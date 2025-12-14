@@ -27,6 +27,55 @@ A Laravel-based boardgame plays and statistics platform for groups.
 
 ## Installation
 
+### Using Docker (Recommended for Development)
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd boardgameplays
+```
+
+2. Start Docker containers:
+```bash
+docker-compose up -d
+```
+
+3. Install PHP dependencies:
+```bash
+docker-compose exec app composer install
+```
+
+4. Install JavaScript dependencies:
+```bash
+docker-compose exec node npm install
+```
+
+5. Copy the environment file:
+```bash
+cp .env.example .env
+```
+
+6. Generate application key:
+```bash
+docker-compose exec app php artisan key:generate
+```
+
+7. Run migrations:
+```bash
+docker-compose exec app php artisan migrate
+```
+
+8. Build frontend assets:
+```bash
+docker-compose exec node npm run build
+```
+
+9. Access the application at http://localhost:8080
+
+See [docker/README.md](docker/README.md) for more Docker commands and troubleshooting.
+
+### Local Installation (Without Docker)
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>

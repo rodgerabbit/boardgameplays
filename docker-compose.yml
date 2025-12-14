@@ -1,0 +1,112 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: boardgameplays_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - boardgameplays
+    depends_on:
+      - postgres
+      - redis
+      - meilisearch
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=boardgameplays
+      - DB_USERNAME=boardgameplays
+      - DB_PASSWORD=boardgameplays
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_STORE=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - MEILISEARCH_HOST=http://meilisearch:7700
+      - MEILISEARCH_KEY=masterKey
+
+  nginx:
+    image: nginx:alpine
+    container_name: boardgameplays_nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - boardgameplays
+    depends_on:
+      - app
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: boardgameplays_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=boardgameplays
+      - POSTGRES_USER=boardgameplays
+      - POSTGRES_PASSWORD=boardgameplays
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - boardgameplays
+
+  redis:
+    image: redis:7-alpine
+    container_name: boardgameplays_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - boardgameplays
+    command: redis-server --appendonly yes
+
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: boardgameplays_meilisearch
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_MASTER_KEY=masterKey
+      - MEILI_ENV=development
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - boardgameplays
+
+  node:
+    image: node:20-alpine
+    container_name: boardgameplays_node
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - /var/www/html/node_modules
+    networks:
+      - boardgameplays
+    command: sh -c "npm install && tail -f /dev/null"
+    depends_on:
+      - app
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  meilisearch_data:
+    driver: local
+
+networks:
+  boardgameplays:
+    driver: bridge
+

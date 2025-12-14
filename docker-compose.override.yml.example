@@ -1,0 +1,16 @@
+# Copy this file to docker-compose.override.yml to customize your local development environment
+# This file is gitignored and allows you to override settings without committing them
+
+version: '3.8'
+
+services:
+  app:
+    environment:
+      # Add your custom environment variables here
+      # - CUSTOM_VAR=value
+
+  nginx:
+    ports:
+      # Change the port if 8080 is already in use
+      # - "8081:80"
+
