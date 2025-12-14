@@ -1,0 +1,340 @@
+# Laravel Boardgame Plays & Statistics Platform - Cursor Rules
+
+## Project Overview
+This is a Laravel-based boardgame plays and statistics platform for groups. The project follows an API-first approach with comprehensive testing and clear, descriptive naming conventions.
+
+## Tech Stack
+- **Backend**: Laravel (PHP 8.2+)
+- **Frontend**: Inertia.js + Vue 3
+- **Database**: PostgreSQL
+- **Cache/Sessions/Queues**: Redis
+- **Search**: Meilisearch (full-text and faceted search)
+- **Object Storage**: Local storage
+- **Realtime**: Laravel Echo + WebSockets (Pusher or self-hosted)
+- **Background Jobs**: Laravel Queue Workers with Supervisor/Horizon
+- **Notifications**: Laravel Notifications (Postmark/SendGrid for email, Discord webhooks, in-app via Redis + DB)
+- **API Documentation**: OpenAPI/Swagger (generate clients)
+- **Monitoring**: Sentry (errors), Prometheus/Grafana (metrics), Grafana Loki (logs)
+
+## Core Principles
+
+### 1. Naming Conventions (CRITICAL)
+- **ALWAYS use clear, descriptive, and full names** - no abbreviations unless they are industry-standard (e.g., `id`, `url`, `api`)
+- **Classes**: PascalCase with descriptive names (e.g., `BoardGamePlayRecordController`, `PlayerStatisticsService`, `GameSessionRepository`)
+- **Methods/Functions**: camelCase with verb-noun pattern (e.g., `calculatePlayerWinRate()`, `storeGamePlayRecord()`, `retrievePlayerStatistics()`)
+- **Variables**: camelCase with descriptive names (e.g., `playerWinCount`, `gameSessionDuration`, `totalPlayRecords`)
+- **Database Tables**: snake_case, plural (e.g., `board_game_plays`, `player_statistics`, `game_sessions`)
+- **Database Columns**: snake_case, descriptive (e.g., `player_id`, `game_session_id`, `played_at`, `win_count`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_PLAYERS_PER_SESSION`, `DEFAULT_STATISTICS_REFRESH_INTERVAL`)
+- **Routes**: kebab-case (e.g., `/api/board-game-plays`, `/api/player-statistics`)
+- **Vue Components**: PascalCase (e.g., `BoardGamePlayForm.vue`, `PlayerStatisticsDashboard.vue`)
+- **Vue Props/Variables**: camelCase (e.g., `playerStatistics`, `gamePlayRecords`)
+
+### 2. Testing Requirements (MANDATORY)
+- **EVERY feature, class, and significant method MUST have corresponding tests**
+- **Test-Driven Development (TDD) is preferred** - write tests before implementation when possible
+- **Test Coverage**: Aim for minimum 80% coverage, critical paths should be 100%
+- **Test Types**:
+  - **Unit Tests**: For individual classes, methods, and services (PHPUnit)
+  - **Feature Tests**: For HTTP endpoints, API routes, and user interactions (Laravel HTTP Tests)
+  - **Integration Tests**: For database operations, external services (S3, Meilisearch, Redis)
+  - **E2E Tests**: For critical user flows (Pest or PHPUnit with Dusk)
+- **Test Naming**: Descriptive test names that explain what is being tested (e.g., `test_calculates_player_win_rate_correctly_when_player_has_multiple_games()`, `test_stores_board_game_play_record_with_valid_data()`)
+- **Test Organization**: Mirror application structure in `tests/` directory
+- **Test Data**: Use factories and seeders for consistent test data
+- **Before writing any code, ensure tests are written or updated**
+
+### 3. Laravel Best Practices
+
+#### Architecture
+- **Use Service Classes** for business logic (not controllers)
+- **Use Repository Pattern** for data access when appropriate
+- **Use Form Requests** for validation (never validate in controllers)
+- **Use Resource Classes** for API responses (API Resources)
+- **Use DTOs (Data Transfer Objects)** for complex data structures
+- **Follow SOLID principles** and DRY (Don't Repeat Yourself)
+- **Use Dependency Injection** - avoid facades in business logic when possible
+
+#### Controllers
+- Keep controllers thin - delegate to services
+- Use single-action controllers for complex operations when appropriate
+- Return JSON responses for API endpoints
+- Use Inertia responses for frontend routes
+
+#### Models
+- Use Eloquent relationships with descriptive names
+- Define accessors/mutators with clear names
+- Use scopes for reusable query logic
+- Use casts for type conversion
+- Define fillable/guarded properties explicitly
+
+#### Database
+- Use migrations for all schema changes
+- Add indexes for frequently queried columns
+- Use foreign key constraints
+- Use database transactions for multi-step operations
+- Use soft deletes when appropriate (e.g., `deleted_at`)
+
+#### API Design
+- **API-First Approach**: Design APIs before frontend implementation
+- Use RESTful conventions where appropriate
+- Version APIs (e.g., `/api/v1/`)
+- Use OpenAPI/Swagger for documentation
+- Return consistent response formats
+- Use proper HTTP status codes
+- Implement rate limiting
+- Use API authentication (Sanctum/Passport)
+
+### 4. Code Quality Standards
+
+#### PHP Standards
+- Follow PSR-12 coding standard
+- Use strict types: `declare(strict_types=1);` at the top of all PHP files
+- Use type hints for all parameters and return types
+- Use nullable types (`?string`, `?int`) when values can be null
+- Avoid magic numbers - use named constants
+- Use early returns to reduce nesting
+- Keep functions/methods small and focused (single responsibility)
+
+#### Documentation
+- Use PHPDoc blocks for all classes, methods, and complex logic
+- Document complex algorithms and business rules
+- Include parameter types, return types, and exceptions in PHPDoc
+- Document API endpoints with OpenAPI annotations
+
+#### Error Handling
+- Use custom exceptions with descriptive names
+- Log errors appropriately (use Laravel's logging)
+- Return meaningful error messages to API consumers
+- Use try-catch blocks for external service calls (S3, Meilisearch, etc.)
+
+### 5. Frontend (Inertia + Vue)
+
+#### Vue Components
+- Use Composition API (Vue 3) with `<script setup>`
+- Use TypeScript for type safety (if applicable)
+- Keep components small and focused
+- Use props validation
+- Emit events with descriptive names
+- Use computed properties for derived state
+- Use reactive/ref appropriately
+
+#### Inertia
+- Use Inertia forms for form handling
+- Use Inertia links for navigation
+- Handle loading states properly
+- Use Inertia's error handling
+
+#### Styling
+- Use Tailwind CSS (or specified CSS framework)
+- Keep styles scoped to components when possible
+- Use consistent spacing and design tokens
+
+### 6. Database & Caching
+
+#### PostgreSQL
+- Use proper data types (avoid TEXT when VARCHAR is sufficient)
+- Use JSON/JSONB columns for flexible data when appropriate
+- Use database transactions for data integrity
+- Use database indexes strategically
+- Use database migrations for all changes
+
+#### Redis
+- Use Redis for caching frequently accessed data
+- Use Redis for session storage
+- Use Redis for queue management
+- Cache expensive queries and computations
+- Set appropriate TTLs for cached data
+
+#### Meilisearch
+- Index models that need full-text search
+- Use faceted search for filtering
+- Keep search indexes in sync with database
+- Handle search errors gracefully
+
+### 7. Background Jobs & Queues
+
+#### Queue Jobs
+- Use descriptive job class names (e.g., `CalculatePlayerStatisticsJob`, `SendGameSessionNotificationJob`)
+- Make jobs idempotent when possible
+- Handle job failures appropriately
+- Use job batching for related operations
+- Use Laravel Horizon for queue monitoring
+
+#### Supervisor
+- Configure Supervisor for queue workers
+- Set appropriate worker counts
+- Handle worker restarts gracefully
+
+### 8. Notifications & Email
+
+#### Laravel Notifications
+- Use notification classes for all notifications
+- Support multiple channels (email, Discord, in-app)
+- Use notification queues for async delivery
+- Provide clear, actionable notification content
+
+#### Email
+- Use Postmark or SendGrid for transactional emails
+- Use email templates (Blade or Markdown)
+- Include proper email headers
+- Handle email failures gracefully
+
+### 9. Monitoring & Observability
+
+#### Error Tracking
+- Use Sentry for error tracking
+- Include context in error reports
+- Set up alerts for critical errors
+
+#### Metrics
+- Use Prometheus for metrics collection
+- Expose relevant application metrics
+- Use Grafana for visualization
+
+#### Logging
+- Use Grafana Loki for log aggregation
+- Log at appropriate levels (debug, info, warning, error)
+- Include context in log messages
+- Use structured logging
+
+### 10. Security
+
+#### Authentication & Authorization
+- Use Laravel Sanctum or Passport for API authentication
+- Implement proper authorization policies
+- Use middleware for route protection
+- Validate and sanitize all user input
+
+#### Data Protection
+- Use HTTPS for all communications
+- Encrypt sensitive data at rest
+- Use parameterized queries (Eloquent handles this)
+- Protect against SQL injection, XSS, CSRF
+
+### 11. File Structure
+
+```
+app/
+  Console/
+  Exceptions/
+  Http/
+    Controllers/
+      Api/
+        V1/
+    Middleware/
+    Requests/
+    Resources/
+  Models/
+  Services/
+  Repositories/
+  DTOs/
+  Jobs/
+  Notifications/
+  Events/
+  Listeners/
+  Policies/
+tests/
+  Unit/
+  Feature/
+  Integration/
+resources/
+  js/
+    components/
+    pages/
+    composables/
+    types/
+  views/
+database/
+  factories/
+  migrations/
+  seeders/
+routes/
+  api.php
+  web.php
+```
+
+### 12. Git & Version Control
+
+#### Commit Messages
+- Use clear, descriptive commit messages
+- Reference issue numbers when applicable
+- Follow conventional commits format when possible
+
+#### Branching
+- Use feature branches for new features
+- Use descriptive branch names (e.g., `feature/player-statistics-calculation`, `fix/board-game-play-validation`)
+
+### 13. Code Review Checklist
+
+Before submitting code, ensure:
+- [ ] All tests pass
+- [ ] New code has corresponding tests
+- [ ] Code follows naming conventions
+- [ ] Code is properly documented
+- [ ] No hardcoded values (use config/env)
+- [ ] Error handling is implemented
+- [ ] Security considerations are addressed
+- [ ] Performance implications are considered
+- [ ] Database migrations are included if needed
+- [ ] API documentation is updated (OpenAPI)
+
+### 14. When Writing Code
+
+**ALWAYS:**
+1. Write tests first (TDD) or alongside code
+2. Use full, descriptive names for everything
+3. Add PHPDoc comments for complex logic
+4. Handle errors appropriately
+5. Follow Laravel conventions
+6. Consider performance implications
+6. Think about security
+7. Update API documentation if adding/changing endpoints
+
+**NEVER:**
+1. Skip writing tests
+2. Use abbreviations or unclear names
+3. Put business logic in controllers
+4. Hardcode configuration values
+5. Ignore error handling
+6. Commit code without tests
+
+### 15. Specific to Boardgame Platform
+
+#### Domain Models
+- Use clear domain terminology (e.g., `BoardGame`, `GamePlay`, `Player`, `GameSession`, `PlayerStatistics`)
+- Model relationships clearly (e.g., a `GamePlay` belongs to a `BoardGame` and a `GameSession`, a `GameSession` has many `GamePlays`)
+
+#### Statistics
+- Calculate statistics efficiently (consider caching)
+- Use database aggregations when possible
+- Store computed statistics when appropriate
+- Update statistics asynchronously via jobs
+
+#### Real-time Features
+- Use Laravel Echo for real-time updates
+- Broadcast events for game sessions, statistics updates
+- Handle WebSocket connection failures gracefully
+
+## Summary
+
+**Priority 1: Clear, Full Names** - Every identifier must be self-documenting
+**Priority 2: Comprehensive Testing** - Every feature must have tests
+**Priority 3: Code Quality** - Follow Laravel best practices and PSR standards
+**Priority 4: API-First** - Design APIs before frontend
+**Priority 5: Observability** - Monitor, log, and track errors
+
+Remember: Code is read more often than it's written. Write code that your future self (and teammates) will understand immediately.
+
+This ruleset covers:
+- Clear, descriptive naming conventions
+- Mandatory testing requirements
+- Laravel best practices aligned with your stack
+- API-first approach with OpenAPI
+- Integration guidance for your services (Redis, Meilisearch, S3, WebSockets)
+- Monitoring and observability practices
+- Security considerations
+
+Since you're in ask mode, create `.cursorrules` in your project root and paste this content. It will guide Cursor to generate code that follows these standards.
+
+Should I adjust any sections or add domain-specific rules for boardgame statistics?
