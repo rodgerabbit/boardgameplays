@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->group(function (): void {
-    // API v1 routes will be registered here
+    // Board Games API (read-only)
+    Route::get('/board-games', [\App\Http\Controllers\Api\V1\BoardGameController::class, 'index']);
+    Route::get('/board-games/{id}', [\App\Http\Controllers\Api\V1\BoardGameController::class, 'show']);
 });
 
