@@ -27,7 +27,35 @@ A Laravel-based boardgame plays and statistics platform for groups.
 
 ## Installation
 
-### Using Docker (Recommended for Development)
+### Quick Setup (Recommended)
+
+The easiest way to set up the project is using the automated setup script:
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd boardgameplays
+```
+
+2. Run the setup script:
+```bash
+./setup.sh
+```
+
+The script will:
+- Check all prerequisites
+- Guide you through Docker or local installation
+- Install all dependencies
+- Configure the environment
+- Run database migrations
+- Build frontend assets
+- Set proper permissions
+
+### Manual Installation
+
+If you prefer to set up manually, follow the instructions below.
+
+#### Using Docker (Recommended for Development)
 
 1. Clone the repository:
 ```bash
@@ -74,7 +102,7 @@ docker-compose exec node npm run build
 
 See [docker/README.md](docker/README.md) for more Docker commands and troubleshooting.
 
-### Local Installation (Without Docker)
+#### Local Installation (Without Docker)
 
 1. Clone the repository:
 ```bash
