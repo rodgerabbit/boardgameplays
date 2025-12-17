@@ -12,6 +12,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# UID and Group ID variables
+export UID=$(id -u)
+export GID=$(id -g)
+
 # Helper functions
 print_success() {
     echo -e "${GREEN}✓${NC} $1"
