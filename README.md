@@ -146,6 +146,27 @@ php artisan migrate
 npm run build
 ```
 
+## Updating the Application
+
+After pulling updates or making changes, use the update script to prepare the application:
+
+```bash
+./update.sh
+```
+
+The update script will:
+- Pull latest code changes (if git repository)
+- Update PHP dependencies (Composer)
+- Update Node dependencies (npm)
+- Run database migrations
+- Clear all application caches
+- Rebuild frontend assets
+- Optimize the application (cache config, routes, views)
+- Restart queue workers (Horizon) if applicable
+- Optionally run tests
+
+The script automatically detects whether you're using Docker or local setup and runs the appropriate commands.
+
 ## Development
 
 ### Running the Development Server
