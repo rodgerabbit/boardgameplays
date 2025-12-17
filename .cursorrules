@@ -316,6 +316,138 @@ Before submitting code, ensure:
 - Broadcast events for game sessions, statistics updates
 - Handle WebSocket connection failures gracefully
 
+#### BoardGameGeek (BGG) API Integration (CRITICAL)
+
+**Core Principle: SYNC, NOT DEPENDENCY**
+- **NEVER make real-time API calls to BoardGameGeek.com during user requests**
+- **ALWAYS store BGG data locally in the database**
+- **ALWAYS use background jobs for syncing data from BGG**
+- The application must function completely independently of BGG API availability
+- BGG API calls are for data synchronization only, not for serving user requests
+
+**Architecture Requirements:**
+
+1. **Data Storage**
+   - Store all BGG data locally in PostgreSQL (e.g., `board_games` table with `bgg_id`)
+   - Store raw XML responses or parsed data in JSON/JSONB columns when needed
+   - Track sync metadata: `bgg_synced_at`, `bgg_sync_status`, `bgg_sync_error_message`
+   - Use `bgg_id` as the unique identifier linking local records to BGG
+
+2. **Service Layer**
+   - Create a dedicated service class: `BoardGameGeekSyncService` or `BoardGameGeekApiClient`
+   - Service should handle XML parsing, rate limiting, error handling
+   - Service methods should be idempotent and handle partial failures gracefully
+   - Use DTOs for BGG API responses (e.g., `BoardGameGeekGameDto`)
+
+3. **Background Jobs (MANDATORY)**
+   - **ALL BGG API calls MUST be in background jobs**
+   - Job naming: `SyncBoardGameFromBoardGameGeekJob`, `SyncBoardGameCollectionFromBoardGameGeekJob`
+   - Jobs should be idempotent (safe to retry)
+   - Use job batching for bulk sync operations
+   - Implement exponential backoff for rate limit errors
+   - Queue jobs with appropriate delays to respect rate limits
+
+4. **Rate Limiting & Respect**
+   - BGG API has strict rate limits (typically 1 request per second)
+   - Implement rate limiting in the service layer using Redis or Laravel's rate limiter
+   - Use job delays to space out requests (e.g., `dispatch()->delay(now()->addSeconds(2))`)
+   - Track rate limit headers from BGG responses and adjust accordingly
+   - Never make synchronous API calls that could block or violate rate limits
+
+5. **Sync Strategies**
+   - **Initial Sync**: When a user adds a BGG ID, queue a job to fetch and store data
+   - **Periodic Sync**: Use scheduled commands (Laravel Scheduler) to sync stale data
+   - **On-Demand Sync**: Allow users to trigger sync via API endpoint that queues a job
+   - **Bulk Sync**: Support syncing collections or multiple games via batched jobs
+   - Track sync frequency and avoid unnecessary API calls
+
+6. **Error Handling**
+   - Handle BGG API downtime gracefully - application continues to work with cached data
+   - Log all BGG API errors with context (BGG ID, endpoint, response)
+   - Store sync errors in database for user visibility
+   - Implement retry logic with exponential backoff for transient failures
+   - Never throw exceptions that break user workflows - always fall back to local data
+
+7. **User Experience**
+   - When displaying board game data, ALWAYS use local database data
+   - Show sync status indicators (e.g., "Last synced: 2 hours ago", "Sync in progress")
+   - Allow users to manually trigger sync (queues a job, doesn't wait)
+   - Show helpful messages if sync fails (e.g., "BGG API temporarily unavailable, using cached data")
+   - Never show loading states waiting for BGG API responses
+
+8. **Testing Requirements**
+   - **MOCK all BGG API calls in tests** - never make real API calls during testing
+   - Use HTTP mocking (e.g., Laravel's `Http::fake()`) for BGG API responses
+   - Test sync jobs with mocked API responses
+   - Test error scenarios (API down, rate limits, invalid responses)
+   - Test that application works when BGG API is unavailable
+   - Integration tests should verify sync job behavior without real API calls
+
+9. **Configuration**
+   - Store BGG API base URL in config file (e.g., `config/boardgamegeek.php`)
+   - Make rate limit settings configurable (requests per second, delay between requests)
+   - Allow disabling BGG sync via feature flag for maintenance
+   - Store sync intervals and retry settings in config
+
+10. **Monitoring & Observability**
+    - Log all BGG API requests with timing, status codes, and response sizes
+    - Track sync job success/failure rates
+    - Monitor rate limit violations and adjust delays accordingly
+    - Alert on repeated sync failures or BGG API downtime
+    - Track sync latency and optimize job scheduling
+
+11. **Code Examples Pattern**
+    ```php
+    // ✅ CORRECT: Queue a job for sync
+    public function store(Request $request): JsonResponse
+    {
+        $boardGame = BoardGame::create($request->validated());
+        
+        if ($request->has('bgg_id')) {
+            SyncBoardGameFromBoardGameGeekJob::dispatch($boardGame->id)
+                ->delay(now()->addSeconds(2)); // Respect rate limits
+        }
+        
+        return new BoardGameResource($boardGame);
+    }
+    
+    // ❌ WRONG: Making real-time API call
+    public function store(Request $request): JsonResponse
+    {
+        $bggData = $this->boardGameGeekApiClient->fetchGame($request->bgg_id); // NEVER DO THIS
+        // ...
+    }
+    ```
+
+12. **File Structure for BGG Integration**
+    ```
+    app/
+      Services/
+        BoardGameGeekSyncService.php
+        BoardGameGeekApiClient.php
+      Jobs/
+        SyncBoardGameFromBoardGameGeekJob.php
+        SyncBoardGameCollectionFromBoardGameGeekJob.php
+      DTOs/
+        BoardGameGeekGameDto.php
+        BoardGameGeekCollectionDto.php
+      Console/
+        Commands/
+          SyncStaleBoardGamesFromBoardGameGeekCommand.php
+    config/
+      boardgamegeek.php
+    ```
+
+**Summary of BGG Integration Rules:**
+- ✅ Store all BGG data locally in database
+- ✅ Use background jobs for ALL BGG API calls
+- ✅ Respect rate limits with delays and queuing
+- ✅ Handle errors gracefully - app works without BGG
+- ✅ Mock BGG API in all tests
+- ❌ NEVER make synchronous BGG API calls in controllers/services
+- ❌ NEVER depend on BGG API for serving user requests
+- ❌ NEVER make real API calls in tests
+
 ## Summary
 
 **Priority 1: Clear, Full Names** - Every identifier must be self-documenting
@@ -332,5 +464,6 @@ This ruleset covers:
 - Laravel best practices aligned with your stack
 - API-first approach with OpenAPI
 - Integration guidance for your services (Redis, Meilisearch, S3, WebSockets)
+- BoardGameGeek API integration (sync pattern, not dependency)
 - Monitoring and observability practices
 - Security considerations
