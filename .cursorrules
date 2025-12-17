@@ -334,7 +334,3 @@ This ruleset covers:
 - Integration guidance for your services (Redis, Meilisearch, S3, WebSockets)
 - Monitoring and observability practices
 - Security considerations
-
-Since you're in ask mode, create `.cursorrules` in your project root and paste this content. It will guide Cursor to generate code that follows these standards.
-
-Should I adjust any sections or add domain-specific rules for boardgame statistics?
