@@ -21,6 +21,19 @@ class AuthControllerTest extends TestCase
     use RefreshDatabase;
 
     /**
+     * Setup the test environment.
+     *
+     * Disables CSRF middleware for web route tests to avoid 419 errors.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Disable CSRF middleware for web route tests
+        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
+    }
+
+    /**
      * Test that login form is accessible to guests.
      */
     public function test_login_form_is_accessible_to_guests(): void
@@ -213,3 +226,4 @@ class AuthControllerTest extends TestCase
         $response->assertRedirect('/login');
     }
 }
+
