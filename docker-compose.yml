@@ -29,7 +29,7 @@ services:
       - QUEUE_CONNECTION=redis
       - MEILISEARCH_HOST=http://meilisearch:7700
       - MEILISEARCH_KEY=masterKey
-    user: "${UID}:${GID}"
+    user: "${DOCKER_UID}:${DOCKER_GID}"
 
   nginx:
     image: nginx:alpine

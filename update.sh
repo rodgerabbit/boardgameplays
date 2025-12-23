@@ -12,9 +12,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# UID and Group ID variables
-export UID=$(id -u)
-export GID=$(id -g)
+# UID and Group ID variables for Docker
+# Note: UID is readonly in bash, so we use DOCKER_UID instead
+export DOCKER_UID=$(id -u)
+export DOCKER_GID=$(id -g)
 
 # Helper functions
 print_success() {
@@ -323,5 +324,6 @@ main() {
 
 # Run main function
 main
+
 
 

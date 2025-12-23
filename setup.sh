@@ -12,9 +12,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# UID and Group ID variables
-export UID=$(id -u)
-export GID=$(id -g)
+# UID and Group ID variables for Docker
+# Note: UID is readonly in bash, so we use DOCKER_UID instead
+export DOCKER_UID=$(id -u)
+export DOCKER_GID=$(id -g)
 
 # Helper functions
 print_success() {
@@ -155,14 +156,14 @@ check_local_prerequisites() {
 setup_with_docker() {
     print_step "Setting Up with Docker"
     
-    # Set UID and GID if not already set (for docker-compose user mapping)
-    if [ -z "$UID" ]; then
-        export UID=$(id -u)
+    # Set DOCKER_UID and DOCKER_GID if not already set (for docker-compose user mapping)
+    if [ -z "$DOCKER_UID" ]; then
+        export DOCKER_UID=$(id -u)
     fi
-    if [ -z "$GID" ]; then
-        export GID=$(id -g)
+    if [ -z "$DOCKER_GID" ]; then
+        export DOCKER_GID=$(id -g)
     fi
-    print_info "Using UID: $UID, GID: $GID for container user mapping"
+    print_info "Using DOCKER_UID: $DOCKER_UID, DOCKER_GID: $DOCKER_GID for container user mapping"
     
     # Check if .env.example exists
     if [ ! -f ".env.example" ]; then
@@ -443,5 +444,6 @@ main() {
 
 # Run main function
 main
+
 
 
