@@ -23,9 +23,13 @@ class BoardGameControllerTest extends TestCase
      */
     public function test_index_returns_list_of_board_games(): void
     {
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
         BoardGame::factory()->count(5)->create();
 
-        $response = $this->getJson('/api/v1/board-games');
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/board-games');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -54,9 +58,13 @@ class BoardGameControllerTest extends TestCase
      */
     public function test_index_returns_paginated_results(): void
     {
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
         BoardGame::factory()->count(25)->create();
 
-        $response = $this->getJson('/api/v1/board-games?per_page=10');
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/board-games?per_page=10');
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -74,9 +82,13 @@ class BoardGameControllerTest extends TestCase
      */
     public function test_index_respects_per_page_limit(): void
     {
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
         BoardGame::factory()->count(150)->create();
 
-        $response = $this->getJson('/api/v1/board-games?per_page=200');
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/board-games?per_page=200');
 
         $response->assertStatus(200);
         $data = $response->json('data');
@@ -89,13 +101,17 @@ class BoardGameControllerTest extends TestCase
      */
     public function test_show_returns_single_board_game(): void
     {
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
         $boardGame = BoardGame::factory()->create([
             'name' => 'Test Game',
             'min_players' => 2,
             'max_players' => 4,
         ]);
 
-        $response = $this->getJson("/api/v1/board-games/{$boardGame->id}");
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/board-games/{$boardGame->id}");
 
         $response->assertStatus(200)
             ->assertJsonStructure([
@@ -130,7 +146,11 @@ class BoardGameControllerTest extends TestCase
      */
     public function test_show_returns_404_for_non_existent_board_game(): void
     {
-        $response = $this->getJson('/api/v1/board-games/99999');
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson('/api/v1/board-games/99999');
 
         $response->assertStatus(404)
             ->assertJson([
@@ -143,11 +163,15 @@ class BoardGameControllerTest extends TestCase
      */
     public function test_store_endpoint_is_not_available(): void
     {
-        $response = $this->postJson('/api/v1/board-games', [
-            'name' => 'New Game',
-            'min_players' => 2,
-            'max_players' => 4,
-        ]);
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/board-games', [
+                'name' => 'New Game',
+                'min_players' => 2,
+                'max_players' => 4,
+            ]);
 
         $response->assertStatus(405);
     }
@@ -157,11 +181,15 @@ class BoardGameControllerTest extends TestCase
      */
     public function test_update_endpoint_is_not_available(): void
     {
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
         $boardGame = BoardGame::factory()->create();
 
-        $response = $this->putJson("/api/v1/board-games/{$boardGame->id}", [
-            'name' => 'Updated Game',
-        ]);
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->putJson("/api/v1/board-games/{$boardGame->id}", [
+                'name' => 'Updated Game',
+            ]);
 
         $response->assertStatus(405);
     }
@@ -171,10 +199,26 @@ class BoardGameControllerTest extends TestCase
      */
     public function test_destroy_endpoint_is_not_available(): void
     {
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
         $boardGame = BoardGame::factory()->create();
 
-        $response = $this->deleteJson("/api/v1/board-games/{$boardGame->id}");
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->deleteJson("/api/v1/board-games/{$boardGame->id}");
 
         $response->assertStatus(405);
+    }
+
+    /**
+     * Test that unauthenticated requests to protected endpoints return 401.
+     */
+    public function test_unauthenticated_requests_return_401(): void
+    {
+        BoardGame::factory()->create();
+
+        $response = $this->getJson('/api/v1/board-games');
+
+        $response->assertStatus(401);
     }
 }
