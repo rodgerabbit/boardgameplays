@@ -60,3 +60,5 @@ class BoardGameSeeder extends Seeder
         ]);
     }
 }
+
+
