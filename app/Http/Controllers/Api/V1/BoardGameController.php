@@ -37,7 +37,11 @@ class BoardGameController extends BaseApiController
      *       "publisher": "Catan Studio",
      *       "designer": "Klaus Teuber",
      *       "image_url": "https://example.com/catan.jpg",
+     *       "thumbnail_url": "https://example.com/catan-thumb.jpg",
      *       "bgg_id": "13",
+     *       "bgg_rating": 7.123,
+     *       "complexity_rating": 2.456,
+     *       "is_expansion": false,
      *       "created_at": "2025-12-17T19:52:30+00:00",
      *       "updated_at": "2025-12-17T19:52:30+00:00"
      *     }
@@ -94,7 +98,11 @@ class BoardGameController extends BaseApiController
      *     "publisher": "Catan Studio",
      *     "designer": "Klaus Teuber",
      *     "image_url": "https://example.com/catan.jpg",
+     *     "thumbnail_url": "https://example.com/catan-thumb.jpg",
      *     "bgg_id": "13",
+     *     "bgg_rating": 7.123,
+     *     "complexity_rating": 2.456,
+     *     "is_expansion": false,
      *     "created_at": "2025-12-17T19:52:30+00:00",
      *     "updated_at": "2025-12-17T19:52:30+00:00"
      *   }

@@ -31,6 +31,10 @@ class DashboardController extends Controller
                 'playing_time_minutes',
                 'year_published',
                 'publisher',
+                'bgg_rating',
+                'complexity_rating',
+                'thumbnail_url',
+                'is_expansion',
             ]);
 
         return Inertia::render('Dashboard', [

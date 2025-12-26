@@ -33,7 +33,11 @@ class BoardGameResource extends JsonResource
             'publisher' => $this->publisher,
             'designer' => $this->designer,
             'image_url' => $this->image_url,
+            'thumbnail_url' => $this->thumbnail_url,
             'bgg_id' => $this->bgg_id,
+            'bgg_rating' => $this->bgg_rating !== null ? (float) $this->bgg_rating : null,
+            'complexity_rating' => $this->complexity_rating !== null ? (float) $this->complexity_rating : null,
+            'is_expansion' => $this->is_expansion,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
