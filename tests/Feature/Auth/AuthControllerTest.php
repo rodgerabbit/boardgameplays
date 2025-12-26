@@ -52,7 +52,7 @@ class AuthControllerTest extends TestCase
 
         $response = $this->actingAs($user)->get('/login');
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
     }
 
     /**
@@ -74,7 +74,7 @@ class AuthControllerTest extends TestCase
 
         $response = $this->actingAs($user)->get('/register');
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
     }
 
     /**
@@ -92,7 +92,7 @@ class AuthControllerTest extends TestCase
             'password' => 'password123',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
         $this->assertAuthenticatedAs($user);
     }
 
@@ -150,7 +150,7 @@ class AuthControllerTest extends TestCase
             'password_confirmation' => 'password123',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/dashboard');
         $this->assertAuthenticated();
 
         $this->assertDatabaseHas('users', [
