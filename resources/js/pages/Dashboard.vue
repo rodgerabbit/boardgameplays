@@ -19,20 +19,54 @@
                 <table class="u-full-width">
                     <thead>
                         <tr>
+                            <th>Thumbnail</th>
                             <th>Game Name</th>
                             <th>Players</th>
                             <th>Playing Time</th>
                             <th>Year Published</th>
                             <th>Publisher</th>
+                            <th>BGG Rating</th>
+                            <th>Complexity</th>
+                            <th>Type</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-for="game in games" :key="game.id">
+                            <td>
+                                <img 
+                                    v-if="game.thumbnail_url" 
+                                    :src="game.thumbnail_url" 
+                                    :alt="game.name + ' thumbnail'"
+                                    style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"
+                                />
+                                <span v-else style="color: #999;">N/A</span>
+                            </td>
                             <td>{{ game.name }}</td>
                             <td>{{ game.min_players }}-{{ game.max_players }}</td>
                             <td>{{ game.playing_time_minutes ? game.playing_time_minutes + ' min' : 'N/A' }}</td>
                             <td>{{ game.year_published || 'N/A' }}</td>
                             <td>{{ game.publisher || 'N/A' }}</td>
+                            <td>
+                                <span v-if="game.bgg_rating !== null">
+                                    {{ parseFloat(game.bgg_rating).toFixed(3) }}
+                                </span>
+                                <span v-else style="color: #999;">N/A</span>
+                            </td>
+                            <td>
+                                <span v-if="game.complexity_rating !== null">
+                                    {{ parseFloat(game.complexity_rating).toFixed(3) }}
+                                </span>
+                                <span v-else style="color: #999;">N/A</span>
+                            </td>
+                            <td>
+                                <span 
+                                    v-if="game.is_expansion" 
+                                    style="background-color: #ff9800; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;"
+                                >
+                                    Expansion
+                                </span>
+                                <span v-else style="color: #666;">Base Game</span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>

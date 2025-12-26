@@ -45,7 +45,11 @@ class BoardGameControllerTest extends TestCase
                         'publisher',
                         'designer',
                         'image_url',
+                        'thumbnail_url',
                         'bgg_id',
+                        'bgg_rating',
+                        'complexity_rating',
+                        'is_expansion',
                         'created_at',
                         'updated_at',
                     ],
@@ -126,7 +130,11 @@ class BoardGameControllerTest extends TestCase
                     'publisher',
                     'designer',
                     'image_url',
+                    'thumbnail_url',
                     'bgg_id',
+                    'bgg_rating',
+                    'complexity_rating',
+                    'is_expansion',
                     'created_at',
                     'updated_at',
                 ],
@@ -137,6 +145,38 @@ class BoardGameControllerTest extends TestCase
                     'name' => 'Test Game',
                     'min_players' => 2,
                     'max_players' => 4,
+                ],
+            ]);
+    }
+
+    /**
+     * Test that the show endpoint returns new rating and expansion fields correctly.
+     */
+    public function test_show_returns_rating_and_expansion_fields(): void
+    {
+        $user = \App\Models\User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $boardGame = BoardGame::factory()->create([
+            'name' => 'Test Game with Ratings',
+            'bgg_rating' => 7.456,
+            'complexity_rating' => 3.789,
+            'thumbnail_url' => 'https://example.com/thumb.jpg',
+            'is_expansion' => true,
+        ]);
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->getJson("/api/v1/board-games/{$boardGame->id}");
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'id' => $boardGame->id,
+                    'name' => 'Test Game with Ratings',
+                    'bgg_rating' => 7.456,
+                    'complexity_rating' => 3.789,
+                    'thumbnail_url' => 'https://example.com/thumb.jpg',
+                    'is_expansion' => true,
                 ],
             ]);
     }

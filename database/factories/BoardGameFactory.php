@@ -41,7 +41,11 @@ class BoardGameFactory extends Factory
             'publisher' => fake()->optional()->company(),
             'designer' => fake()->optional()->name(),
             'image_url' => fake()->optional()->imageUrl(),
+            'thumbnail_url' => fake()->optional()->imageUrl(200, 200),
             'bgg_id' => fake()->boolean(70) ? fake()->unique()->numerify('#####') : null,
+            'bgg_rating' => fake()->optional(0.7)->randomFloat(3, 0, 10),
+            'complexity_rating' => fake()->optional(0.7)->randomFloat(3, 0, 5),
+            'is_expansion' => fake()->boolean(20),
         ];
     }
 }

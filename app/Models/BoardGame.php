@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Model;
  * BoardGame model representing a board game entity.
  *
  * This model represents a board game with its metadata such as name, description,
- * player count, playing time, publisher, designer, and optional BoardGameGeek ID.
+ * player count, playing time, publisher, designer, optional BoardGameGeek ID,
+ * BoardGameGeek rating (0-10 scale), complexity rating (0-5 scale), thumbnail URL,
+ * and expansion status.
  */
 class BoardGame extends Model
 {
@@ -32,7 +34,11 @@ class BoardGame extends Model
         'publisher',
         'designer',
         'image_url',
+        'thumbnail_url',
         'bgg_id',
+        'bgg_rating',
+        'complexity_rating',
+        'is_expansion',
     ];
 
     /**
@@ -47,6 +53,9 @@ class BoardGame extends Model
             'max_players' => 'integer',
             'playing_time_minutes' => 'integer',
             'year_published' => 'integer',
+            'bgg_rating' => 'decimal:3',
+            'complexity_rating' => 'decimal:3',
+            'is_expansion' => 'boolean',
         ];
     }
 }
