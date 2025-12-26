@@ -62,7 +62,7 @@ class AuthController extends Controller
 
             $request->session()->regenerate();
 
-            return redirect()->intended('/');
+            return redirect()->intended(route('dashboard'));
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors([
                 'email' => 'The provided credentials are incorrect.',
@@ -83,7 +83,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/');
+        return redirect()->intended(route('dashboard'));
     }
 
     /**
@@ -99,3 +99,4 @@ class AuthController extends Controller
         return redirect('/');
     }
 }
+

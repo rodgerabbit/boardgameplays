@@ -6,16 +6,36 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <!-- Skeleton CSS Framework -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/skeleton-css@2.0.4/css/skeleton.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/skeleton-css@2.0.4/css/normalize.min.css">
+
+        <!-- Custom Styles -->
+        <style>
+            body {
+                background-color: #ffffff;
+                color: #000000;
+            }
+            .container {
+                max-width: 1200px;
+            }
+            .text-grey {
+                color: #555555;
+            }
+            .bg-grey {
+                background-color: #f5f5f5;
+            }
+            .border-grey {
+                border-color: #cccccc;
+            }
+        </style>
 
         <!-- Scripts -->
         @routes
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>
-    <body class="font-sans antialiased">
+    <body>
         @inertia
     </body>
 </html>

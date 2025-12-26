@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Public routes
 Route::get('/', function () {
     return Inertia::render('Index');
-})->middleware('auth');
+})->name('home');
 
 // Authentication routes
 Route::middleware('guest')->group(function (): void {
@@ -18,6 +20,8 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 });
 
+// Authenticated routes
 Route::middleware('auth')->group(function (): void {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });
