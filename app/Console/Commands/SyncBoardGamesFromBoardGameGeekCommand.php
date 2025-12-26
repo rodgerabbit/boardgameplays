@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Jobs\SyncBoardGameFromBoardGameGeekJob;
+use App\Jobs\SyncBoardGamesBatchFromBoardGameGeekJob;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -66,12 +66,15 @@ class SyncBoardGamesFromBoardGameGeekCommand extends Command
             $this->info("Limited to {$limit} IDs.");
         }
 
-        $this->info("Queueing sync jobs with {$delay} second delay between jobs...");
+        $maxIdsPerRequest = (int) config('boardgamegeek.rate_limiting.max_ids_per_request', 20);
+        
+        $this->info("Queueing batch sync jobs (up to {$maxIdsPerRequest} IDs per job) with {$delay} second delay between batches...");
 
-        $queued = 0;
+        // Filter and validate IDs
+        $validBggIds = [];
         $skipped = 0;
 
-        foreach ($bggIds as $index => $bggId) {
+        foreach ($bggIds as $bggId) {
             $bggId = trim($bggId);
 
             if (empty($bggId) || !is_numeric($bggId)) {
@@ -79,18 +82,28 @@ class SyncBoardGamesFromBoardGameGeekCommand extends Command
                 continue;
             }
 
-            // Queue the job with increasing delay to respect rate limits
-            SyncBoardGameFromBoardGameGeekJob::dispatch($bggId)
-                ->delay(now()->addSeconds($delay * ($index + 1)));
+            $validBggIds[] = $bggId;
+        }
 
-            $queued++;
+        // Split into batches of max IDs per request
+        $batches = array_chunk($validBggIds, $maxIdsPerRequest);
+        $queued = 0;
+        $batchIndex = 0;
 
-            if (($index + 1) % 10 === 0) {
-                $this->info("Queued {$queued} jobs...");
+        foreach ($batches as $batch) {
+            // Queue the batch job with increasing delay to respect rate limits
+            SyncBoardGamesBatchFromBoardGameGeekJob::dispatch($batch)
+                ->delay(now()->addSeconds($delay * $batchIndex));
+
+            $queued += count($batch);
+            $batchIndex++;
+
+            if ($batchIndex % 5 === 0) {
+                $this->info("Queued {$batchIndex} batch jobs ({$queued} total IDs)...");
             }
         }
 
-        $this->info("Successfully queued {$queued} sync jobs.");
+        $this->info("Successfully queued {$batchIndex} batch jobs ({$queued} total IDs).");
         if ($skipped > 0) {
             $this->warn("Skipped {$skipped} invalid IDs.");
         }
