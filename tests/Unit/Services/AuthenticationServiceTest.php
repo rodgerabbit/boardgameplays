@@ -166,3 +166,4 @@ class AuthenticationServiceTest extends TestCase
         $this->assertEquals(0, $user->tokens()->count());
     }
 }
+

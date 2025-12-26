@@ -76,3 +76,4 @@ class AuthenticationService
         $user->tokens()->delete();
     }
 }
+
