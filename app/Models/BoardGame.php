@@ -39,6 +39,9 @@ class BoardGame extends Model
         'bgg_rating',
         'complexity_rating',
         'is_expansion',
+        'bgg_synced_at',
+        'bgg_sync_status',
+        'bgg_sync_error_message',
     ];
 
     /**
@@ -56,6 +59,7 @@ class BoardGame extends Model
             'bgg_rating' => 'decimal:3',
             'complexity_rating' => 'decimal:3',
             'is_expansion' => 'boolean',
+            'bgg_synced_at' => 'datetime',
         ];
     }
 }
