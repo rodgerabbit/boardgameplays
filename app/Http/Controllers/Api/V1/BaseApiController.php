@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -15,6 +16,7 @@ use Illuminate\Http\JsonResponse;
  */
 abstract class BaseApiController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Return a successful JSON response.
      *

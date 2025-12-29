@@ -4,12 +4,26 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Group;
+use App\Policies\GroupPolicy;
 use App\Services\BoardGameGeekApiClient;
 use App\Services\BoardGameGeekSyncService;
+use App\Services\GroupAuditLogService;
+use App\Services\GroupService;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * The policy mappings for the application.
+     *
+     * @var array<class-string, class-string>
+     */
+    protected $policies = [
+        Group::class => GroupPolicy::class,
+    ];
+
     /**
      * Register any application services.
      */
@@ -34,6 +48,12 @@ class AppServiceProvider extends ServiceProvider
                 apiClient: $app->make(BoardGameGeekApiClient::class),
             );
         });
+
+        // Register GroupService
+        $this->app->bind(GroupService::class);
+
+        // Register GroupAuditLogService
+        $this->app->bind(GroupAuditLogService::class);
     }
 
     /**

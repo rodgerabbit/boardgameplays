@@ -54,3 +54,4 @@ class RegisterRequest extends FormRequest
     }
 }
 
+

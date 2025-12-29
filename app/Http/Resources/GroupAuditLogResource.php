@@ -8,11 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * API resource for User model.
+ * API resource for GroupAuditLog model.
  *
- * Transforms the User model into a consistent JSON structure for API responses.
+ * Transforms the GroupAuditLog model into a consistent JSON structure for API responses.
  */
-class UserResource extends JsonResource
+class GroupAuditLogResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -23,13 +23,11 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
-            'email_verified_at' => $this->email_verified_at?->toIso8601String(),
+            'action' => $this->action,
+            'changes' => $this->changes,
+            'metadata' => $this->metadata,
+            'user' => new UserResource($this->whenLoaded('user')),
             'created_at' => $this->created_at->toIso8601String(),
-            'updated_at' => $this->updated_at->toIso8601String(),
         ];
     }
 }
-
-
