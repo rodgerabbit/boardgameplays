@@ -257,3 +257,10 @@ It is licensed under the PolyForm Noncommercial License.
 Commercial use is not permitted without a separate license.
 
 If you are interested in commercial use, please contact https://github.com/rodgerabbit
+
+## Contributing
+
+By contributing to this project, you agree to the terms of the
+[Contributor License Agreement](CLA.md).
+
+Commercial use of this project is not permitted without a separate license.
