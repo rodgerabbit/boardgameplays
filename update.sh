@@ -229,6 +229,129 @@ update_local() {
     return 0
 }
 
+# Clear BoardGames, Groups, and Users tables before seeding
+clear_seed_tables() {
+    local DOCKER_COMPOSE=$1
+    
+    print_info "Clearing BoardGames, Groups, and Users tables..."
+    
+    # Create PHP script to clear tables
+    local SCRIPT_PATH="storage/clear_seed_tables.php"
+    cat > "$SCRIPT_PATH" << 'PHPSCRIPT'
+<?php
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$app = require_once __DIR__ . '/../bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+
+$dbDriver = \Illuminate\Support\Facades\DB::getDriverName();
+
+// Handle foreign key constraints based on database driver
+try {
+    if ($dbDriver === 'pgsql') {
+        // PostgreSQL: Use CASCADE to handle foreign keys
+        // Clear groups-related tables first (they reference groups and users)
+        \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE group_audit_logs CASCADE');
+        \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE group_members CASCADE');
+        \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE groups CASCADE');
+        \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE board_games CASCADE');
+        \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE users CASCADE');
+    } elseif ($dbDriver === 'mysql' || $dbDriver === 'mariadb') {
+        // MySQL/MariaDB: Disable foreign key checks
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        \Illuminate\Support\Facades\DB::table('group_audit_logs')->truncate();
+        \Illuminate\Support\Facades\DB::table('group_members')->truncate();
+        \Illuminate\Support\Facades\DB::table('groups')->truncate();
+        \Illuminate\Support\Facades\DB::table('board_games')->truncate();
+        \Illuminate\Support\Facades\DB::table('users')->truncate();
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1');
+    } else {
+        // SQLite or other: Use DB table truncate
+        \Illuminate\Support\Facades\DB::table('group_audit_logs')->truncate();
+        \Illuminate\Support\Facades\DB::table('group_members')->truncate();
+        \Illuminate\Support\Facades\DB::table('groups')->truncate();
+        \Illuminate\Support\Facades\DB::table('board_games')->truncate();
+        \Illuminate\Support\Facades\DB::table('users')->truncate();
+    }
+} catch (\Exception $e) {
+    echo "Warning: Could not clear tables: " . $e->getMessage() . "\n";
+    echo "Continuing with seeding anyway...\n";
+}
+
+echo "BoardGames, Groups, and Users tables cleared successfully\n";
+PHPSCRIPT
+    
+    if [ -n "$DOCKER_COMPOSE" ]; then
+        # Docker setup
+        $DOCKER_COMPOSE exec -T app php "$SCRIPT_PATH"
+    else
+        # Local setup
+        php "$SCRIPT_PATH"
+    fi
+    
+    local EXIT_CODE=$?
+    # Clean up the script
+    rm -f "$SCRIPT_PATH" 2>/dev/null || true
+    
+    if [ $EXIT_CODE -eq 0 ]; then
+        print_success "Tables cleared"
+    else
+        print_error "Failed to clear tables"
+        return 1
+    fi
+}
+
+# Create or update test user
+create_test_user() {
+    local DOCKER_COMPOSE=$1
+    
+    print_step "Creating Test User"
+    print_info "Creating/updating test user (test@example.com / password)..."
+    
+    # Create PHP script in storage directory (should be writable)
+    local SCRIPT_PATH="storage/create_test_user.php"
+    cat > "$SCRIPT_PATH" << 'PHPSCRIPT'
+<?php
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$app = require_once __DIR__ . '/../bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+
+$user = \App\Models\User::firstOrNew(['email' => 'test@example.com']);
+$user->name = 'Test User';
+$user->password = \Illuminate\Support\Facades\Hash::make('password');
+$user->email_verified_at = now();
+$user->save();
+
+echo "Test user created/updated successfully\n";
+echo "Email: test@example.com\n";
+echo "Password: password\n";
+PHPSCRIPT
+    
+    if [ -n "$DOCKER_COMPOSE" ]; then
+        # Docker setup
+        $DOCKER_COMPOSE exec -T app php "$SCRIPT_PATH"
+    else
+        # Local setup
+        php "$SCRIPT_PATH"
+    fi
+    
+    local EXIT_CODE=$?
+    # Clean up the script
+    rm -f "$SCRIPT_PATH" 2>/dev/null || true
+    
+    if [ $EXIT_CODE -eq 0 ]; then
+        print_success "Test user created/updated"
+        print_info "You can now login with: test@example.com / password"
+    else
+        print_error "Failed to create test user"
+    fi
+}
+
 # Run tests (optional)
 run_tests() {
     print_step "Running Tests"
@@ -286,6 +409,39 @@ main() {
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         if ! run_tests; then
             print_warning "Tests failed, but update completed"
+        fi
+    fi
+    
+    # Ask about seeding (after tests, since tests may reset the database)
+    echo ""
+    read -p "Do you want to seed the database with seeders? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        print_step "Seeding Database"
+        # Clear tables before seeding
+        if [ "$UPDATE_METHOD" = "Docker" ]; then
+            DOCKER_COMPOSE_CMD=$(docker_compose_cmd)
+            clear_seed_tables "$DOCKER_COMPOSE_CMD"
+            print_info "Running database seeders..."
+            $DOCKER_COMPOSE_CMD exec -T app php artisan db:seed
+        else
+            clear_seed_tables ""
+            print_info "Running database seeders..."
+            php artisan db:seed
+        fi
+        print_success "Database seeded"
+    fi
+    
+    # Ask about creating test user (after tests and seeding)
+    echo ""
+    read -p "Do you want to create/update a test user? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [ "$UPDATE_METHOD" = "Docker" ]; then
+            DOCKER_COMPOSE_CMD=$(docker_compose_cmd)
+            create_test_user "$DOCKER_COMPOSE_CMD"
+        else
+            create_test_user ""
         fi
     fi
     
