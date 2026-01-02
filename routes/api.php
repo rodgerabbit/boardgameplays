@@ -46,10 +46,7 @@ Route::prefix('v1')->group(function (): void {
             ->middleware(ThrottleGroupCreation::class)
             ->name('api.groups.store');
         Route::get('/groups/{id}', [GroupController::class, 'show'])->name('api.groups.show');
-        Route::put('/groups/{id}', [GroupController::class, 'update'])
-            ->middleware(ThrottleGroupUpdate::class)
-            ->name('api.groups.update');
-        Route::patch('/groups/{id}', [GroupController::class, 'update'])
+        Route::match(['put', 'patch'], '/groups/{id}', [GroupController::class, 'update'])
             ->middleware(ThrottleGroupUpdate::class)
             ->name('api.groups.update');
         Route::delete('/groups/{id}', [GroupController::class, 'destroy'])->name('api.groups.destroy');
