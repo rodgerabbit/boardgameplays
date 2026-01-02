@@ -257,4 +257,3 @@ Add to `routes/api.php`:
 
 1. **Role System**: Using a flexible role-based system for system admins, with group-specific roles stored in the pivot table
 2. **Audit Logging**: JSONB columns for flexible change tracking, separate table for queryability
-3. **Rate Limiting**: Custom middleware using Redis for per-user rate limiting
