@@ -251,4 +251,9 @@ routes/
 
 ## License
 
-MIT License - see LICENSE file for details
+This project is **source-available**, not open source.
+
+It is licensed under the PolyForm Noncommercial License.
+Commercial use is not permitted without a separate license.
+
+If you are interested in commercial use, please contact https://github.com/rodgerabbit
