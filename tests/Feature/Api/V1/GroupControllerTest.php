@@ -116,11 +116,13 @@ class GroupControllerTest extends TestCase
 
         $this->assertDatabaseHas('groups', [
             'friendly_name' => 'Test Gaming Group',
+            'created_by_user_id' => $user->id,
         ]);
 
         // Verify creator is added as admin
         $group = Group::where('friendly_name', 'Test Gaming Group')->first();
         $this->assertNotNull($group);
+        $this->assertEquals($user->id, $group->created_by_user_id);
         $this->assertTrue(
             GroupMember::where('group_id', $group->id)
                 ->where('user_id', $user->id)

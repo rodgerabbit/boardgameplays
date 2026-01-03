@@ -29,6 +29,7 @@ class GroupResource extends JsonResource
             'website_link' => $this->website_link,
             'discord_link' => $this->discord_link,
             'slack_link' => $this->slack_link,
+            'created_by_user_id' => $this->created_by_user_id,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
@@ -46,6 +47,11 @@ class GroupResource extends JsonResource
         // Include audit log count if requested
         if ($request->has('include') && str_contains($request->get('include', ''), 'audit_log_count')) {
             $data['audit_log_count'] = $this->auditLogs()->count();
+        }
+
+        // Include creator if requested
+        if ($request->has('include') && str_contains($request->get('include', ''), 'creator')) {
+            $data['creator'] = new UserResource($this->whenLoaded('creator'));
         }
 
         return $data;

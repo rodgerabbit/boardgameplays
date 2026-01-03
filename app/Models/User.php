@@ -87,6 +87,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the groups created by the user.
+     */
+    public function createdGroups(): HasMany
+    {
+        return $this->hasMany(Group::class, 'created_by_user_id');
+    }
+
+    /**
      * Check if the user is a system admin.
      */
     public function isAdmin(): bool

@@ -56,6 +56,7 @@ class GroupSeeder extends Seeder
         // Get or create some users for group members
         $users = User::all();
         $testUser = User::firstWhere('email', 'test@example.com');
+        $creatorUser = $testUser ?? $users->first();
 
         // Create a local board game meetup group
         $localMeetupGroup = Group::factory()->create([
@@ -65,6 +66,7 @@ class GroupSeeder extends Seeder
             'website_link' => 'https://example.com/local-meetup',
             'discord_link' => 'https://discord.gg/local-meetup',
             'slack_link' => null,
+            'created_by_user_id' => $creatorUser?->id,
         ]);
 
         // Create a competitive gaming group
@@ -75,6 +77,7 @@ class GroupSeeder extends Seeder
             'website_link' => 'https://example.com/competitive-league',
             'discord_link' => 'https://discord.gg/competitive-league',
             'slack_link' => 'https://competitive-league.slack.com',
+            'created_by_user_id' => $creatorUser?->id,
         ]);
 
         // Create a casual family gaming group
@@ -85,6 +88,7 @@ class GroupSeeder extends Seeder
             'website_link' => null,
             'discord_link' => null,
             'slack_link' => null,
+            'created_by_user_id' => $creatorUser?->id,
         ]);
 
         // Create a Eurogames-focused group
@@ -95,6 +99,7 @@ class GroupSeeder extends Seeder
             'website_link' => 'https://example.com/eurogames',
             'discord_link' => 'https://discord.gg/eurogames',
             'slack_link' => null,
+            'created_by_user_id' => $creatorUser?->id,
         ]);
 
         // Create a cooperative games group
@@ -105,6 +110,7 @@ class GroupSeeder extends Seeder
             'website_link' => null,
             'discord_link' => 'https://discord.gg/cooperative-games',
             'slack_link' => null,
+            'created_by_user_id' => $creatorUser?->id,
         ]);
 
         // Add members to groups if users exist

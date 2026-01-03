@@ -28,7 +28,10 @@ class GroupService extends BaseService
     public function createGroup(array $groupData, User $creator): Group
     {
         return DB::transaction(function () use ($groupData, $creator): Group {
-            $group = Group::create($groupData);
+            $group = Group::create([
+                ...$groupData,
+                'created_by_user_id' => $creator->id,
+            ]);
 
             // Add creator as group admin
             GroupMember::create([
