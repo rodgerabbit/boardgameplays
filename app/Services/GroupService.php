@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
+use App\Services\UserSettingsService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -40,6 +41,12 @@ class GroupService extends BaseService
                 'role' => GroupMember::ROLE_GROUP_ADMIN,
                 'joined_at' => now(),
             ]);
+
+            // Set as default group if user doesn't have one yet
+            if ($creator->default_group_id === null) {
+                $userSettingsService = new UserSettingsService();
+                $userSettingsService->setDefaultGroupToFirst($creator);
+            }
 
             return $group;
         });
@@ -90,12 +97,20 @@ class GroupService extends BaseService
      */
     public function addMemberToGroup(Group $group, User $user, string $role = GroupMember::ROLE_GROUP_MEMBER): GroupMember
     {
-        return GroupMember::create([
+        $groupMember = GroupMember::create([
             'group_id' => $group->id,
             'user_id' => $user->id,
             'role' => $role,
             'joined_at' => now(),
         ]);
+
+        // Set as default group if user doesn't have one yet
+        if ($user->default_group_id === null) {
+            $userSettingsService = new UserSettingsService();
+            $userSettingsService->setDefaultGroupToFirst($user);
+        }
+
+        return $groupMember;
     }
 
     /**

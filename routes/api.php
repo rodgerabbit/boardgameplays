@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\ApiAuthController;
 use App\Http\Controllers\Api\V1\BoardGameController;
 use App\Http\Controllers\Api\V1\GroupAuditLogController;
 use App\Http\Controllers\Api\V1\GroupController;
+use App\Http\Controllers\Api\V1\UserSettingsController;
 use App\Http\Middleware\ThrottleGroupCreation;
 use App\Http\Middleware\ThrottleGroupUpdate;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,12 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::post('/auth/logout', [ApiAuthController::class, 'logout'])->name('api.auth.logout');
         Route::get('/auth/me', [ApiAuthController::class, 'me'])->name('api.auth.me');
+    });
+
+    // Protected User Settings API routes
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('/user/settings', [UserSettingsController::class, 'show'])->name('api.user.settings.show');
+        Route::match(['put', 'patch'], '/user/settings', [UserSettingsController::class, 'update'])->name('api.user.settings.update');
     });
 
     // Protected Board Games API routes
