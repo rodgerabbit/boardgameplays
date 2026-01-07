@@ -12,10 +12,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
 /**
- * Controller for handling API-based authentication (token-based).
+ * @group Authentication
  *
- * This controller handles login, registration, and logout for the API
- * using Laravel Sanctum token-based authentication.
+ * APIs for user authentication and token management.
+ * This API uses Laravel Sanctum for token-based authentication.
  */
 class ApiAuthController extends BaseApiController
 {
@@ -28,7 +28,39 @@ class ApiAuthController extends BaseApiController
     }
 
     /**
-     * Handle a login request and return an API token.
+     * Login
+     *
+     * Authenticate a user and return an API token.
+     *
+     * @bodyParam email string required The user's email address. Example: user@example.com
+     * @bodyParam password string required The user's password. Example: password123
+     * @bodyParam remember boolean Whether to remember the user. Example: true
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Login successful",
+     *   "data": {
+     *     "user": {
+     *       "id": 1,
+     *       "name": "John Doe",
+     *       "email": "user@example.com",
+     *       "email_verified_at": "2025-12-17T19:52:30+00:00",
+     *       "created_at": "2025-12-17T19:52:30+00:00",
+     *       "updated_at": "2025-12-17T19:52:30+00:00"
+     *     },
+     *     "token": "1|abcdefghijklmnopqrstuvwxyz1234567890"
+     *   }
+     * }
+     *
+     * @response 401 {
+     *   "success": false,
+     *   "message": "The provided credentials are incorrect.",
+     *   "errors": {
+     *     "email": ["The provided credentials are incorrect."]
+     *   }
+     * }
+     *
+     * @unauthenticated
      */
     public function login(LoginRequest $request): JsonResponse
     {
@@ -56,7 +88,41 @@ class ApiAuthController extends BaseApiController
     }
 
     /**
-     * Handle a registration request and return an API token.
+     * Register
+     *
+     * Register a new user account and return an API token.
+     *
+     * @bodyParam name string required The user's full name. Example: John Doe
+     * @bodyParam email string required The user's email address. Must be unique. Example: user@example.com
+     * @bodyParam password string required The user's password. Must be confirmed. Example: password123
+     * @bodyParam password_confirmation string required The password confirmation. Must match password. Example: password123
+     *
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Registration successful",
+     *   "data": {
+     *     "user": {
+     *       "id": 1,
+     *       "name": "John Doe",
+     *       "email": "user@example.com",
+     *       "email_verified_at": null,
+     *       "created_at": "2025-12-17T19:52:30+00:00",
+     *       "updated_at": "2025-12-17T19:52:30+00:00"
+     *     },
+     *     "token": "1|abcdefghijklmnopqrstuvwxyz1234567890"
+     *   }
+     * }
+     *
+     * @response 422 {
+     *   "success": false,
+     *   "message": "The given data was invalid.",
+     *   "errors": {
+     *     "email": ["The email has already been taken."],
+     *     "password": ["The password confirmation does not match."]
+     *   }
+     * }
+     *
+     * @unauthenticated
      */
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -73,7 +139,22 @@ class ApiAuthController extends BaseApiController
     }
 
     /**
-     * Handle a logout request and revoke the current API token.
+     * Logout
+     *
+     * Revoke the current API token and log out the authenticated user.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Logout successful",
+     *   "data": null
+     * }
+     *
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated"
+     * }
+     *
+     * @authenticated
      */
     public function logout(): JsonResponse
     {
@@ -87,7 +168,31 @@ class ApiAuthController extends BaseApiController
     }
 
     /**
-     * Get the authenticated user.
+     * Get authenticated user
+     *
+     * Retrieve the currently authenticated user's information.
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": null,
+     *   "data": {
+     *     "user": {
+     *       "id": 1,
+     *       "name": "John Doe",
+     *       "email": "user@example.com",
+     *       "email_verified_at": "2025-12-17T19:52:30+00:00",
+     *       "created_at": "2025-12-17T19:52:30+00:00",
+     *       "updated_at": "2025-12-17T19:52:30+00:00"
+     *     }
+     *   }
+     * }
+     *
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated"
+     * }
+     *
+     * @authenticated
      */
     public function me(): JsonResponse
     {
@@ -102,5 +207,6 @@ class ApiAuthController extends BaseApiController
         ], null, 200);
     }
 }
+
 
 

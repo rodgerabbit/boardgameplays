@@ -1,25 +1,25 @@
-name: 'Board Games'
+name: Authentication
 description: |-
 
-  APIs for retrieving board game information.
-  This API provides read-only access to board game data. No write operations are available.
+  APIs for user authentication and token management.
+  This API uses Laravel Sanctum for token-based authentication.
 endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: api/v1/board-games
+      - POST
+    uri: api/v1/auth/login
     metadata:
       custom: []
-      groupName: 'Board Games'
+      groupName: Authentication
       groupDescription: |-
 
-        APIs for retrieving board game information.
-        This API provides read-only access to board game data. No write operations are available.
+        APIs for user authentication and token management.
+        This API uses Laravel Sanctum for token-based authentication.
       subgroup: ''
       subgroupDescription: ''
-      title: 'List all board games'
-      description: 'Get a paginated list of all board games in the system.'
+      title: Login
+      description: 'Authenticate a user and return an API token.'
       authenticated: false
       deprecated: false
     headers:
@@ -27,22 +27,46 @@ endpoints:
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
-    queryParameters:
-      per_page:
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      email:
         custom: []
-        name: per_page
-        description: 'The number of items per page. Maximum 100. Default: 15.'
-        required: false
-        example: 20
-        type: integer
+        name: email
+        description: "The user's email address."
+        required: true
+        example: user@example.com
+        type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanQueryParameters:
-      per_page: 20
-    bodyParameters: []
-    cleanBodyParameters: []
+      password:
+        custom: []
+        name: password
+        description: "The user's password."
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      remember:
+        custom: []
+        name: remember
+        description: 'Whether to remember the user.'
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      email: user@example.com
+      password: password123
+      remember: true
     fileParameters: []
     responses:
       -
@@ -50,37 +74,31 @@ endpoints:
         status: 200
         content: |-
           {
-            "data": [
-              {
+            "success": true,
+            "message": "Login successful",
+            "data": {
+              "user": {
                 "id": 1,
-                "name": "Catan",
-                "description": "Players try to be the dominant force on the island of Catan by building settlements, cities, and roads.",
-                "min_players": 3,
-                "max_players": 4,
-                "playing_time_minutes": 90,
-                "year_published": 1995,
-                "publisher": "Catan Studio",
-                "designer": "Klaus Teuber",
-                "image_url": "https://example.com/catan.jpg",
-                "bgg_id": "13",
+                "name": "John Doe",
+                "email": "user@example.com",
+                "email_verified_at": "2025-12-17T19:52:30+00:00",
                 "created_at": "2025-12-17T19:52:30+00:00",
                 "updated_at": "2025-12-17T19:52:30+00:00"
-              }
-            ],
-            "links": {
-              "first": "http://localhost:8080/api/v1/board-games?page=1",
-              "last": "http://localhost:8080/api/v1/board-games?page=10",
-              "prev": null,
-              "next": "http://localhost:8080/api/v1/board-games?page=2"
-            },
-            "meta": {
-              "current_page": 1,
-              "from": 1,
-              "last_page": 10,
-              "path": "http://localhost:8080/api/v1/board-games",
-              "per_page": 15,
-              "to": 15,
-              "total": 150
+              },
+              "token": "1|abcdefghijklmnopqrstuvwxyz1234567890"
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: |-
+          {
+            "success": false,
+            "message": "The provided credentials are incorrect.",
+            "errors": {
+              "email": ["The provided credentials are incorrect."]
             }
           }
         headers: []
@@ -93,38 +111,144 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: 'api/v1/board-games/{id}'
+      - POST
+    uri: api/v1/auth/register
     metadata:
       custom: []
-      groupName: 'Board Games'
+      groupName: Authentication
       groupDescription: |-
 
-        APIs for retrieving board game information.
-        This API provides read-only access to board game data. No write operations are available.
+        APIs for user authentication and token management.
+        This API uses Laravel Sanctum for token-based authentication.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get a specific board game'
-      description: 'Retrieve detailed information about a specific board game by its ID.'
+      title: Register
+      description: 'Register a new user account and return an API token.'
       authenticated: false
       deprecated: false
     headers:
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      id:
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
         custom: []
-        name: id
-        description: 'The ID of the board game.'
+        name: name
+        description: "The user's full name."
         required: true
-        example: '1'
+        example: 'John Doe'
         type: string
         enumValues: []
         exampleWasSpecified: true
         nullable: false
         deprecated: false
-    cleanUrlParameters:
-      id: '1'
+      email:
+        custom: []
+        name: email
+        description: "The user's email address. Must be unique."
+        required: true
+        example: user@example.com
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password:
+        custom: []
+        name: password
+        description: "The user's password. Must be confirmed."
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      password_confirmation:
+        custom: []
+        name: password_confirmation
+        description: 'The password confirmation. Must match password.'
+        required: true
+        example: password123
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: 'John Doe'
+      email: user@example.com
+      password: password123
+      password_confirmation: password123
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 201
+        content: |-
+          {
+            "success": true,
+            "message": "Registration successful",
+            "data": {
+              "user": {
+                "id": 1,
+                "name": "John Doe",
+                "email": "user@example.com",
+                "email_verified_at": null,
+                "created_at": "2025-12-17T19:52:30+00:00",
+                "updated_at": "2025-12-17T19:52:30+00:00"
+              },
+              "token": "1|abcdefghijklmnopqrstuvwxyz1234567890"
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "success": false,
+            "message": "The given data was invalid.",
+            "errors": {
+              "email": ["The email has already been taken."],
+              "password": ["The password confirmation does not match."]
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/auth/logout
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: |-
+
+        APIs for user authentication and token management.
+        This API uses Laravel Sanctum for token-based authentication.
+      subgroup: ''
+      subgroupDescription: ''
+      title: Logout
+      description: 'Revoke the current API token and log out the authenticated user.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -136,35 +260,95 @@ endpoints:
         status: 200
         content: |-
           {
+            "success": true,
+            "message": "Logout successful",
+            "data": null
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: |-
+          {
+            "success": false,
+            "message": "Unauthenticated"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/auth/me
+    metadata:
+      custom: []
+      groupName: Authentication
+      groupDescription: |-
+
+        APIs for user authentication and token management.
+        This API uses Laravel Sanctum for token-based authentication.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get authenticated user'
+      description: "Retrieve the currently authenticated user's information."
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": null,
             "data": {
-              "id": 1,
-              "name": "Catan",
-              "description": "Players try to be the dominant force on the island of Catan by building settlements, cities, and roads.",
-              "min_players": 3,
-              "max_players": 4,
-              "playing_time_minutes": 90,
-              "year_published": 1995,
-              "publisher": "Catan Studio",
-              "designer": "Klaus Teuber",
-              "image_url": "https://example.com/catan.jpg",
-              "bgg_id": "13",
-              "created_at": "2025-12-17T19:52:30+00:00",
-              "updated_at": "2025-12-17T19:52:30+00:00"
+              "user": {
+                "id": 1,
+                "name": "John Doe",
+                "email": "user@example.com",
+                "email_verified_at": "2025-12-17T19:52:30+00:00",
+                "created_at": "2025-12-17T19:52:30+00:00",
+                "updated_at": "2025-12-17T19:52:30+00:00"
+              }
             }
           }
         headers: []
         description: ''
       -
         custom: []
-        status: 404
+        status: 401
         content: |-
           {
-            "message": "Board game not found"
+            "success": false,
+            "message": "Unauthenticated"
           }
         headers: []
         description: ''
     responseFields: []
-    auth: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
     controller: null
     method: null
     route: null

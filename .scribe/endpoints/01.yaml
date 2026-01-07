@@ -1,0 +1,183 @@
+name: 'User Settings'
+description: |-
+
+  APIs for managing user settings.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/user/settings
+    metadata:
+      custom: []
+      groupName: 'User Settings'
+      groupDescription: |-
+
+        APIs for managing user settings.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get user settings'
+      description: |-
+        Retrieve the authenticated user's settings including default group,
+        theme preference, and play notification delay.
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": null,
+            "data": {
+              "default_group_id": 1,
+              "effective_default_group_id": 1,
+              "theme_preference": "system",
+              "play_notification_delay_hours": 0
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: |-
+          {
+            "success": false,
+            "message": "Unauthenticated"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PUT
+      - PATCH
+    uri: api/v1/user/settings
+    metadata:
+      custom: []
+      groupName: 'User Settings'
+      groupDescription: |-
+
+        APIs for managing user settings.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update user settings'
+      description: "Update one or more of the authenticated user's settings. Only provided fields will be updated."
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      default_group_id:
+        custom: []
+        name: default_group_id
+        description: "nullable The ID of the user's default group. Must be a group the user is a member of."
+        required: false
+        example: 1
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      theme_preference:
+        custom: []
+        name: theme_preference
+        description: "nullable The user's theme preference. Must be one of: light, dark, system."
+        required: false
+        example: dark
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+      play_notification_delay_hours:
+        custom: []
+        name: play_notification_delay_hours
+        description: 'nullable The delay in hours before sending play notifications. Must be between 0 and 4.'
+        required: false
+        example: 2
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
+    cleanBodyParameters:
+      default_group_id: 1
+      theme_preference: dark
+      play_notification_delay_hours: 2
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "success": true,
+            "message": "Settings updated successfully.",
+            "data": {
+              "default_group_id": 1,
+              "effective_default_group_id": 1,
+              "theme_preference": "dark",
+              "play_notification_delay_hours": 2
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 401
+        content: |-
+          {
+            "success": false,
+            "message": "Unauthenticated"
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 422
+        content: |-
+          {
+            "success": false,
+            "message": "The selected group does not exist or you are not a member of it.",
+            "errors": {
+              "default_group_id": ["The selected group does not exist or you are not a member of it."]
+            }
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

@@ -63,6 +63,8 @@ class BoardGameController extends BaseApiController
      *   }
      * }
      *
+     * @authenticated
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -111,6 +113,8 @@ class BoardGameController extends BaseApiController
      * @response 404 {
      *   "message": "Board game not found"
      * }
+     *
+     * @authenticated
      *
      * @param string $id
      * @return JsonResponse

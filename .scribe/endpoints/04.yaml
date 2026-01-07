@@ -1,0 +1,158 @@
+name: 'Group Audit Logs'
+description: |-
+
+  APIs for viewing group audit logs.
+endpoints:
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/groups/{id}/audit-logs'
+    metadata:
+      custom: []
+      groupName: 'Group Audit Logs'
+      groupDescription: |-
+
+        APIs for viewing group audit logs.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Get audit logs for a group'
+      description: 'Retrieve audit logs for a specific group. Only group admins and system admins can view.'
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the group.'
+        required: true
+        example: '1'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: '1'
+    queryParameters:
+      per_page:
+        custom: []
+        name: per_page
+        description: 'The number of items per page. Maximum 100. Default: 15.'
+        required: false
+        example: 20
+        type: integer
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+      actions:
+        custom: []
+        name: actions
+        description: 'Comma-separated list of actions to filter by. Available actions: created, updated, deleted, restored.'
+        required: false
+        example: 'created,updated'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
+    cleanQueryParameters:
+      per_page: 20
+      actions: 'created,updated'
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |-
+          {
+            "data": [
+              {
+                "id": 1,
+                "action": "created",
+                "changes": null,
+                "metadata": {
+                  "friendly_name": "My Gaming Group"
+                },
+                "user": {
+                  "id": 1,
+                  "name": "John Doe",
+                  "email": "user@example.com",
+                  "email_verified_at": "2025-12-17T19:52:30+00:00",
+                  "created_at": "2025-12-17T19:52:30+00:00",
+                  "updated_at": "2025-12-17T19:52:30+00:00"
+                },
+                "created_at": "2025-12-17T19:52:30+00:00"
+              },
+              {
+                "id": 2,
+                "action": "updated",
+                "changes": {
+                  "friendly_name": {
+                    "before": "My Gaming Group",
+                    "after": "My Updated Gaming Group"
+                  }
+                },
+                "metadata": null,
+                "user": {
+                  "id": 1,
+                  "name": "John Doe",
+                  "email": "user@example.com",
+                  "email_verified_at": "2025-12-17T19:52:30+00:00",
+                  "created_at": "2025-12-17T19:52:30+00:00",
+                  "updated_at": "2025-12-17T19:52:30+00:00"
+                },
+                "created_at": "2025-12-17T20:00:00+00:00"
+              }
+            ],
+            "links": {
+              "first": "http://localhost/api/v1/groups/1/audit-logs?page=1",
+              "last": "http://localhost/api/v1/groups/1/audit-logs?page=5",
+              "prev": null,
+              "next": "http://localhost/api/v1/groups/1/audit-logs?page=2"
+            },
+            "meta": {
+              "current_page": 1,
+              "from": 1,
+              "last_page": 5,
+              "path": "http://localhost/api/v1/groups/1/audit-logs",
+              "per_page": 15,
+              "to": 15,
+              "total": 75
+            }
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 403
+        content: |-
+          {
+            "message": "You do not have permission to view audit logs for this group."
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+            "message": "No query results for model [App\\Models\\Group] 1"
+          }
+        headers: []
+        description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null

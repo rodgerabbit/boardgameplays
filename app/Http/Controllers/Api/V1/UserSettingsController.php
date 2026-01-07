@@ -26,12 +26,28 @@ class UserSettingsController extends BaseApiController
     }
 
     /**
-     * Get the authenticated user's settings.
+     * Get user settings
      *
-     * Retrieve the current user's settings including default group,
+     * Retrieve the authenticated user's settings including default group,
      * theme preference, and play notification delay.
      *
-     * @return JsonResponse
+     * @response 200 {
+     *   "success": true,
+     *   "message": null,
+     *   "data": {
+     *     "default_group_id": 1,
+     *     "effective_default_group_id": 1,
+     *     "theme_preference": "system",
+     *     "play_notification_delay_hours": 0
+     *   }
+     * }
+     *
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated"
+     * }
+     *
+     * @authenticated
      */
     public function show(): JsonResponse
     {
@@ -45,12 +61,39 @@ class UserSettingsController extends BaseApiController
     }
 
     /**
-     * Update the authenticated user's settings.
+     * Update user settings
      *
-     * Update one or more of the user's settings. Only provided fields will be updated.
+     * Update one or more of the authenticated user's settings. Only provided fields will be updated.
      *
-     * @param UpdateUserSettingsRequest $request
-     * @return JsonResponse
+     * @bodyParam default_group_id integer nullable The ID of the user's default group. Must be a group the user is a member of. Example: 1
+     * @bodyParam theme_preference string nullable The user's theme preference. Must be one of: light, dark, system. Example: dark
+     * @bodyParam play_notification_delay_hours integer nullable The delay in hours before sending play notifications. Must be between 0 and 4. Example: 2
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Settings updated successfully.",
+     *   "data": {
+     *     "default_group_id": 1,
+     *     "effective_default_group_id": 1,
+     *     "theme_preference": "dark",
+     *     "play_notification_delay_hours": 2
+     *   }
+     * }
+     *
+     * @response 401 {
+     *   "success": false,
+     *   "message": "Unauthenticated"
+     * }
+     *
+     * @response 422 {
+     *   "success": false,
+     *   "message": "The selected group does not exist or you are not a member of it.",
+     *   "errors": {
+     *     "default_group_id": ["The selected group does not exist or you are not a member of it."]
+     *   }
+     * }
+     *
+     * @authenticated
      */
     public function update(UpdateUserSettingsRequest $request): JsonResponse
     {
