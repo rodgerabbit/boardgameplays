@@ -44,6 +44,8 @@ class User extends Authenticatable
         'theme_preference',
         'play_notification_delay_hours',
         'board_game_geek_username',
+        'board_game_geek_password_encrypted',
+        'sync_plays_to_board_game_geek',
     ];
 
     /**

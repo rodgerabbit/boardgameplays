@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\V1\AdminGroupController;
 use App\Http\Controllers\Api\V1\ApiAuthController;
 use App\Http\Controllers\Api\V1\BoardGameController;
+use App\Http\Controllers\Api\V1\BoardGamePlayController;
 use App\Http\Controllers\Api\V1\GroupAuditLogController;
 use App\Http\Controllers\Api\V1\GroupController;
 use App\Http\Controllers\Api\V1\UserSettingsController;
@@ -44,6 +45,15 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/board-games', [BoardGameController::class, 'index'])->name('api.board-games.index');
         Route::get('/board-games/{id}', [BoardGameController::class, 'show'])->name('api.board-games.show');
+    });
+
+    // Protected Board Game Plays API routes
+    Route::middleware('auth:sanctum')->group(function (): void {
+        Route::get('/board-game-plays', [BoardGamePlayController::class, 'index'])->name('api.board-game-plays.index');
+        Route::post('/board-game-plays', [BoardGamePlayController::class, 'store'])->name('api.board-game-plays.store');
+        Route::get('/board-game-plays/{id}', [BoardGamePlayController::class, 'show'])->name('api.board-game-plays.show');
+        Route::match(['put', 'patch'], '/board-game-plays/{id}', [BoardGamePlayController::class, 'update'])->name('api.board-game-plays.update');
+        Route::delete('/board-game-plays/{id}', [BoardGamePlayController::class, 'destroy'])->name('api.board-game-plays.destroy');
     });
 
     // Protected Groups API routes

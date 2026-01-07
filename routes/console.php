@@ -12,3 +12,6 @@ Artisan::command('inspire', function () {
 
 // Schedule the hard delete expired groups command to run daily
 Schedule::command('groups:hard-delete-expired')->daily();
+
+// Schedule the BGG plays sync command to run daily at 4 AM
+Schedule::command('bgg:sync-plays')->dailyAt('04:00');

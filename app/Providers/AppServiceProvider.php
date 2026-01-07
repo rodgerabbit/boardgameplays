@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\BoardGamePlay;
 use App\Models\Group;
+use App\Policies\BoardGamePlayPolicy;
 use App\Policies\GroupPolicy;
 use App\Services\BoardGameGeekApiClient;
 use App\Services\BoardGameGeekSyncService;
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Group::class => GroupPolicy::class,
+        BoardGamePlay::class => BoardGamePlayPolicy::class,
     ];
 
     /**
@@ -54,6 +57,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Register GroupAuditLogService
         $this->app->bind(GroupAuditLogService::class);
+
+        // Register BoardGamePlayService
+        $this->app->bind(\App\Services\BoardGamePlayService::class);
     }
 
     /**

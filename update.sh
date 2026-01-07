@@ -245,7 +245,7 @@ update_local() {
 clear_seed_tables() {
     local DOCKER_COMPOSE=$1
     
-    print_info "Clearing BoardGames, Groups, and Users tables..."
+    print_info "Clearing BoardGamePlays, BoardGames, Groups, and Users tables..."
     
     # Create PHP script to clear tables
     local SCRIPT_PATH="storage/clear_seed_tables.php"
@@ -264,7 +264,11 @@ $dbDriver = \Illuminate\Support\Facades\DB::getDriverName();
 try {
     if ($dbDriver === 'pgsql') {
         // PostgreSQL: Use CASCADE to handle foreign keys
-        // Clear groups-related tables first (they reference groups and users)
+        // Clear board game plays first (they reference board games, groups, and users)
+        \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE board_game_play_expansions CASCADE');
+        \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE board_game_play_players CASCADE');
+        \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE board_game_plays CASCADE');
+        // Clear groups-related tables (they reference groups and users)
         \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE group_audit_logs CASCADE');
         \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE group_members CASCADE');
         \Illuminate\Support\Facades\DB::statement('TRUNCATE TABLE groups CASCADE');
@@ -273,6 +277,9 @@ try {
     } elseif ($dbDriver === 'mysql' || $dbDriver === 'mariadb') {
         // MySQL/MariaDB: Disable foreign key checks
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        \Illuminate\Support\Facades\DB::table('board_game_play_expansions')->truncate();
+        \Illuminate\Support\Facades\DB::table('board_game_play_players')->truncate();
+        \Illuminate\Support\Facades\DB::table('board_game_plays')->truncate();
         \Illuminate\Support\Facades\DB::table('group_audit_logs')->truncate();
         \Illuminate\Support\Facades\DB::table('group_members')->truncate();
         \Illuminate\Support\Facades\DB::table('groups')->truncate();
@@ -281,6 +288,9 @@ try {
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1');
     } else {
         // SQLite or other: Use DB table truncate
+        \Illuminate\Support\Facades\DB::table('board_game_play_expansions')->truncate();
+        \Illuminate\Support\Facades\DB::table('board_game_play_players')->truncate();
+        \Illuminate\Support\Facades\DB::table('board_game_plays')->truncate();
         \Illuminate\Support\Facades\DB::table('group_audit_logs')->truncate();
         \Illuminate\Support\Facades\DB::table('group_members')->truncate();
         \Illuminate\Support\Facades\DB::table('groups')->truncate();
@@ -292,7 +302,7 @@ try {
     echo "Continuing with seeding anyway...\n";
 }
 
-echo "BoardGames, Groups, and Users tables cleared successfully\n";
+echo "BoardGamePlays, BoardGames, Groups, and Users tables cleared successfully\n";
 PHPSCRIPT
     
     if [ -n "$DOCKER_COMPOSE" ]; then

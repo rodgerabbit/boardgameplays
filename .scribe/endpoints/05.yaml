@@ -1,23 +1,23 @@
-name: 'Admin - Groups'
+name: 'Group Audit Logs'
 description: |-
 
-  Admin APIs for managing groups (system admin only).
+  APIs for viewing group audit logs.
 endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: 'api/v1/admin/groups/{id}/restore'
+      - GET
+    uri: 'api/v1/groups/{id}/audit-logs'
     metadata:
       custom: []
-      groupName: 'Admin - Groups'
+      groupName: 'Group Audit Logs'
       groupDescription: |-
 
-        Admin APIs for managing groups (system admin only).
+        APIs for viewing group audit logs.
       subgroup: ''
       subgroupDescription: ''
-      title: 'Restore a soft-deleted group'
-      description: 'Restore a group that was previously soft-deleted. Only system admins can restore groups.'
+      title: 'Get audit logs for a group'
+      description: 'Retrieve audit logs for a specific group. Only group admins and system admins can view.'
       authenticated: true
       deprecated: false
     headers:
@@ -28,7 +28,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the group to restore.'
+        description: 'The ID of the group.'
         required: true
         example: '1'
         type: string
@@ -38,83 +38,6 @@ endpoints:
         deprecated: false
     cleanUrlParameters:
       id: '1'
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 200
-        content: |-
-          {
-            "success": true,
-            "message": "Group restored successfully.",
-            "data": {
-              "id": 1,
-              "friendly_name": "My Gaming Group",
-              "description": "A group for board game enthusiasts",
-              "group_location": "New York, NY",
-              "website_link": "https://example.com",
-              "discord_link": "https://discord.gg/example",
-              "slack_link": null,
-              "created_by_user_id": 1,
-              "created_at": "2025-12-17T19:52:30+00:00",
-              "updated_at": "2025-12-17T19:52:30+00:00"
-            }
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 403
-        content: |-
-          {
-            "message": "Only system administrators can access this endpoint."
-          }
-        headers: []
-        description: ''
-      -
-        custom: []
-        status: 404
-        content: |-
-          {
-            "message": "No query results for model [App\\Models\\Group] 1"
-          }
-        headers: []
-        description: ''
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/admin/groups/deleted
-    metadata:
-      custom: []
-      groupName: 'Admin - Groups'
-      groupDescription: |-
-
-        Admin APIs for managing groups (system admin only).
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'List soft-deleted groups'
-      description: 'Get a paginated list of all soft-deleted groups. Only system admins can view deleted groups.'
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
     queryParameters:
       per_page:
         custom: []
@@ -127,8 +50,20 @@ endpoints:
         exampleWasSpecified: true
         nullable: false
         deprecated: false
+      actions:
+        custom: []
+        name: actions
+        description: 'Comma-separated list of actions to filter by. Available actions: created, updated, deleted, restored.'
+        required: false
+        example: 'created,updated'
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: false
+        deprecated: false
     cleanQueryParameters:
       per_page: 20
+      actions: 'created,updated'
     bodyParameters: []
     cleanBodyParameters: []
     fileParameters: []
@@ -141,31 +76,56 @@ endpoints:
             "data": [
               {
                 "id": 1,
-                "friendly_name": "My Gaming Group",
-                "description": "A group for board game enthusiasts",
-                "group_location": "New York, NY",
-                "website_link": "https://example.com",
-                "discord_link": "https://discord.gg/example",
-                "slack_link": null,
-                "created_by_user_id": 1,
-                "created_at": "2025-12-17T19:52:30+00:00",
-                "updated_at": "2025-12-17T19:52:30+00:00"
+                "action": "created",
+                "changes": null,
+                "metadata": {
+                  "friendly_name": "My Gaming Group"
+                },
+                "user": {
+                  "id": 1,
+                  "name": "John Doe",
+                  "email": "user@example.com",
+                  "email_verified_at": "2025-12-17T19:52:30+00:00",
+                  "created_at": "2025-12-17T19:52:30+00:00",
+                  "updated_at": "2025-12-17T19:52:30+00:00"
+                },
+                "created_at": "2025-12-17T19:52:30+00:00"
+              },
+              {
+                "id": 2,
+                "action": "updated",
+                "changes": {
+                  "friendly_name": {
+                    "before": "My Gaming Group",
+                    "after": "My Updated Gaming Group"
+                  }
+                },
+                "metadata": null,
+                "user": {
+                  "id": 1,
+                  "name": "John Doe",
+                  "email": "user@example.com",
+                  "email_verified_at": "2025-12-17T19:52:30+00:00",
+                  "created_at": "2025-12-17T19:52:30+00:00",
+                  "updated_at": "2025-12-17T19:52:30+00:00"
+                },
+                "created_at": "2025-12-17T20:00:00+00:00"
               }
             ],
             "links": {
-              "first": "http://localhost/api/v1/admin/groups/deleted?page=1",
-              "last": "http://localhost/api/v1/admin/groups/deleted?page=3",
+              "first": "http://localhost/api/v1/groups/1/audit-logs?page=1",
+              "last": "http://localhost/api/v1/groups/1/audit-logs?page=5",
               "prev": null,
-              "next": "http://localhost/api/v1/admin/groups/deleted?page=2"
+              "next": "http://localhost/api/v1/groups/1/audit-logs?page=2"
             },
             "meta": {
               "current_page": 1,
               "from": 1,
-              "last_page": 3,
-              "path": "http://localhost/api/v1/admin/groups/deleted",
+              "last_page": 5,
+              "path": "http://localhost/api/v1/groups/1/audit-logs",
               "per_page": 15,
               "to": 15,
-              "total": 45
+              "total": 75
             }
           }
         headers: []
@@ -175,7 +135,16 @@ endpoints:
         status: 403
         content: |-
           {
-            "message": "Only system administrators can access this endpoint."
+            "message": "You do not have permission to view audit logs for this group."
+          }
+        headers: []
+        description: ''
+      -
+        custom: []
+        status: 404
+        content: |-
+          {
+            "message": "No query results for model [App\\Models\\Group] 1"
           }
         headers: []
         description: ''

@@ -72,6 +72,28 @@ return [
     'concurrency' => [
         'max_concurrent_requests' => env('BOARDGAMEGEEK_MAX_CONCURRENT_REQUESTS', 1),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Generic BGG Credentials
+    |--------------------------------------------------------------------------
+    |
+    | Generic credentials for syncing plays to BoardGameGeek.com.
+    | These can be used as a fallback when user-specific credentials are not available.
+    |
+    */
+    'generic_username' => env('BOARDGAMEGEEK_GENERIC_USERNAME'),
+    'generic_password' => env('BOARDGAMEGEEK_GENERIC_PASSWORD'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Play Submission Rate Limiting
+    |--------------------------------------------------------------------------
+    |
+    | Rate limiting for play submission to BGG.
+    |
+    */
+    'play_submission_rate_limit_seconds' => env('BOARDGAMEGEEK_PLAY_SUBMISSION_RATE_LIMIT_SECONDS', 2),
 ];
 
 

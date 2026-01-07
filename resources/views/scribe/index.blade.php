@@ -98,6 +98,28 @@
                             </li>
                                                                         </ul>
                             </ul>
+                    <ul id="tocify-header-board-game-plays" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="board-game-plays">
+                    <a href="#board-game-plays">Board Game Plays</a>
+                </li>
+                                    <ul id="tocify-subheader-board-game-plays" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="board-game-plays-GETapi-v1-board-game-plays">
+                                <a href="#board-game-plays-GETapi-v1-board-game-plays">List board game plays</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="board-game-plays-POSTapi-v1-board-game-plays">
+                                <a href="#board-game-plays-POSTapi-v1-board-game-plays">Create a new board game play</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="board-game-plays-GETapi-v1-board-game-plays--id-">
+                                <a href="#board-game-plays-GETapi-v1-board-game-plays--id-">Get a specific board game play</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="board-game-plays-PUTapi-v1-board-game-plays--id-">
+                                <a href="#board-game-plays-PUTapi-v1-board-game-plays--id-">Update a board game play</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="board-game-plays-DELETEapi-v1-board-game-plays--id-">
+                                <a href="#board-game-plays-DELETEapi-v1-board-game-plays--id-">Delete a board game play</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-board-games" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="board-games">
                     <a href="#board-games">Board Games</a>
@@ -1283,6 +1305,1524 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Example: <code>application/json</code></p>
             </div>
                         </form>
+
+                <h1 id="board-game-plays">Board Game Plays</h1>
+
+    <p>APIs for managing board game plays.</p>
+
+                                <h2 id="board-game-plays-GETapi-v1-board-game-plays">List board game plays</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Get a paginated list of board game plays. Only plays the user has access to will be returned.</p>
+
+<span id="example-requests-GETapi-v1-board-game-plays">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/board-game-plays?per_page=20&amp;include=board_game%2Cplayers&amp;group_id=1&amp;board_game_id=1&amp;source=website" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/board-game-plays"
+);
+
+const params = {
+    "per_page": "20",
+    "include": "board_game,players",
+    "group_id": "1",
+    "board_game_id": "1",
+    "source": "website",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-board-game-plays">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 1,
+            &quot;board_game_id&quot;: 1,
+            &quot;group_id&quot;: 1,
+            &quot;created_by_user_id&quot;: 1,
+            &quot;played_at&quot;: &quot;2025-01-07&quot;,
+            &quot;location&quot;: &quot;Home&quot;,
+            &quot;comment&quot;: &quot;Great game!&quot;,
+            &quot;game_length_minutes&quot;: 90,
+            &quot;source&quot;: &quot;website&quot;,
+            &quot;created_at&quot;: &quot;2025-01-07T20:22:14+00:00&quot;,
+            &quot;updated_at&quot;: &quot;2025-01-07T20:22:14+00:00&quot;
+        }
+    ],
+    &quot;links&quot;: {
+        &quot;first&quot;: &quot;http://localhost/api/v1/board-game-plays?page=1&quot;,
+        &quot;last&quot;: &quot;http://localhost/api/v1/board-game-plays?page=10&quot;,
+        &quot;prev&quot;: null,
+        &quot;next&quot;: &quot;http://localhost/api/v1/board-game-plays?page=2&quot;
+    },
+    &quot;meta&quot;: {
+        &quot;current_page&quot;: 1,
+        &quot;from&quot;: 1,
+        &quot;last_page&quot;: 10,
+        &quot;path&quot;: &quot;http://localhost/api/v1/board-game-plays&quot;,
+        &quot;per_page&quot;: 15,
+        &quot;to&quot;: 15,
+        &quot;total&quot;: 150
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-board-game-plays" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-board-game-plays"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-board-game-plays"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-board-game-plays" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-board-game-plays">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-board-game-plays" data-method="GET"
+      data-path="api/v1/board-game-plays"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-board-game-plays', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-board-game-plays"
+                    onclick="tryItOut('GETapi-v1-board-game-plays');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-board-game-plays"
+                    onclick="cancelTryOut('GETapi-v1-board-game-plays');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-board-game-plays"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/board-game-plays</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-board-game-plays"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-board-game-plays"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-board-game-plays"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="per_page"                data-endpoint="GETapi-v1-board-game-plays"
+               value="20"
+               data-component="query">
+    <br>
+<p>The number of items per page. Maximum 100. Default: 15. Example: <code>20</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>include</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="include"                data-endpoint="GETapi-v1-board-game-plays"
+               value="board_game,players"
+               data-component="query">
+    <br>
+<p>Comma-separated list of relationships to include (board_game, group, creator, players, expansions). Example: <code>board_game,players</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>group_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="group_id"                data-endpoint="GETapi-v1-board-game-plays"
+               value="1"
+               data-component="query">
+    <br>
+<p>Filter by group ID. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>board_game_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="board_game_id"                data-endpoint="GETapi-v1-board-game-plays"
+               value="1"
+               data-component="query">
+    <br>
+<p>Filter by board game ID. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>source</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="source"                data-endpoint="GETapi-v1-board-game-plays"
+               value="website"
+               data-component="query">
+    <br>
+<p>Filter by source (website, boardgamegeek). Example: <code>website</code></p>
+            </div>
+                </form>
+
+                    <h2 id="board-game-plays-POSTapi-v1-board-game-plays">Create a new board game play</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Create a new board game play record with players and optional expansions.</p>
+
+<span id="example-requests-POSTapi-v1-board-game-plays">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost/api/v1/board-game-plays" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"board_game_id\": 1,
+    \"group_id\": 1,
+    \"played_at\": \"2025-01-07\",
+    \"location\": \"Home\",
+    \"comment\": \"Great game!\",
+    \"game_length_minutes\": 90,
+    \"source\": \"website\",
+    \"expansions\": [
+        2,
+        3
+    ],
+    \"players\": [
+        {
+            \"user_id\": 1,
+            \"score\": 100,
+            \"is_winner\": true
+        }
+    ],
+    \"sync_to_board_game_geek\": false,
+    \"board_game_geek_username\": \"b\",
+    \"board_game_geek_password\": \"architecto\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/board-game-plays"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "board_game_id": 1,
+    "group_id": 1,
+    "played_at": "2025-01-07",
+    "location": "Home",
+    "comment": "Great game!",
+    "game_length_minutes": 90,
+    "source": "website",
+    "expansions": [
+        2,
+        3
+    ],
+    "players": [
+        {
+            "user_id": 1,
+            "score": 100,
+            "is_winner": true
+        }
+    ],
+    "sync_to_board_game_geek": false,
+    "board_game_geek_username": "b",
+    "board_game_geek_password": "architecto"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-board-game-plays">
+            <blockquote>
+            <p>Example response (201):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Board game play created successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;board_game_id&quot;: 1,
+        &quot;played_at&quot;: &quot;2025-01-07&quot;,
+        &quot;location&quot;: &quot;Home&quot;,
+        &quot;comment&quot;: &quot;Great game!&quot;,
+        &quot;game_length_minutes&quot;: 90,
+        &quot;source&quot;: &quot;website&quot;,
+        &quot;created_at&quot;: &quot;2025-01-07T20:22:14+00:00&quot;,
+        &quot;updated_at&quot;: &quot;2025-01-07T20:22:14+00:00&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The given data was invalid.&quot;,
+    &quot;errors&quot;: {
+        &quot;board_game_id&quot;: [
+            &quot;The board game must not be an expansion.&quot;
+        ],
+        &quot;players&quot;: [
+            &quot;The players field is required.&quot;
+        ]
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-POSTapi-v1-board-game-plays" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-board-game-plays"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-board-game-plays"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-board-game-plays" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-board-game-plays">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-board-game-plays" data-method="POST"
+      data-path="api/v1/board-game-plays"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-board-game-plays', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-board-game-plays"
+                    onclick="tryItOut('POSTapi-v1-board-game-plays');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-board-game-plays"
+                    onclick="cancelTryOut('POSTapi-v1-board-game-plays');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-board-game-plays"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/board-game-plays</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-board-game-plays"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>board_game_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="board_game_id"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="1"
+               data-component="body">
+    <br>
+<p>The ID of the board game (must be a base game, not expansion). Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>group_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="group_id"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="1"
+               data-component="body">
+    <br>
+<p>The ID of the group. If not provided, uses user's default group. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>played_at</code></b>&nbsp;&nbsp;
+<small>date</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="played_at"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="2025-01-07"
+               data-component="body">
+    <br>
+<p>The date the game was played. Example: <code>2025-01-07</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>location</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="location"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="Home"
+               data-component="body">
+    <br>
+<p>The location where the game was played. Example: <code>Home</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>comment</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="comment"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="Great game!"
+               data-component="body">
+    <br>
+<p>Optional comment about the play. Example: <code>Great game!</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>game_length_minutes</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="game_length_minutes"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="90"
+               data-component="body">
+    <br>
+<p>Optional game length in minutes. Example: <code>90</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>source</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="source"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="website"
+               data-component="body">
+    <br>
+<p>The source of the play (website, boardgamegeek). Example: <code>website</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>expansions</code></b>&nbsp;&nbsp;
+<small>string[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="expansions[0]"                data-endpoint="POSTapi-v1-board-game-plays"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="expansions[1]"                data-endpoint="POSTapi-v1-board-game-plays"
+               data-component="body">
+    <br>
+<p>Optional array of expansion IDs.</p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+        <details>
+            <summary style="padding-bottom: 10px;">
+                <b style="line-height: 2;"><code>players</code></b>&nbsp;&nbsp;
+<small>string[]</small>&nbsp;
+ &nbsp;
+ &nbsp;
+<br>
+<p>Array of players (1-30 players).</p>
+            </summary>
+                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>user_id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="players.0.user_id"                data-endpoint="POSTapi-v1-board-game-plays"
+               value=""
+               data-component="body">
+    <br>
+<p>This field is required when none of <code>players.<em>.board_game_geek_username</code> and <code>players.</em>.guest_name</code> are present. The <code>id</code> of an existing record in the users table.</p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>board_game_geek_username</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="players.0.board_game_geek_username"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="n"
+               data-component="body">
+    <br>
+<p>This field is required when none of <code>players.<em>.user_id</code> and <code>players.</em>.guest_name</code> are present. Must not be greater than 255 characters. Example: <code>n</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>guest_name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="players.0.guest_name"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="g"
+               data-component="body">
+    <br>
+<p>This field is required when none of <code>players.<em>.user_id</code> and <code>players.</em>.board_game_geek_username</code> are present. Must not be greater than 255 characters. Example: <code>g</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>score</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="players.0.score"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="4326.41688"
+               data-component="body">
+    <br>
+<p>Example: <code>4326.41688</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>is_winner</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <label data-endpoint="POSTapi-v1-board-game-plays" style="display: none">
+            <input type="radio" name="players.0.is_winner"
+                   value="true"
+                   data-endpoint="POSTapi-v1-board-game-plays"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="POSTapi-v1-board-game-plays" style="display: none">
+            <input type="radio" name="players.0.is_winner"
+                   value="false"
+                   data-endpoint="POSTapi-v1-board-game-plays"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Example: <code>false</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>position</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="players.0.position"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="27"
+               data-component="body">
+    <br>
+<p>Must be at least 1. Example: <code>27</code></p>
+                    </div>
+                                    </details>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>sync_to_board_game_geek</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <label data-endpoint="POSTapi-v1-board-game-plays" style="display: none">
+            <input type="radio" name="sync_to_board_game_geek"
+                   value="true"
+                   data-endpoint="POSTapi-v1-board-game-plays"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="POSTapi-v1-board-game-plays" style="display: none">
+            <input type="radio" name="sync_to_board_game_geek"
+                   value="false"
+                   data-endpoint="POSTapi-v1-board-game-plays"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Whether to sync this play to BGG. Example: <code>false</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>board_game_geek_username</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="board_game_geek_username"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="b"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters. Example: <code>b</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>board_game_geek_password</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="board_game_geek_password"                data-endpoint="POSTapi-v1-board-game-plays"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+        </form>
+
+                    <h2 id="board-game-plays-GETapi-v1-board-game-plays--id-">Get a specific board game play</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Retrieve detailed information about a specific board game play by its ID.</p>
+
+<span id="example-requests-GETapi-v1-board-game-plays--id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost/api/v1/board-game-plays/1?include=board_game%2Cplayers" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/board-game-plays/1"
+);
+
+const params = {
+    "include": "board_game,players",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-board-game-plays--id-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;board_game_id&quot;: 1,
+        &quot;played_at&quot;: &quot;2025-01-07&quot;,
+        &quot;location&quot;: &quot;Home&quot;,
+        &quot;comment&quot;: &quot;Great game!&quot;,
+        &quot;game_length_minutes&quot;: 90,
+        &quot;source&quot;: &quot;website&quot;,
+        &quot;created_at&quot;: &quot;2025-01-07T20:22:14+00:00&quot;,
+        &quot;updated_at&quot;: &quot;2025-01-07T20:22:14+00:00&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (403):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This action is unauthorized.&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Board game play not found&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-board-game-plays--id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-board-game-plays--id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-board-game-plays--id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-board-game-plays--id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-board-game-plays--id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-board-game-plays--id-" data-method="GET"
+      data-path="api/v1/board-game-plays/{id}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-board-game-plays--id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-board-game-plays--id-"
+                    onclick="tryItOut('GETapi-v1-board-game-plays--id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-board-game-plays--id-"
+                    onclick="cancelTryOut('GETapi-v1-board-game-plays--id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-board-game-plays--id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/board-game-plays/{id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-board-game-plays--id-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-board-game-plays--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-board-game-plays--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="GETapi-v1-board-game-plays--id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the board game play. Example: <code>1</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>include</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="include"                data-endpoint="GETapi-v1-board-game-plays--id-"
+               value="board_game,players"
+               data-component="query">
+    <br>
+<p>Comma-separated list of relationships to include (board_game, group, creator, players, expansions). Example: <code>board_game,players</code></p>
+            </div>
+                </form>
+
+                    <h2 id="board-game-plays-PUTapi-v1-board-game-plays--id-">Update a board game play</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Update a board game play's properties.</p>
+
+<span id="example-requests-PUTapi-v1-board-game-plays--id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PUT \
+    "http://localhost/api/v1/board-game-plays/1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"board_game_id\": 1,
+    \"group_id\": 1,
+    \"played_at\": \"2025-01-07\",
+    \"location\": \"Home\",
+    \"comment\": \"Great game!\",
+    \"game_length_minutes\": 90,
+    \"source\": \"website\",
+    \"expansions\": [
+        2,
+        3
+    ],
+    \"players\": [
+        {
+            \"user_id\": 1,
+            \"score\": 100,
+            \"is_winner\": true
+        }
+    ],
+    \"sync_to_board_game_geek\": true,
+    \"board_game_geek_username\": \"g\",
+    \"board_game_geek_password\": \"architecto\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/board-game-plays/1"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "board_game_id": 1,
+    "group_id": 1,
+    "played_at": "2025-01-07",
+    "location": "Home",
+    "comment": "Great game!",
+    "game_length_minutes": 90,
+    "source": "website",
+    "expansions": [
+        2,
+        3
+    ],
+    "players": [
+        {
+            "user_id": 1,
+            "score": 100,
+            "is_winner": true
+        }
+    ],
+    "sync_to_board_game_geek": true,
+    "board_game_geek_username": "g",
+    "board_game_geek_password": "architecto"
+};
+
+fetch(url, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PUTapi-v1-board-game-plays--id-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Board game play updated successfully.&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 1,
+        &quot;board_game_id&quot;: 1,
+        &quot;played_at&quot;: &quot;2025-01-07&quot;,
+        &quot;location&quot;: &quot;Home&quot;,
+        &quot;comment&quot;: &quot;Great game!&quot;,
+        &quot;game_length_minutes&quot;: 90,
+        &quot;source&quot;: &quot;website&quot;,
+        &quot;created_at&quot;: &quot;2025-01-07T20:22:14+00:00&quot;,
+        &quot;updated_at&quot;: &quot;2025-01-07T20:22:30+00:00&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (403):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This action is unauthorized.&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Board game play not found&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-PUTapi-v1-board-game-plays--id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PUTapi-v1-board-game-plays--id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PUTapi-v1-board-game-plays--id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PUTapi-v1-board-game-plays--id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PUTapi-v1-board-game-plays--id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PUTapi-v1-board-game-plays--id-" data-method="PUT"
+      data-path="api/v1/board-game-plays/{id}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PUTapi-v1-board-game-plays--id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PUTapi-v1-board-game-plays--id-"
+                    onclick="tryItOut('PUTapi-v1-board-game-plays--id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PUTapi-v1-board-game-plays--id-"
+                    onclick="cancelTryOut('PUTapi-v1-board-game-plays--id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PUTapi-v1-board-game-plays--id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-darkblue">PUT</small>
+            <b><code>api/v1/board-game-plays/{id}</code></b>
+        </p>
+            <p>
+            <small class="badge badge-purple">PATCH</small>
+            <b><code>api/v1/board-game-plays/{id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the board game play. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>board_game_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="board_game_id"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="1"
+               data-component="body">
+    <br>
+<p>The ID of the board game (must be a base game, not expansion). Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>group_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="group_id"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="1"
+               data-component="body">
+    <br>
+<p>The ID of the group. Example: <code>1</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>played_at</code></b>&nbsp;&nbsp;
+<small>date</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="played_at"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="2025-01-07"
+               data-component="body">
+    <br>
+<p>The date the game was played. Example: <code>2025-01-07</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>location</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="location"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="Home"
+               data-component="body">
+    <br>
+<p>The location where the game was played. Example: <code>Home</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>comment</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="comment"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="Great game!"
+               data-component="body">
+    <br>
+<p>Optional comment about the play. Example: <code>Great game!</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>game_length_minutes</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="game_length_minutes"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="90"
+               data-component="body">
+    <br>
+<p>Optional game length in minutes. Example: <code>90</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>source</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="source"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="website"
+               data-component="body">
+    <br>
+<p>Example: <code>website</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>website</code></li> <li><code>boardgamegeek</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>expansions</code></b>&nbsp;&nbsp;
+<small>string[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="expansions[0]"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="expansions[1]"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               data-component="body">
+    <br>
+<p>Optional array of expansion IDs.</p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+        <details>
+            <summary style="padding-bottom: 10px;">
+                <b style="line-height: 2;"><code>players</code></b>&nbsp;&nbsp;
+<small>string[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+<br>
+<p>Array of players (1-30 players).</p>
+            </summary>
+                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>user_id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="players.0.user_id"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value=""
+               data-component="body">
+    <br>
+<p>This field is required when none of <code>players.<em>.board_game_geek_username</code> and <code>players.</em>.guest_name</code> are present. The <code>id</code> of an existing record in the users table.</p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>board_game_geek_username</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="players.0.board_game_geek_username"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="n"
+               data-component="body">
+    <br>
+<p>This field is required when none of <code>players.<em>.user_id</code> and <code>players.</em>.guest_name</code> are present. Must not be greater than 255 characters. Example: <code>n</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>guest_name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="players.0.guest_name"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="g"
+               data-component="body">
+    <br>
+<p>This field is required when none of <code>players.<em>.user_id</code> and <code>players.</em>.board_game_geek_username</code> are present. Must not be greater than 255 characters. Example: <code>g</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>score</code></b>&nbsp;&nbsp;
+<small>number</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="players.0.score"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="4326.41688"
+               data-component="body">
+    <br>
+<p>Example: <code>4326.41688</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>is_winner</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <label data-endpoint="PUTapi-v1-board-game-plays--id-" style="display: none">
+            <input type="radio" name="players.0.is_winner"
+                   value="true"
+                   data-endpoint="PUTapi-v1-board-game-plays--id-"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="PUTapi-v1-board-game-plays--id-" style="display: none">
+            <input type="radio" name="players.0.is_winner"
+                   value="false"
+                   data-endpoint="PUTapi-v1-board-game-plays--id-"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Example: <code>true</code></p>
+                    </div>
+                                                                <div style="margin-left: 14px; clear: unset;">
+                        <b style="line-height: 2;"><code>position</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="players.0.position"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="27"
+               data-component="body">
+    <br>
+<p>Must be at least 1. Example: <code>27</code></p>
+                    </div>
+                                    </details>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>sync_to_board_game_geek</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <label data-endpoint="PUTapi-v1-board-game-plays--id-" style="display: none">
+            <input type="radio" name="sync_to_board_game_geek"
+                   value="true"
+                   data-endpoint="PUTapi-v1-board-game-plays--id-"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="PUTapi-v1-board-game-plays--id-" style="display: none">
+            <input type="radio" name="sync_to_board_game_geek"
+                   value="false"
+                   data-endpoint="PUTapi-v1-board-game-plays--id-"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Example: <code>true</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>board_game_geek_username</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="board_game_geek_username"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="g"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters. Example: <code>g</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>board_game_geek_password</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="board_game_geek_password"                data-endpoint="PUTapi-v1-board-game-plays--id-"
+               value="architecto"
+               data-component="body">
+    <br>
+<p>Example: <code>architecto</code></p>
+        </div>
+        </form>
+
+                    <h2 id="board-game-plays-DELETEapi-v1-board-game-plays--id-">Delete a board game play</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Delete a board game play. Only the creator or group admin can delete.</p>
+
+<span id="example-requests-DELETEapi-v1-board-game-plays--id-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://localhost/api/v1/board-game-plays/1" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost/api/v1/board-game-plays/1"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-v1-board-game-plays--id-">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Board game play deleted successfully.&quot;,
+    &quot;data&quot;: null
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (403):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This action is unauthorized.&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Board game play not found&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-DELETEapi-v1-board-game-plays--id-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-v1-board-game-plays--id-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-v1-board-game-plays--id-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-v1-board-game-plays--id-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-v1-board-game-plays--id-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-v1-board-game-plays--id-" data-method="DELETE"
+      data-path="api/v1/board-game-plays/{id}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-v1-board-game-plays--id-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-v1-board-game-plays--id-"
+                    onclick="tryItOut('DELETEapi-v1-board-game-plays--id-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-v1-board-game-plays--id-"
+                    onclick="cancelTryOut('DELETEapi-v1-board-game-plays--id-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-v1-board-game-plays--id-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/v1/board-game-plays/{id}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-v1-board-game-plays--id-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-v1-board-game-plays--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-v1-board-game-plays--id-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="DELETEapi-v1-board-game-plays--id-"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the board game play. Example: <code>1</code></p>
+            </div>
+                    </form>
 
                 <h1 id="board-games">Board Games</h1>
 
