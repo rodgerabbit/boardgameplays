@@ -128,6 +128,12 @@ update_with_docker() {
     $DOCKER_COMPOSE exec -T node npm run build
     print_success "Frontend assets rebuilt"
     
+    # Regenerate API documentation
+    print_step "Regenerating API Documentation"
+    print_info "Generating Scribe API documentation..."
+    $DOCKER_COMPOSE exec -T app php artisan scribe:generate >/dev/null 2>&1 || print_warning "API documentation generation had warnings (this is usually fine)"
+    print_success "API documentation regenerated"
+    
     # Optimize application
     print_step "Optimizing Application"
     print_info "Caching configuration..."
@@ -206,6 +212,12 @@ update_local() {
     print_info "Building production assets..."
     npm run build
     print_success "Frontend assets rebuilt"
+    
+    # Regenerate API documentation
+    print_step "Regenerating API Documentation"
+    print_info "Generating Scribe API documentation..."
+    php artisan scribe:generate >/dev/null 2>&1 || print_warning "API documentation generation had warnings (this is usually fine)"
+    print_success "API documentation regenerated"
     
     # Optimize application
     print_step "Optimizing Application"
