@@ -54,6 +54,11 @@ class UpdateUserSettingsRequest extends FormRequest
                 'min:0',
                 'max:' . User::MAX_PLAY_NOTIFICATION_DELAY_HOURS,
             ],
+            'board_game_geek_username' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
         ];
     }
 

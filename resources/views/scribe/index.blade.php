@@ -3045,7 +3045,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 </p>
 
 <p>Retrieve the authenticated user's settings including default group,
-theme preference, and play notification delay.</p>
+theme preference, play notification delay, and BoardGameGeek username.</p>
 
 <span id="example-requests-GETapi-v1-user-settings">
 <blockquote>Example request:</blockquote>
@@ -3090,7 +3090,8 @@ fetch(url, {
         &quot;default_group_id&quot;: 1,
         &quot;effective_default_group_id&quot;: 1,
         &quot;theme_preference&quot;: &quot;system&quot;,
-        &quot;play_notification_delay_hours&quot;: 0
+        &quot;play_notification_delay_hours&quot;: 0,
+        &quot;board_game_geek_username&quot;: null
     }
 }</code>
  </pre>
@@ -3211,7 +3212,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"default_group_id\": 1,
     \"theme_preference\": \"dark\",
-    \"play_notification_delay_hours\": 2
+    \"play_notification_delay_hours\": 2,
+    \"board_game_geek_username\": \"myusername\"
 }"
 </code></pre></div>
 
@@ -3230,7 +3232,8 @@ const headers = {
 let body = {
     "default_group_id": 1,
     "theme_preference": "dark",
-    "play_notification_delay_hours": 2
+    "play_notification_delay_hours": 2,
+    "board_game_geek_username": "myusername"
 };
 
 fetch(url, {
@@ -3254,7 +3257,8 @@ fetch(url, {
         &quot;default_group_id&quot;: 1,
         &quot;effective_default_group_id&quot;: 1,
         &quot;theme_preference&quot;: &quot;dark&quot;,
-        &quot;play_notification_delay_hours&quot;: 2
+        &quot;play_notification_delay_hours&quot;: 2,
+        &quot;board_game_geek_username&quot;: &quot;myusername&quot;
     }
 }</code>
  </pre>
@@ -3407,6 +3411,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>nullable The delay in hours before sending play notifications. Must be between 0 and 4. Example: <code>2</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>board_game_geek_username</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="board_game_geek_username"                data-endpoint="PUTapi-v1-user-settings"
+               value="myusername"
+               data-component="body">
+    <br>
+<p>nullable The user's BoardGameGeek.com username. Example: <code>myusername</code></p>
         </div>
         </form>
 

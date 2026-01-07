@@ -29,7 +29,7 @@ class UserSettingsController extends BaseApiController
      * Get user settings
      *
      * Retrieve the authenticated user's settings including default group,
-     * theme preference, and play notification delay.
+     * theme preference, play notification delay, and BoardGameGeek username.
      *
      * @response 200 {
      *   "success": true,
@@ -38,7 +38,8 @@ class UserSettingsController extends BaseApiController
      *     "default_group_id": 1,
      *     "effective_default_group_id": 1,
      *     "theme_preference": "system",
-     *     "play_notification_delay_hours": 0
+     *     "play_notification_delay_hours": 0,
+     *     "board_game_geek_username": null
      *   }
      * }
      *
@@ -68,6 +69,7 @@ class UserSettingsController extends BaseApiController
      * @bodyParam default_group_id integer nullable The ID of the user's default group. Must be a group the user is a member of. Example: 1
      * @bodyParam theme_preference string nullable The user's theme preference. Must be one of: light, dark, system. Example: dark
      * @bodyParam play_notification_delay_hours integer nullable The delay in hours before sending play notifications. Must be between 0 and 4. Example: 2
+     * @bodyParam board_game_geek_username string nullable The user's BoardGameGeek.com username. Example: myusername
      *
      * @response 200 {
      *   "success": true,
@@ -76,7 +78,8 @@ class UserSettingsController extends BaseApiController
      *     "default_group_id": 1,
      *     "effective_default_group_id": 1,
      *     "theme_preference": "dark",
-     *     "play_notification_delay_hours": 2
+     *     "play_notification_delay_hours": 2,
+     *     "board_game_geek_username": "myusername"
      *   }
      * }
      *

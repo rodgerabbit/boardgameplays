@@ -21,7 +21,7 @@ endpoints:
       title: 'Get user settings'
       description: |-
         Retrieve the authenticated user's settings including default group,
-        theme preference, and play notification delay.
+        theme preference, play notification delay, and BoardGameGeek username.
       authenticated: true
       deprecated: false
     headers:
@@ -47,7 +47,8 @@ endpoints:
               "default_group_id": 1,
               "effective_default_group_id": 1,
               "theme_preference": "system",
-              "play_notification_delay_hours": 0
+              "play_notification_delay_hours": 0,
+              "board_game_geek_username": null
             }
           }
         headers: []
@@ -130,10 +131,22 @@ endpoints:
         exampleWasSpecified: true
         nullable: true
         deprecated: false
+      board_game_geek_username:
+        custom: []
+        name: board_game_geek_username
+        description: "nullable The user's BoardGameGeek.com username."
+        required: false
+        example: myusername
+        type: string
+        enumValues: []
+        exampleWasSpecified: true
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
       default_group_id: 1
       theme_preference: dark
       play_notification_delay_hours: 2
+      board_game_geek_username: myusername
     fileParameters: []
     responses:
       -
@@ -147,7 +160,8 @@ endpoints:
               "default_group_id": 1,
               "effective_default_group_id": 1,
               "theme_preference": "dark",
-              "play_notification_delay_hours": 2
+              "play_notification_delay_hours": 2,
+              "board_game_geek_username": "myusername"
             }
           }
         headers: []

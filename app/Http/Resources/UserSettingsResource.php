@@ -32,6 +32,7 @@ class UserSettingsResource extends JsonResource
             'effective_default_group_id' => $effectiveDefaultGroupId,
             'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
             'play_notification_delay_hours' => $user->play_notification_delay_hours ?? 0,
+            'board_game_geek_username' => $user->board_game_geek_username,
         ];
     }
 }

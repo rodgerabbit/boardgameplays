@@ -43,6 +43,7 @@ class User extends Authenticatable
         'default_group_id',
         'theme_preference',
         'play_notification_delay_hours',
+        'board_game_geek_username',
     ];
 
     /**

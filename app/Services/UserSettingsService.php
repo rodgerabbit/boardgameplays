@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\DB;
  * Service class for managing user settings.
  *
  * This service handles all business logic related to user settings, including
- * updating default group, theme preference, and play notification delay.
+ * updating default group, theme preference, play notification delay, and
+ * BoardGameGeek username.
  */
 class UserSettingsService extends BaseService
 {

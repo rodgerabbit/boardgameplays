@@ -39,6 +39,7 @@ class UserSettingsControllerTest extends TestCase
                     'effective_default_group_id',
                     'theme_preference',
                     'play_notification_delay_hours',
+                    'board_game_geek_username',
                 ],
             ])
             ->assertJson([
@@ -46,6 +47,7 @@ class UserSettingsControllerTest extends TestCase
                     'default_group_id' => null,
                     'theme_preference' => 'system',
                     'play_notification_delay_hours' => 0,
+                    'board_game_geek_username' => null,
                 ],
             ]);
     }
@@ -417,6 +419,60 @@ class UserSettingsControllerTest extends TestCase
         $response = $this->getJson('/api/v1/user/settings');
 
         $response->assertStatus(401);
+    }
+
+    /**
+     * Test that update can set board game geek username.
+     */
+    public function test_update_can_set_board_game_geek_username(): void
+    {
+        $user = User::factory()->create();
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->patchJson('/api/v1/user/settings', [
+                'board_game_geek_username' => 'testuser',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'board_game_geek_username' => 'testuser',
+                ],
+            ]);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'board_game_geek_username' => 'testuser',
+        ]);
+    }
+
+    /**
+     * Test that update can clear board game geek username.
+     */
+    public function test_update_can_clear_board_game_geek_username(): void
+    {
+        $user = User::factory()->create([
+            'board_game_geek_username' => 'testuser',
+        ]);
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->patchJson('/api/v1/user/settings', [
+                'board_game_geek_username' => null,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'data' => [
+                    'board_game_geek_username' => null,
+                ],
+            ]);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $user->id,
+            'board_game_geek_username' => null,
+        ]);
     }
 
     /**
