@@ -51,12 +51,30 @@ class BoardGameGeekPlaySyncService extends BaseService
                     'page' => $page,
                 ]);
 
-                $response = Http::timeout(30)
+                $request = Http::timeout(30)
                     ->retry(3, 1000)
-                    ->get($url);
+                    ->withHeaders([
+                        'Accept' => 'application/xml',
+                    ]);
+
+                $apiToken = config('boardgamegeek.api_token');
+                if ($apiToken !== null) {
+                    $request->withToken($apiToken);
+                }
+
+                $response = $request->get($url);
 
                 if (!$response->successful()) {
-                    throw new \RuntimeException('BGG API request failed with status: ' . $response->status());
+                    if ($response->status() === 401) {
+                        $errorMessage = 'BoardGameGeek API token was not accepted (401 Unauthorized). Please check BOARDGAMEGEEK_API_TOKEN in .env file.';
+                        Log::error($errorMessage, [
+                            'username' => $username,
+                            'page' => $page,
+                            'status' => $response->status(),
+                        ]);
+                        throw new \RuntimeException($errorMessage);
+                    }
+                    throw new \RuntimeException('HTTP request returned status code ' . $response->status());
                 }
 
                 $xml = new SimpleXMLElement($response->body());
