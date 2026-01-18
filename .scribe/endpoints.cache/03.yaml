@@ -640,7 +640,7 @@ endpoints:
         name: source
         description: ''
         required: false
-        example: website
+        example: boardgamegeek
         type: string
         enumValues:
           - website
@@ -758,7 +758,7 @@ endpoints:
         name: 'players[].is_winner'
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -782,7 +782,7 @@ endpoints:
       location: Home
       comment: 'Great game!'
       game_length_minutes: 90
-      source: website
+      source: boardgamegeek
       expansions:
         - 2
         - 3

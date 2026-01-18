@@ -187,7 +187,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: January 7, 2026</li>
+        <li>Last updated: January 18, 2026</li>
     </ul>
 </div>
 
@@ -2213,7 +2213,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"location\": \"Home\",
     \"comment\": \"Great game!\",
     \"game_length_minutes\": 90,
-    \"source\": \"website\",
+    \"source\": \"boardgamegeek\",
     \"expansions\": [
         2,
         3
@@ -2250,7 +2250,7 @@ let body = {
     "location": "Home",
     "comment": "Great game!",
     "game_length_minutes": 90,
-    "source": "website",
+    "source": "boardgamegeek",
     "expansions": [
         2,
         3
@@ -2495,10 +2495,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="source"                data-endpoint="PUTapi-v1-board-game-plays--id-"
-               value="website"
+               value="boardgamegeek"
                data-component="body">
     <br>
-<p>Example: <code>website</code></p>
+<p>Example: <code>boardgamegeek</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>website</code></li> <li><code>boardgamegeek</code></li></ul>
         </div>
@@ -2594,7 +2594,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>position</code></b>&nbsp;&nbsp;
