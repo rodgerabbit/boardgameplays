@@ -15,3 +15,6 @@ Schedule::command('groups:hard-delete-expired')->daily();
 
 // Schedule the BGG plays sync command to run daily at 4 AM
 Schedule::command('bgg:sync-plays')->dailyAt('04:00');
+
+// Schedule the BGG board games refresh command to run weekly on Sunday at 3 AM
+Schedule::command('boardgamegeek:refresh-all')->weekly()->at('03:00');
