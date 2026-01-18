@@ -100,6 +100,12 @@ class BoardGamePlayController extends BaseApiController
             $query->where('source', $request->get('source'));
         }
 
+        // By default, exclude duplicate plays from statistics
+        // Allow including excluded plays via query parameter for admin/debugging purposes
+        if (!$request->has('include_excluded') || !$request->boolean('include_excluded')) {
+            $query->notExcluded();
+        }
+
         // Handle includes
         $includes = explode(',', $request->get('include', ''));
         if (in_array('board_game', $includes)) {

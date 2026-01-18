@@ -42,18 +42,26 @@ class DashboardController extends Controller
                 'is_expansion',
             ]);
 
-        // User statistics: total games played and games won
+        // User statistics: total games played and games won (exclude duplicate plays)
         $userStatistics = [
-            'total_games_played' => BoardGamePlayPlayer::where('user_id', $user->id)->count(),
+            'total_games_played' => BoardGamePlayPlayer::where('user_id', $user->id)
+                ->whereHas('boardGamePlay', function ($query) {
+                    $query->notExcluded();
+                })
+                ->count(),
             'total_games_won' => BoardGamePlayPlayer::where('user_id', $user->id)
                 ->where('is_winner', true)
+                ->whereHas('boardGamePlay', function ($query) {
+                    $query->notExcluded();
+                })
                 ->count(),
         ];
 
-        // Last games played by the user (where user participated as a player)
+        // Last games played by the user (where user participated as a player, exclude duplicates)
         $lastUserPlays = BoardGamePlay::whereHas('players', function ($query) use ($user) {
             $query->where('user_id', $user->id);
         })
+            ->notExcluded()
             ->with([
                 'boardGame:id,name,thumbnail_url',
                 'players' => function ($query) {
@@ -78,6 +86,7 @@ class DashboardController extends Controller
         
         if ($defaultGroupId) {
             $lastGroupPlays = BoardGamePlay::where('group_id', $defaultGroupId)
+                ->notExcluded()
                 ->with([
                     'boardGame:id,name,thumbnail_url',
                     'players' => function ($query) {

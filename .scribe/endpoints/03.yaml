@@ -679,7 +679,7 @@ endpoints:
         name: sync_to_board_game_geek
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -756,7 +756,7 @@ endpoints:
         name: 'players[].is_winner'
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -789,7 +789,7 @@ endpoints:
           user_id: 1
           score: 100
           is_winner: true
-      sync_to_board_game_geek: true
+      sync_to_board_game_geek: false
       board_game_geek_username: g
       board_game_geek_password: architecto
     fileParameters: []

@@ -27,7 +27,7 @@ class BoardGamePlayServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new BoardGamePlayService();
+        $this->service = app(BoardGamePlayService::class);
     }
 
     public function test_create_board_game_play_creates_play_with_players(): void

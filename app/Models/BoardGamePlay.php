@@ -44,6 +44,10 @@ class BoardGamePlay extends Model
         'bgg_sync_to_status',
         'bgg_sync_to_error_message',
         'sync_to_bgg',
+        'is_excluded',
+        'leading_play_id',
+        'excluded_at',
+        'exclusion_reason',
     ];
 
     /**
@@ -59,6 +63,8 @@ class BoardGamePlay extends Model
             'bgg_synced_at' => 'datetime',
             'bgg_synced_to_at' => 'datetime',
             'sync_to_bgg' => 'boolean',
+            'is_excluded' => 'boolean',
+            'excluded_at' => 'datetime',
         ];
     }
 
@@ -205,5 +211,101 @@ class BoardGamePlay extends Model
     public function getWinners(): Collection
     {
         return $this->players()->where('is_winner', true)->get();
+    }
+
+    /**
+     * Scope a query to only include excluded plays.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeExcluded($query)
+    {
+        return $query->where('is_excluded', true);
+    }
+
+    /**
+     * Scope a query to only include non-excluded plays.
+     *
+     * This is the default scope for statistics queries to exclude duplicates.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNotExcluded($query)
+    {
+        return $query->where('is_excluded', false);
+    }
+
+    /**
+     * Scope a query to only include leading plays.
+     *
+     * Leading plays are plays that are not excluded and do not have a leading_play_id set.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeLeading($query)
+    {
+        return $query->where('is_excluded', false)
+            ->whereNull('leading_play_id');
+    }
+
+    /**
+     * Check if this play is excluded.
+     *
+     * @return bool
+     */
+    public function isExcluded(): bool
+    {
+        return $this->is_excluded === true;
+    }
+
+    /**
+     * Check if this play is a leading play.
+     *
+     * A leading play is not excluded and does not have a leading_play_id set.
+     *
+     * @return bool
+     */
+    public function isLeading(): bool
+    {
+        return !$this->is_excluded && $this->leading_play_id === null;
+    }
+
+    /**
+     * Get the leading play if this play is excluded.
+     *
+     * @return BoardGamePlay|null
+     */
+    public function getLeadingPlay(): ?BoardGamePlay
+    {
+        if (!$this->is_excluded || $this->leading_play_id === null) {
+            return null;
+        }
+
+        return self::find($this->leading_play_id);
+    }
+
+    /**
+     * Get all excluded plays that point to this play as the leading play.
+     *
+     * @return Collection<int, BoardGamePlay>
+     */
+    public function getExcludedPlays(): Collection
+    {
+        return self::where('leading_play_id', $this->id)
+            ->where('is_excluded', true)
+            ->get();
+    }
+
+    /**
+     * Get the relationship to the leading play.
+     *
+     * @return BelongsTo
+     */
+    public function leadingPlay(): BelongsTo
+    {
+        return $this->belongsTo(BoardGamePlay::class, 'leading_play_id');
     }
 }

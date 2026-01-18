@@ -2225,7 +2225,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             \"is_winner\": true
         }
     ],
-    \"sync_to_board_game_geek\": true,
+    \"sync_to_board_game_geek\": false,
     \"board_game_geek_username\": \"g\",
     \"board_game_geek_password\": \"architecto\"
 }"
@@ -2262,7 +2262,7 @@ let body = {
             "is_winner": true
         }
     ],
-    "sync_to_board_game_geek": true,
+    "sync_to_board_game_geek": false,
     "board_game_geek_username": "g",
     "board_game_geek_password": "architecto"
 };
@@ -2594,7 +2594,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>position</code></b>&nbsp;&nbsp;
@@ -2630,7 +2630,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>board_game_geek_username</code></b>&nbsp;&nbsp;

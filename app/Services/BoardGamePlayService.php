@@ -21,6 +21,14 @@ use Illuminate\Support\Facades\DB;
 class BoardGamePlayService extends BaseService
 {
     /**
+     * Create a new instance of the service.
+     */
+    public function __construct(
+        private readonly BoardGamePlayDeduplicationService $deduplicationService
+    ) {
+    }
+
+    /**
      * Create a new board game play with validation.
      *
      * @param array<string, mixed> $playData The play data
@@ -97,6 +105,10 @@ class BoardGamePlayService extends BaseService
                 $this->queueBggSyncIfRequested($play->fresh(), $bggUsername, $bggPassword);
             }
 
+            // Sync deduplication after play is created
+            $play->refresh();
+            $this->deduplicationService->syncDeduplicationForPlay($play);
+
             return $play->fresh(['boardGame', 'group', 'creator', 'players', 'expansions']);
         });
     }
@@ -163,6 +175,10 @@ class BoardGamePlayService extends BaseService
                 $play->expansions()->sync($expansions);
             }
 
+            // Sync deduplication after play is updated (may affect other plays)
+            $play->refresh();
+            $this->deduplicationService->syncDeduplicationForPlay($play);
+
             return $play->fresh(['boardGame', 'group', 'creator', 'players', 'expansions']);
         });
     }
@@ -170,12 +186,38 @@ class BoardGamePlayService extends BaseService
     /**
      * Delete a board game play.
      *
+     * If the play is a leading play, promote another from the excluded group.
+     * If the play is excluded, just delete it.
+     *
      * @param BoardGamePlay $play The play to delete
      * @return bool True if deleted successfully
      */
     public function deleteBoardGamePlay(BoardGamePlay $play): bool
     {
-        return $play->delete();
+        return DB::transaction(function () use ($play): bool {
+            // If this is a leading play, we need to promote another from the excluded group
+            if ($play->isLeading()) {
+                $excludedPlays = $play->getExcludedPlays();
+
+                if ($excludedPlays->isNotEmpty()) {
+                    // Promote the first excluded play to be the new leading play
+                    $newLeadingPlay = $excludedPlays->first();
+                    $this->deduplicationService->clearExclusion($newLeadingPlay);
+
+                    // Update other excluded plays to point to the new leading play
+                    foreach ($excludedPlays->where('id', '!=', $newLeadingPlay->id) as $excludedPlay) {
+                        $excludedPlay->update(['leading_play_id' => $newLeadingPlay->id]);
+                    }
+
+                    // Re-sync deduplication for the new leading play to ensure consistency
+                    $newLeadingPlay->refresh();
+                    $this->deduplicationService->syncDeduplicationForPlay($newLeadingPlay);
+                }
+            }
+
+            // Delete the play
+            return $play->delete();
+        });
     }
 
     /**

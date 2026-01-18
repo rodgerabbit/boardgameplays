@@ -36,6 +36,7 @@ class BoardGamePlayPlayerService extends BaseService
     ): bool {
         $query = BoardGamePlay::query()
             ->where('board_game_id', $boardGame->id)
+            ->notExcluded() // Exclude duplicate plays from first play detection
             ->whereHas('players', function ($q) use ($user, $bggUsername, $guestName) {
                 if ($user !== null) {
                     $q->where('user_id', $user->id);

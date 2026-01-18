@@ -25,7 +25,7 @@ class BoardGamePlayNewPlayerDetectionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new BoardGamePlayService();
+        $this->service = app(BoardGamePlayService::class);
     }
 
     public function test_new_player_is_marked_when_first_play(): void
