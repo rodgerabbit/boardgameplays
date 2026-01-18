@@ -75,6 +75,12 @@ class BoardGameGeekApiClientTest extends TestCase
         $this->assertEquals('Brass: Birmingham', $games[0]->name);
         $this->assertNotNull($games[0]->bggRating);
         $this->assertNotNull($games[0]->complexityRating);
+        
+        // Verify integer fields are extracted correctly from value attributes
+        $this->assertEquals(2, $games[0]->minPlayers);
+        $this->assertEquals(4, $games[0]->maxPlayers);
+        $this->assertEquals(60, $games[0]->playingTimeMinutes);
+        $this->assertEquals(2018, $games[0]->yearPublished);
     }
 
     /**

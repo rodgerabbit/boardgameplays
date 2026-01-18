@@ -378,16 +378,32 @@ class BoardGameGeekApiClient extends BaseService
     /**
      * Extract an integer value from the item.
      *
+     * In BGG XML, integer values like playingtime, yearpublished, minplayers, maxplayers
+     * are stored as child elements with a 'value' attribute (e.g., <playingtime value="60"/>).
+     *
      * @param SimpleXMLElement $item
      * @param string $attributeName
      * @return int|null
      */
     private function extractIntegerValue(SimpleXMLElement $item, string $attributeName): ?int
     {
-        $value = $this->extractStringValue($item, $attributeName);
-        if ($value !== null && $value !== '') {
-            $intValue = (int) $value;
-            return $intValue > 0 ? $intValue : null;
+        // Check if the child element exists
+        if (isset($item->$attributeName)) {
+            $element = $item->$attributeName;
+            // Check if it has a 'value' attribute (BGG XML format)
+            if (isset($element['value'])) {
+                $value = (string) $element['value'];
+                if ($value !== '') {
+                    $intValue = (int) $value;
+                    return $intValue > 0 ? $intValue : null;
+                }
+            }
+            // Fallback: try to get text content if no value attribute
+            $value = (string) $element;
+            if ($value !== '') {
+                $intValue = (int) $value;
+                return $intValue > 0 ? $intValue : null;
+            }
         }
 
         return null;
