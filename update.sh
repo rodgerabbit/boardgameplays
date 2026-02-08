@@ -93,7 +93,13 @@ update_with_docker() {
     # Update PHP dependencies
     print_step "Updating PHP Dependencies"
     print_info "Updating Composer dependencies..."
-    $DOCKER_COMPOSE exec -T app composer update --no-interaction --prefer-dist --optimize-autoloader
+    # Use --no-scripts to avoid pre-package-uninstall bootstrap failures when packages (e.g. shalvah/clara) are removed; we run dump-autoload afterward so discovery still runs.
+    if $DOCKER_COMPOSE exec -T app composer update --no-interaction --prefer-dist --optimize-autoloader --no-scripts; then
+        $DOCKER_COMPOSE exec -T app composer dump-autoload --optimize --no-interaction
+    else
+        print_error "Composer update failed"
+        exit 1
+    fi
     print_success "PHP dependencies updated"
     
     # Update Node dependencies
@@ -178,7 +184,13 @@ update_local() {
     # Update PHP dependencies
     print_step "Updating PHP Dependencies"
     print_info "Updating Composer dependencies..."
-    composer update --no-interaction --prefer-dist --optimize-autoloader
+    # Use --no-scripts to avoid pre-package-uninstall bootstrap failures when packages (e.g. shalvah/clara) are removed; we run dump-autoload afterward so discovery still runs.
+    if composer update --no-interaction --prefer-dist --optimize-autoloader --no-scripts; then
+        composer dump-autoload --optimize --no-interaction
+    else
+        print_error "Composer update failed"
+        exit 1
+    fi
     print_success "PHP dependencies updated"
     
     # Update Node dependencies
