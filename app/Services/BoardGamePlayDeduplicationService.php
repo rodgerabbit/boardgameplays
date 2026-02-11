@@ -126,6 +126,9 @@ class BoardGamePlayDeduplicationService extends BaseService
 
         $plays = $query->with('players')->get();
 
+        // Clean up any incorrect same-user exclusions (e.g. from before pairing fix)
+        $this->clearSameUserExclusionsInScope($groupId, $boardGameId, $playedAt);
+
         // Group plays by (board_game_id, played_at, group_id) for efficient processing
         $playGroups = $plays->groupBy(function ($play) {
             return sprintf('%d-%s-%d', $play->board_game_id, $play->played_at->toDateString(), $play->group_id);
@@ -184,44 +187,89 @@ class BoardGamePlayDeduplicationService extends BaseService
      * Identify duplicate groups from a collection of plays.
      *
      * Groups plays that are actual duplicates (same participants, different creators).
-     * Returns an array of collections, where each collection contains plays that are duplicates.
+     * When multiple plays from different creators share the same participants (e.g. two
+     * users each logged two plays of the same game on the same day), plays are paired
+     * by order: 1st play of creator A with 1st of creator B, 2nd with 2nd, etc.
+     * Order within creator is by bgg_play_id (asc, null last) then created_at (asc).
      *
      * @param \Illuminate\Database\Eloquent\Collection<int, BoardGamePlay>|\Illuminate\Support\Collection<int, BoardGamePlay> $plays The plays to analyze
      * @return array<int, \Illuminate\Support\Collection<int, BoardGamePlay>> Array of duplicate groups
      */
     public function identifyDuplicateGroups(\Illuminate\Support\Collection $plays): array
     {
-        $duplicateGroups = [];
-        $processed = [];
+        if ($plays->count() < 2) {
+            return [];
+        }
 
-        foreach ($plays as $play) {
-            if (isset($processed[$play->id])) {
+        // Ensure all plays have players loaded for participant grouping
+        $plays->each(function (BoardGamePlay $play) {
+            if (!$play->relationLoaded('players')) {
+                $play->load('players');
+            }
+        });
+
+        // 1. Group by participant set (same participants = same real game pool)
+        $byParticipantKey = $plays->groupBy(function (BoardGamePlay $play) {
+            $participants = $this->normalizeParticipants($play);
+
+            return json_encode($participants);
+        });
+
+        $duplicateGroups = [];
+        foreach ($byParticipantKey as $participantKey => $playsWithSameParticipants) {
+            if ($playsWithSameParticipants->count() < 2) {
                 continue;
             }
 
-            $duplicateGroup = collect([$play]);
-            $processed[$play->id] = true;
-
-            // Find all plays with same participants but different creators
-            foreach ($plays as $otherPlay) {
-                if ($play->id === $otherPlay->id || isset($processed[$otherPlay->id])) {
-                    continue;
-                }
-
-                // Must have different creators
-                if ($play->created_by_user_id === $otherPlay->created_by_user_id) {
-                    continue;
-                }
-
-                // Must have same participants
-                if ($this->hasSameParticipants($play, $otherPlay)) {
-                    $duplicateGroup->push($otherPlay);
-                    $processed[$otherPlay->id] = true;
-                }
+            // 2. Partition by creator; need at least 2 creators for duplicates
+            $byCreator = $playsWithSameParticipants->groupBy('created_by_user_id');
+            if ($byCreator->count() < 2) {
+                continue;
             }
 
-            if ($duplicateGroup->count() >= 2) {
-                $duplicateGroups[] = $duplicateGroup;
+            // 3. Sort each creator's plays by BGG order (asc)
+            $sortKey = function (BoardGamePlay $play) {
+                return [
+                    $play->bgg_play_id !== null ? (int) $play->bgg_play_id : PHP_INT_MAX,
+                    $play->created_at->timestamp,
+                    $play->id,
+                ];
+            };
+            $sortedByCreator = $byCreator->map(function ($creatorPlays) use ($sortKey) {
+                return $creatorPlays->sortBy($sortKey)->values();
+            });
+
+            $minLength = $sortedByCreator->min(fn ($list) => $list->count());
+            if ($minLength < 1) {
+                continue;
+            }
+
+            // 4. Reverse the list of the creator with larger BGG IDs so "earliest" pairs with "latest"
+            $creatorIds = $sortedByCreator->keys()->toArray();
+            $firstCreatorId = $creatorIds[0];
+            $secondCreatorId = $creatorIds[1];
+            $firstMinBgg = $sortedByCreator->get($firstCreatorId)->first()->bgg_play_id !== null
+                ? (int) $sortedByCreator->get($firstCreatorId)->first()->bgg_play_id
+                : PHP_INT_MAX;
+            $secondMinBgg = $sortedByCreator->get($secondCreatorId)->first()->bgg_play_id !== null
+                ? (int) $sortedByCreator->get($secondCreatorId)->first()->bgg_play_id
+                : PHP_INT_MAX;
+            $laterCreatorId = $secondMinBgg > $firstMinBgg ? $secondCreatorId : $firstCreatorId;
+            $sortedByCreator = $sortedByCreator->map(function ($list, $creatorId) use ($laterCreatorId) {
+                if ($creatorId === $laterCreatorId) {
+                    return $list->reverse()->values();
+                }
+
+                return $list;
+            });
+
+            // 5. Pair by index
+            for ($i = 0; $i < $minLength; $i++) {
+                $group = collect();
+                foreach ($sortedByCreator as $creatorPlays) {
+                    $group->push($creatorPlays[$i]);
+                }
+                $duplicateGroups[] = $group;
             }
         }
 
@@ -232,94 +280,82 @@ class BoardGamePlayDeduplicationService extends BaseService
      * Determine the leading play from a collection of duplicate plays.
      *
      * Selection priority:
-     * 1. Earliest created_at
-     * 2. Lowest bgg_play_id (if both have it)
-     * 3. Play with more details (comments, scores)
+     * 1. Play with more details (location, new player indicator, time, comments, scores)
+     * 2. Logged earlier: lowest bgg_play_id when present (BGG order), then earliest created_at
      *
      * @param \Illuminate\Support\Collection<int, BoardGamePlay>|\Illuminate\Database\Eloquent\Collection<int, BoardGamePlay> $duplicatePlays The duplicate plays
      * @return BoardGamePlay The leading play
      */
     public function determineLeadingPlay(\Illuminate\Support\Collection $duplicatePlays): BoardGamePlay
     {
-        // Sort by created_at, then by bgg_play_id
+        // Ensure all plays have players loaded for detail score
+        $duplicatePlays->each(function (BoardGamePlay $play) {
+            if (!$play->relationLoaded('players')) {
+                $play->load('players');
+            }
+        });
+
+        // Sort by: (1) detail score descending, (2) bgg_play_id ascending (null last), (3) created_at ascending
         $sorted = $duplicatePlays->sortBy(function (BoardGamePlay $play) {
+            $detailScore = $this->calculateDetailScore($play);
+
             return [
-                $play->created_at->timestamp,
+                -$detailScore, // negative so higher score sorts first
                 $play->bgg_play_id !== null ? (int) $play->bgg_play_id : PHP_INT_MAX,
+                $play->created_at->timestamp,
+                $play->id, // deterministic tiebreaker
             ];
         });
 
-        $leading = $sorted->first();
+        return $sorted->first();
+    }
 
-        // Check if there are multiple plays with the same priority (same created_at and bgg_play_id)
-        $samePriority = $sorted->filter(function (BoardGamePlay $play) use ($leading) {
-            return $play->created_at->equalTo($leading->created_at) &&
-                   ($play->bgg_play_id ?? PHP_INT_MAX) === ($leading->bgg_play_id ?? PHP_INT_MAX);
-        });
+    /**
+     * Calculate a detail richness score for leading-play preference.
+     *
+     * Higher score = more details (location, new player indicator, time, comments, scores).
+     * Used to prefer the more complete log when deduplicating.
+     *
+     * @param BoardGamePlay $play The play to score
+     * @return int Non-negative detail score
+     */
+    private function calculateDetailScore(BoardGamePlay $play): int
+    {
+        $detailScore = 0;
 
-        if ($samePriority->count() > 1) {
-            // Reload all plays from database with players to ensure fresh data
-            // Order by ID to ensure consistent ordering
-            $playIds = $samePriority->pluck('id')->toArray();
-            $freshPlays = BoardGamePlay::whereIn('id', $playIds)
-                ->with('players')
-                ->orderBy('id')
-                ->get();
-
-            // Calculate detail score function - must match test calculation exactly
-            $calculateDetailScore = function (BoardGamePlay $play): int {
-                $detailScore = 0;
-
-                // Comment adds significant value (match test: !empty($play->comment))
-                if (!empty($play->comment)) {
-                    $detailScore += 10;
-                }
-
-                // Scores add value - ensure players are loaded
-                if (!$play->relationLoaded('players')) {
-                    $play->load('players');
-                }
-                // Match test: whereNotNull('score')->count() > 0
-                $playersWithScores = $play->players->whereNotNull('score')->count();
-                if ($playersWithScores > 0) {
-                    $detailScore += 5;
-                }
-
-                // Game length adds value
-                if ($play->game_length_minutes !== null) {
-                    $detailScore += 2;
-                }
-
-                return $detailScore;
-            };
-
-            // Calculate scores for all plays and find maximum
-            // Use a more explicit approach to ensure deterministic selection
-            $bestPlay = null;
-            $bestScore = -1;
-            $bestId = PHP_INT_MAX;
-
-            foreach ($freshPlays as $play) {
-                $score = $calculateDetailScore($play);
-                
-                // If this play has a higher detail score, it's the new best
-                if ($score > $bestScore) {
-                    $bestPlay = $play;
-                    $bestScore = $score;
-                    $bestId = $play->id;
-                } elseif ($score === $bestScore && $score > 0) {
-                    // If scores are equal and non-zero, prefer the play with lower ID
-                    if ($play->id < $bestId) {
-                        $bestPlay = $play;
-                        $bestId = $play->id;
-                    }
-                }
-            }
-
-            $leading = $bestPlay ?? $freshPlays->first();
+        // Non-empty, meaningful location (e.g. not "Unknown" or empty)
+        $location = trim((string) ($play->location ?? ''));
+        if ($location !== '' && strtolower($location) !== 'unknown') {
+            $detailScore += 5;
         }
 
-        return $leading;
+        // Comment adds significant value
+        if (!empty($play->comment)) {
+            $detailScore += 10;
+        }
+
+        // Game length (time) adds value
+        if ($play->game_length_minutes !== null) {
+            $detailScore += 2;
+        }
+
+        if (!$play->relationLoaded('players')) {
+            $play->load('players');
+        }
+
+        // New player indicator: at least one player marked as new to this game
+        $hasNewPlayer = $play->players->where('is_new_player', true)->count() > 0;
+        if ($hasNewPlayer) {
+            $detailScore += 5;
+        }
+
+        // Scores add value
+        $playersWithScores = $play->players->whereNotNull('score')->count();
+        if ($playersWithScores > 0) {
+            $detailScore += 5;
+        }
+
+        return $detailScore;
     }
 
     /**
@@ -333,6 +369,12 @@ class BoardGamePlayDeduplicationService extends BaseService
     {
         foreach ($excludedPlays as $excludedPlay) {
             if ($excludedPlay->id === $leadingPlay->id) {
+                continue;
+            }
+
+            // Never mark a play as excluded when the leading play is from the same user.
+            // Duplicates are only across different users (same game/date/participants, different creators).
+            if ($excludedPlay->created_by_user_id === $leadingPlay->created_by_user_id) {
                 continue;
             }
 
@@ -369,6 +411,39 @@ class BoardGamePlayDeduplicationService extends BaseService
             'excluded_at' => null,
             'exclusion_reason' => null,
         ]);
+    }
+
+    /**
+     * Clear exclusion from any play that points to a leading play from the same user.
+     * Fixes legacy data where same-user plays were incorrectly marked as duplicates.
+     */
+    private function clearSameUserExclusionsInScope(?int $groupId, ?int $boardGameId, ?Carbon $playedAt): void
+    {
+        $query = BoardGamePlay::query()
+            ->where('is_excluded', true)
+            ->whereNotNull('leading_play_id')
+            ->whereNotNull('group_id');
+
+        if ($groupId !== null) {
+            $query->where('group_id', $groupId);
+        }
+        if ($boardGameId !== null) {
+            $query->where('board_game_id', $boardGameId);
+        }
+        if ($playedAt !== null) {
+            $query->whereDate('played_at', $playedAt);
+        }
+
+        $query->whereRaw(
+            'created_by_user_id = (SELECT created_by_user_id FROM board_game_plays AS lp WHERE lp.id = board_game_plays.leading_play_id)'
+        )->each(function (BoardGamePlay $play): void {
+                $wasLeadingPlayId = $play->leading_play_id;
+                $this->clearExclusion($play);
+                Log::info('Cleared same-user exclusion', [
+                    'play_id' => $play->id,
+                    'was_leading_play_id' => $wasLeadingPlayId,
+                ]);
+            });
     }
 
     /**

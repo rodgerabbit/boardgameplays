@@ -37,6 +37,7 @@ todos:
     dependencies:
       - integrate_service
       - update_statistics
+isProject: false
 ---
 
 # Play Deduplication System Implementation
@@ -48,8 +49,8 @@ Implement a deduplication system that identifies duplicate board game plays with
 ## Requirements Summary
 
 - **Duplicate Criteria**: Same boardgame, same `played_at` date, logged by different users, same participants
-- **Leading Play Selection**: Earliest `created_at`, then lowest `bgg_play_id` if both have it
-- **Details Preference**: Prefer play with more details (comments, scores) as leading
+- **Leading Play Selection**: (1) Prefer play with more details (location, new player indicator, time, comments, scores); (2) tiebreak by “logged earlier”: lowest `bgg_play_id` when present, then earliest `created_at`
+- **Multiple duplicate pairs**: When several plays from different creators share the same participants (e.g. two users each log two plays the same day), pair by play order: 1st-with-1st, 2nd-with-2nd (order within creator by `bgg_play_id` then `created_at`)
 - **Efficiency**: Only recalculate affected plays when new/updated plays are added
 
 ## Implementation Plan
@@ -77,12 +78,12 @@ Add indexes:
 
 This service will handle:
 
-- **`findDuplicatePlays(BoardGamePlay $play): Collection`** - Find all potential duplicates for a play
-- **`identifyDuplicateGroup(Collection $plays): array`** - Group plays that are actual duplicates (same participants)
-- **`determineLeadingPlay(Collection $duplicatePlays): BoardGamePlay`** - Select leading play based on priority rules
-- **`markExcludedPlays(BoardGamePlay $leadingPlay, Collection $excludedPlays): void`** - Mark plays as excluded
-- **`syncDeduplicationForPlay(BoardGamePlay $play): void`** - Main entry point that handles deduplication for a single play
-- **`syncDeduplicationForGroup(?int $groupId, ?int $boardGameId = null, ?\Carbon\Carbon $playedAt = null): void`** - Recalculate deduplication for a specific scope (efficient updates)
+- `**findDuplicatePlays(BoardGamePlay $play): Collection**` - Find all potential duplicates for a play
+- `**identifyDuplicateGroup(Collection $plays): array**` - Group plays that are actual duplicates (same participants)
+- `**determineLeadingPlay(Collection $duplicatePlays): BoardGamePlay**` - Select leading play based on priority rules
+- `**markExcludedPlays(BoardGamePlay $leadingPlay, Collection $excludedPlays): void**` - Mark plays as excluded
+- `**syncDeduplicationForPlay(BoardGamePlay $play): void**` - Main entry point that handles deduplication for a single play
+- `**syncDeduplicationForGroup(?int $groupId, ?int $boardGameId = null, ?\Carbon\Carbon $playedAt = null): void**` - Recalculate deduplication for a specific scope (efficient updates)
 
 **Key Logic**:
 
@@ -99,13 +100,13 @@ Add:
 
 - `is_excluded` and `leading_play_id` to fillable array
 - Cast `is_excluded` to boolean
-- **`scopeExcluded($query)`** - Filter excluded plays
-- **`scopeNotExcluded($query)`** - Filter non-excluded plays (default for statistics)
-- **`scopeLeading($query)`** - Filter only leading plays
-- **`isExcluded(): bool`** - Check if play is excluded
-- **`isLeading(): bool`** - Check if play is leading (not excluded and no leading_play_id set)
-- **`getLeadingPlay(): ?BoardGamePlay`** - Get the leading play if this is excluded
-- **`getExcludedPlays(): Collection`** - Get all excluded plays that point to this as leading
+- `**scopeExcluded($query)**` - Filter excluded plays
+- `**scopeNotExcluded($query)**` - Filter non-excluded plays (default for statistics)
+- `**scopeLeading($query)**` - Filter only leading plays
+- `**isExcluded(): bool**` - Check if play is excluded
+- `**isLeading(): bool**` - Check if play is leading (not excluded and no leading_play_id set)
+- `**getLeadingPlay(): ?BoardGamePlay**` - Get the leading play if this is excluded
+- `**getExcludedPlays(): Collection**` - Get all excluded plays that point to this as leading
 
 ### 4. Integration with Play Service
 
@@ -113,9 +114,9 @@ Add:
 
 Update:
 
-- **`createBoardGamePlay()`**: After creating play, call `syncDeduplicationForPlay()`
-- **`updateBoardGamePlay()`**: After updating play, call `syncDeduplicationForPlay()` (may affect other plays)
-- **`deleteBoardGamePlay()`**: Before deletion, if play is leading, promote another from excluded group; if excluded, just delete
+- `**createBoardGamePlay()**`: After creating play, call `syncDeduplicationForPlay()`
+- `**updateBoardGamePlay()**`: After updating play, call `syncDeduplicationForPlay()` (may affect other plays)
+- `**deleteBoardGamePlay()**`: Before deletion, if play is leading, promote another from excluded group; if excluded, just delete
 
 ### 5. Statistics Query Updates
 
@@ -240,37 +241,12 @@ private function hasSameParticipants(BoardGamePlay $play1, BoardGamePlay $play2)
 
 ### Leading Play Selection
 
-```php
-private function determineLeadingPlay(Collection $plays): BoardGamePlay
-{
-    // Sort by created_at, then by bgg_play_id
-    $sorted = $plays->sortBy(function ($play) {
-        return [
-            $play->created_at->timestamp,
-            $play->bgg_play_id ?? PHP_INT_MAX,
-        ];
-    });
-    
-    // Prefer play with more details if dates/IDs are equal
-    $leading = $sorted->first();
-    $samePriority = $sorted->filter(function ($play) use ($leading) {
-        return $play->created_at->equalTo($leading->created_at) &&
-               ($play->bgg_play_id ?? PHP_INT_MAX) === ($leading->bgg_play_id ?? PHP_INT_MAX);
-    });
-    
-    if ($samePriority->count() > 1) {
-        // Prefer play with more details
-        $leading = $samePriority->max(function ($play) {
-            $detailScore = 0;
-            if (!empty($play->comment)) $detailScore += 10;
-            if ($play->players->whereNotNull('score')->count() > 0) $detailScore += 5;
-            return $detailScore;
-        });
-    }
-    
-    return $leading;
-}
-```
+1. **Detail score first** (higher wins): non-empty location (not "Unknown") +5, comment +10, game_length_minutes +2, any player `is_new_player` +5, players with score +5.
+2. **Tiebreaker “logged earlier”**: lower `bgg_play_id` (asc, null last), then earlier `created_at`, then lower `id`.
+
+### Duplicate group pairing
+
+When multiple plays from different creators share the same participants (e.g. two users each log two plays the same day), pair by **play order**: 1st play of creator A with 1st of creator B, 2nd with 2nd, etc. Order within creator is by `bgg_play_id` (asc, null last) then `created_at` (asc).
 
 ## Migration Strategy
 
@@ -285,3 +261,4 @@ private function determineLeadingPlay(Collection $plays): BoardGamePlay
 - Index on `is_excluded` for statistics queries
 - Only process affected plays (same boardgame/date/group) on create/update
 - Consider caching participant normalization if needed
+

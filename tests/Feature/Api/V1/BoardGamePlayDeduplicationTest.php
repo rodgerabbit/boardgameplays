@@ -259,13 +259,17 @@ class BoardGamePlayDeduplicationTest extends TestCase
 
     public function test_updating_play_can_change_exclusion_status(): void
     {
-        // Create duplicate plays
+        // Create duplicate plays with equal detail score so earlier created wins (play1)
         $play1 = BoardGamePlay::factory()->create([
             'board_game_id' => $this->boardGame->id,
             'group_id' => $this->group->id,
             'created_by_user_id' => $this->user1->id,
             'played_at' => '2025-01-07',
             'created_at' => now()->subHour(),
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
+            'bgg_play_id' => '100',
         ]);
 
         $play2 = BoardGamePlay::factory()->create([
@@ -274,6 +278,10 @@ class BoardGamePlayDeduplicationTest extends TestCase
             'created_by_user_id' => $this->user2->id,
             'played_at' => '2025-01-07',
             'created_at' => now(),
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
+            'bgg_play_id' => '200',
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -281,6 +289,7 @@ class BoardGamePlayDeduplicationTest extends TestCase
             'user_id' => $this->playerUser->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
+            'is_new_player' => false,
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -288,12 +297,15 @@ class BoardGamePlayDeduplicationTest extends TestCase
             'user_id' => $this->playerUser->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
+            'is_new_player' => false,
         ]);
 
-        // Sync deduplication
+        // Sync deduplication - play1 (lower bgg_play_id) should be leading, play2 excluded
         app(\App\Services\BoardGamePlayDeduplicationService::class)->syncDeduplicationForPlay($play1);
 
+        $play1->refresh();
         $play2->refresh();
+        $this->assertTrue($play1->isLeading(), 'Play1 (lower BGG ID) should be leading');
         $this->assertTrue($play2->isExcluded(), 'Play2 should be excluded initially');
 
         // Update play2 to have different participants

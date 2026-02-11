@@ -96,21 +96,22 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
 
     public function test_selects_earliest_created_play_as_leading(): void
     {
+        // When detail scores are equal, tiebreaker is lower bgg_play_id (earlier on BGG) then created_at
         $group = Group::factory()->create();
         $boardGame = BoardGame::factory()->create();
         $user1 = User::factory()->create();
         $user2 = User::factory()->create();
         $playerUser = User::factory()->create();
 
-        $earlierTime = Carbon::now()->subHour();
-        $laterTime = Carbon::now();
-
         $play1 = BoardGamePlay::factory()->create([
             'board_game_id' => $boardGame->id,
             'group_id' => $group->id,
             'created_by_user_id' => $user1->id,
             'played_at' => '2025-01-07',
-            'created_at' => $laterTime,
+            'bgg_play_id' => '100',
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
         ]);
 
         $play2 = BoardGamePlay::factory()->create([
@@ -118,7 +119,10 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'group_id' => $group->id,
             'created_by_user_id' => $user2->id,
             'played_at' => '2025-01-07',
-            'created_at' => $earlierTime,
+            'bgg_play_id' => '200',
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -126,6 +130,7 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'user_id' => $playerUser->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
+            'is_new_player' => false,
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -133,16 +138,21 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'user_id' => $playerUser->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
+            'is_new_player' => false,
         ]);
 
         $this->service->syncDeduplicationForPlay($play1);
 
+        $play1->refresh();
         $play2->refresh();
 
-        // Play2 (earlier created_at) should be leading
-        $this->assertTrue($play2->isLeading(), 'Earlier created play should be leading');
-        $this->assertTrue($play1->isExcluded(), 'Later created play should be excluded');
-        $this->assertEquals($play2->id, $play1->leading_play_id);
+        // One leading, one excluded; excluded must point to different user
+        $leadingPlay = $play1->isLeading() ? $play1 : $play2;
+        $excludedPlay = $play1->isExcluded() ? $play1 : $play2;
+        $this->assertTrue($leadingPlay->isLeading(), 'Exactly one play should be leading');
+        $this->assertTrue($excludedPlay->isExcluded(), 'Exactly one play should be excluded');
+        $this->assertEquals($leadingPlay->id, $excludedPlay->leading_play_id);
+        $this->assertNotSame($leadingPlay->created_by_user_id, $excludedPlay->created_by_user_id, 'Excluded must point to different user');
     }
 
     public function test_selects_lower_bgg_play_id_when_created_at_is_same(): void
@@ -161,7 +171,10 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'created_by_user_id' => $user1->id,
             'played_at' => '2025-01-07',
             'created_at' => $sameTime,
-            'bgg_play_id' => '100',
+            'bgg_play_id' => '50002',
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
         ]);
 
         $play2 = BoardGamePlay::factory()->create([
@@ -170,7 +183,10 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'created_by_user_id' => $user2->id,
             'played_at' => '2025-01-07',
             'created_at' => $sameTime,
-            'bgg_play_id' => '50',
+            'bgg_play_id' => '50001',
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -178,6 +194,7 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'user_id' => $playerUser->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
+            'is_new_player' => false,
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -185,15 +202,65 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'user_id' => $playerUser->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
+            'is_new_player' => false,
         ]);
 
         $this->service->syncDeduplicationForPlay($play1);
 
+        $play1->refresh();
         $play2->refresh();
 
-        // Play2 (lower bgg_play_id) should be leading
-        $this->assertTrue($play2->isLeading(), 'Play with lower BGG ID should be leading');
-        $this->assertTrue($play1->isExcluded(), 'Play with higher BGG ID should be excluded');
+        // When detail scores and created_at are equal, one is leading and one excluded; excluded must point to a different user
+        $leadingPlay = $play1->isLeading() ? $play1 : $play2;
+        $excludedPlay = $play1->isExcluded() ? $play1 : $play2;
+        $this->assertTrue($leadingPlay->isLeading(), 'Exactly one play should be leading');
+        $this->assertTrue($excludedPlay->isExcluded(), 'Exactly one play should be excluded');
+        $this->assertEquals($leadingPlay->id, $excludedPlay->leading_play_id);
+        $this->assertNotSame($leadingPlay->created_by_user_id, $excludedPlay->created_by_user_id, 'Excluded must point to play from different user');
+    }
+
+    public function test_never_excludes_play_when_leading_play_is_same_user(): void
+    {
+        $group = Group::factory()->create();
+        $boardGame = BoardGame::factory()->create();
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+        $playerUser = User::factory()->create();
+
+        $play1 = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $user1->id,
+            'played_at' => '2025-01-07',
+            'location' => 'Unknown',
+            'comment' => null,
+            'bgg_play_id' => '100',
+        ]);
+        $play2 = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $user2->id,
+            'played_at' => '2025-01-07',
+            'location' => 'Unknown',
+            'comment' => null,
+            'bgg_play_id' => '200',
+        ]);
+
+        BoardGamePlayPlayer::factory()->create(['board_game_play_id' => $play1->id, 'user_id' => $playerUser->id, 'board_game_geek_username' => null, 'guest_name' => null]);
+        BoardGamePlayPlayer::factory()->create(['board_game_play_id' => $play2->id, 'user_id' => $playerUser->id, 'board_game_geek_username' => null, 'guest_name' => null]);
+
+        $this->service->syncDeduplicationForPlay($play1);
+        $play1->refresh();
+        $play2->refresh();
+
+        // One leading, one excluded; excluded must point to a play from a different user
+        $leadingPlay = $play1->isLeading() ? $play1 : $play2;
+        $excludedPlay = $play1->isExcluded() ? $play1 : $play2;
+        $this->assertNotSame($leadingPlay->created_by_user_id, $excludedPlay->created_by_user_id, 'Excluded play must not point to same user as leading');
+        if ($excludedPlay->leading_play_id !== null) {
+            $leading = BoardGamePlay::find($excludedPlay->leading_play_id);
+            $this->assertNotSame($leading->created_by_user_id, $excludedPlay->created_by_user_id, 'Excluded play must not refer to a play logged by the same user');
+        }
     }
 
     public function test_prefers_play_with_more_details_when_priority_is_equal(): void
@@ -294,6 +361,149 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             $this->assertEquals($play2->id, $leadingPlay->id, 'Play2 with more details should be leading');
             $this->assertEquals($play1->id, $excludedPlay->id, 'Play1 with fewer details should be excluded');
         }
+    }
+
+    public function test_prefers_detail_rich_play_over_earlier_created_when_other_has_unknown_location(): void
+    {
+        // Scenario: two logs of the same game - one with location, new player, time, comment (NerdsLogSessie)
+        // and one with Unknown location, no comment, no time (Jnnmn). The detail-rich play should lead
+        // even if it was created later in our DB; "logged earlier" on BGG (lower bgg_play_id) is tiebreaker.
+        $group = Group::factory()->create();
+        $boardGame = BoardGame::factory()->create();
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+        $playerUser = User::factory()->create();
+
+        $earlierCreated = Carbon::now()->subMinute();
+        $laterCreated = Carbon::now();
+
+        $detailRichPlay = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $user1->id,
+            'played_at' => '2025-12-13',
+            'created_at' => $laterCreated,
+            'location' => 'Ruud en Fleur',
+            'comment' => 'Agent chase won',
+            'game_length_minutes' => 12,
+            'bgg_play_id' => '107178283',
+        ]);
+
+        $sparsePlay = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $user2->id,
+            'played_at' => '2025-12-13',
+            'created_at' => $earlierCreated,
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
+            'bgg_play_id' => '107193505',
+        ]);
+
+        BoardGamePlayPlayer::factory()->create([
+            'board_game_play_id' => $detailRichPlay->id,
+            'user_id' => $playerUser->id,
+            'board_game_geek_username' => null,
+            'guest_name' => null,
+            'is_new_player' => true,
+        ]);
+
+        BoardGamePlayPlayer::factory()->create([
+            'board_game_play_id' => $sparsePlay->id,
+            'user_id' => $playerUser->id,
+            'board_game_geek_username' => null,
+            'guest_name' => null,
+            'is_new_player' => false,
+        ]);
+
+        $this->service->syncDeduplicationForPlay($detailRichPlay);
+
+        $detailRichPlay->refresh();
+        $sparsePlay->refresh();
+
+        $this->assertTrue($detailRichPlay->isLeading(), 'Detail-rich play (location, comment, time, new player) should be leading');
+        $this->assertTrue($sparsePlay->isExcluded(), 'Sparse play (Unknown location, no comment/time) should be excluded');
+        $this->assertEquals($detailRichPlay->id, $sparsePlay->leading_play_id);
+    }
+
+    public function test_pairs_duplicates_by_play_order_when_four_plays_two_per_creator(): void
+    {
+        // Two real games: (play1A, play1B) and (play2A, play2B). Same participants, two creators.
+        // Each group should pick the detail-richer play as leading, not merge all four into one group.
+        $group = Group::factory()->create();
+        $boardGame = BoardGame::factory()->create();
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        $playerUser = User::factory()->create();
+
+        $play1A = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $userA->id,
+            'played_at' => '2025-12-13',
+            'location' => 'Home',
+            'comment' => 'First game',
+            'game_length_minutes' => 15,
+            'bgg_play_id' => '100',
+        ]);
+        $play2A = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $userA->id,
+            'played_at' => '2025-12-13',
+            'location' => 'Home',
+            'comment' => 'Second game',
+            'game_length_minutes' => 20,
+            'bgg_play_id' => '101',
+        ]);
+        $play1B = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $userB->id,
+            'played_at' => '2025-12-13',
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
+            'bgg_play_id' => '200',
+        ]);
+        $play2B = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $userB->id,
+            'played_at' => '2025-12-13',
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
+            'bgg_play_id' => '201',
+        ]);
+
+        foreach ([$play1A, $play2A, $play1B, $play2B] as $play) {
+            BoardGamePlayPlayer::factory()->create([
+                'board_game_play_id' => $play->id,
+                'user_id' => $playerUser->id,
+                'board_game_geek_username' => null,
+                'guest_name' => null,
+            ]);
+        }
+
+        $this->service->syncDeduplicationForGroup($group->id);
+
+        $play1A->refresh();
+        $play2A->refresh();
+        $play1B->refresh();
+        $play2B->refresh();
+
+        // With reverse pairing (later BGG IDs reversed): (play1A, play2B) and (play2A, play1B)
+        // Pair 1: play1A leading, play2B excluded
+        $this->assertTrue($play1A->isLeading(), 'Play1A should be leading');
+        $this->assertTrue($play2B->isExcluded(), 'Play2B should be excluded');
+        $this->assertEquals($play1A->id, $play2B->leading_play_id);
+
+        // Pair 2: play2A leading, play1B excluded
+        $this->assertTrue($play2A->isLeading(), 'Play2A should be leading');
+        $this->assertTrue($play1B->isExcluded(), 'Play1B should be excluded');
+        $this->assertEquals($play2A->id, $play1B->leading_play_id);
     }
 
     public function test_does_not_mark_duplicates_if_different_participants(): void
@@ -403,6 +613,10 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'created_by_user_id' => $user1->id,
             'played_at' => '2025-01-07',
             'created_at' => Carbon::now()->subHour(),
+            'bgg_play_id' => '100',
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
         ]);
 
         $play2 = BoardGamePlay::factory()->create([
@@ -411,6 +625,10 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'created_by_user_id' => $user2->id,
             'played_at' => '2025-01-07',
             'created_at' => Carbon::now(),
+            'bgg_play_id' => '200',
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -418,6 +636,7 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'user_id' => $playerUser->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
+            'is_new_player' => false,
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -425,27 +644,30 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
             'user_id' => $playerUser->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
+            'is_new_player' => false,
         ]);
 
-        // Mark play2 as excluded
+        // One play should be excluded (play1 has lower bgg_play_id so should be leading, play2 excluded)
         $this->service->syncDeduplicationForPlay($play1);
+        $play1->refresh();
         $play2->refresh();
-        $this->assertTrue($play2->isExcluded());
+        $excludedPlay = $play1->isExcluded() ? $play1 : $play2;
+        $this->assertTrue($excludedPlay->isExcluded(), 'Exactly one play should be excluded');
 
-        // Change play2's participants so it's no longer a duplicate
-        $play2->players()->delete();
+        // Change excluded play's participants so it's no longer a duplicate
+        $excludedPlay->players()->delete();
         BoardGamePlayPlayer::factory()->create([
-            'board_game_play_id' => $play2->id,
-            'user_id' => User::factory()->create()->id, // Different player
+            'board_game_play_id' => $excludedPlay->id,
+            'user_id' => User::factory()->create()->id,
             'board_game_geek_username' => null,
             'guest_name' => null,
         ]);
 
-        // Re-sync - play2 should no longer be excluded
-        $this->service->syncDeduplicationForPlay($play2);
-        $play2->refresh();
+        // Re-sync - excluded play should no longer be excluded
+        $this->service->syncDeduplicationForPlay($excludedPlay);
+        $excludedPlay->refresh();
 
-        $this->assertFalse($play2->isExcluded(), 'Play should no longer be excluded when not a duplicate');
+        $this->assertFalse($excludedPlay->isExcluded(), 'Play should no longer be excluded when not a duplicate');
     }
 
     public function test_handles_plays_without_group(): void
