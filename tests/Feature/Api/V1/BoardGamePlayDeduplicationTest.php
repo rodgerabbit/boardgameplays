@@ -259,7 +259,7 @@ class BoardGamePlayDeduplicationTest extends TestCase
 
     public function test_updating_play_can_change_exclusion_status(): void
     {
-        // Create duplicate plays with equal detail score so earlier created wins (play1)
+        // Create duplicate plays with equal detail score so lower bgg_play_id wins (play1)
         $play1 = BoardGamePlay::factory()->create([
             'board_game_id' => $this->boardGame->id,
             'group_id' => $this->group->id,
@@ -269,6 +269,7 @@ class BoardGamePlayDeduplicationTest extends TestCase
             'location' => 'Unknown',
             'comment' => null,
             'game_length_minutes' => null,
+            'is_incomplete' => false,
             'bgg_play_id' => '100',
         ]);
 
@@ -281,6 +282,7 @@ class BoardGamePlayDeduplicationTest extends TestCase
             'location' => 'Unknown',
             'comment' => null,
             'game_length_minutes' => null,
+            'is_incomplete' => false,
             'bgg_play_id' => '200',
         ]);
 
