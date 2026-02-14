@@ -758,7 +758,7 @@ endpoints:
         name: 'players[].is_winner'
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false

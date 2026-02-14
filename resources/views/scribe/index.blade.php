@@ -187,7 +187,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: February 11, 2026</li>
+        <li>Last updated: February 14, 2026</li>
     </ul>
 </div>
 
@@ -2594,7 +2594,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>position</code></b>&nbsp;&nbsp;
