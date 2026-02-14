@@ -45,7 +45,10 @@
         <div class="row" style="margin-bottom: 2rem;">
             <div class="twelve columns">
                 <h2>Your Recent Games</h2>
-                <table class="u-full-width" v-if="lastUserPlays.length > 0">
+                <p v-if="userPlaysPaginator.total > 0" class="recent-games-hint" style="color: #666; font-size: 0.875rem; margin-bottom: 0.75rem;">
+                    Duplicate plays are shown greyed out and are not counted in your statistics.
+                </p>
+                <table class="u-full-width" v-if="userPlaysPaginator.data && userPlaysPaginator.data.length > 0">
                     <thead>
                         <tr>
                             <th>Date</th>
@@ -54,11 +57,20 @@
                             <th>Duration</th>
                             <th>Players</th>
                             <th>Your Result</th>
+                            <th>Logged by</th>
+                            <th>BGG</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="play in lastUserPlays" :key="play.id">
-                            <td>{{ formatDate(play.played_at) }}</td>
+                        <tr
+                            v-for="play in userPlaysPaginator.data"
+                            :key="play.id"
+                            :class="{ 'play-row-excluded': play.is_excluded }"
+                        >
+                            <td>
+                                <span v-if="play.is_excluded" class="duplicate-label" title="Duplicate play (not counted in statistics)">⊕ </span>
+                                {{ formatDate(play.played_at) }}
+                            </td>
                             <td>
                                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                                     <img 
@@ -95,9 +107,46 @@
                                 </span>
                                 <span v-else style="color: #999;">N/A</span>
                             </td>
+                            <td>{{ play.creator?.name ?? '—' }}</td>
+                            <td>
+                                <a
+                                    v-if="play.bgg_play_id"
+                                    :href="`https://boardgamegeek.com/play/details/${play.bgg_play_id}`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style="color: #1976d2;"
+                                >
+                                    BGG
+                                </a>
+                                <span v-else style="color: #999;">—</span>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
+                <div v-if="userPlaysPaginator.data && userPlaysPaginator.data.length > 0" class="pagination-controls" style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <span class="pagination-info" style="color: #666; font-size: 0.875rem;">
+                        Page {{ userPlaysPaginator.current_page }} of {{ userPlaysPaginator.last_page }}
+                        ({{ userPlaysPaginator.total }} total)
+                    </span>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button
+                            type="button"
+                            class="button"
+                            :disabled="!userPlaysPaginator.prev_page_url"
+                            @click="goToUserPlaysPage(userPlaysPaginator.current_page - 1)"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            type="button"
+                            class="button"
+                            :disabled="!userPlaysPaginator.next_page_url"
+                            @click="goToUserPlaysPage(userPlaysPaginator.current_page + 1)"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
                 <p v-else style="color: #666; padding: 1rem;">No games played yet.</p>
             </div>
         </div>
@@ -115,6 +164,8 @@
                             <th>Duration</th>
                             <th>Players</th>
                             <th>Winners</th>
+                            <th>Logged by</th>
+                            <th>BGG</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -155,6 +206,19 @@
                                     </span>
                                     <span v-if="getWinners(play).length === 0" style="color: #999;">No winners</span>
                                 </div>
+                            </td>
+                            <td>{{ play.creator?.name ?? '—' }}</td>
+                            <td>
+                                <a
+                                    v-if="play.bgg_play_id"
+                                    :href="`https://boardgamegeek.com/play/details/${play.bgg_play_id}`"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style="color: #1976d2;"
+                                >
+                                    BGG
+                                </a>
+                                <span v-else style="color: #999;">—</span>
                             </td>
                         </tr>
                     </tbody>
@@ -238,9 +302,17 @@ const props = defineProps({
         type: Object,
         required: true,
     },
-    lastUserPlays: {
-        type: Array,
+    userPlaysPaginator: {
+        type: Object,
         required: true,
+        default: () => ({
+            data: [],
+            current_page: 1,
+            last_page: 1,
+            total: 0,
+            prev_page_url: null,
+            next_page_url: null,
+        }),
     },
     lastGroupPlays: {
         type: Array,
@@ -251,6 +323,11 @@ const props = defineProps({
         required: true,
     },
 });
+
+const goToUserPlaysPage = (page) => {
+    if (page < 1 || page > props.userPlaysPaginator.last_page) return;
+    router.get(route('dashboard'), { user_plays_page: page }, { preserveState: true });
+};
 
 const logout = () => {
     router.post(route('logout'));
@@ -308,6 +385,30 @@ table th {
 
 table tbody tr:nth-child(even) {
     background-color: #fafafa;
+}
+
+/* Duplicate (excluded) plays: greyed out, not counted in statistics */
+table tbody tr.play-row-excluded {
+    background-color: #e8e8e8;
+    color: #888;
+}
+
+table tbody tr.play-row-excluded:nth-child(even) {
+    background-color: #e0e0e0;
+}
+
+table tbody tr.play-row-excluded img {
+    opacity: 0.7;
+}
+
+.duplicate-label {
+    color: #888;
+    font-size: 0.875rem;
+}
+
+.pagination-controls .button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 </style>
 
