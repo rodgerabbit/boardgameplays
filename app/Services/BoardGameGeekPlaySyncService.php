@@ -125,6 +125,11 @@ class BoardGameGeekPlaySyncService extends BaseService
         foreach ($plays as $playElement) {
             try {
                 if (!$this->validateBggPlay($playElement)) {
+                    // Update existing play's is_incomplete when BGG marks it incomplete so deduplication excludes it
+                    $incomplete = (int) ($playElement['incomplete'] ?? 0);
+                    if ($incomplete !== 0) {
+                        BoardGamePlay::where('bgg_play_id', (string) $playElement['id'])->update(['is_incomplete' => true]);
+                    }
                     continue;
                 }
 
@@ -216,6 +221,7 @@ class BoardGameGeekPlaySyncService extends BaseService
         $location = (string) $playElement['location'];
         $comment = (string) ($playElement->comments ?? '');
         $length = (int) ($playElement['length'] ?? 0);
+        $incomplete = (int) ($playElement['incomplete'] ?? 0);
 
         return [
             'board_game_id' => $boardGameId,
@@ -226,6 +232,7 @@ class BoardGameGeekPlaySyncService extends BaseService
             'comment' => $comment !== '' ? $comment : null,
             'game_length_minutes' => $length > 0 ? $length : null,
             'source' => 'boardgamegeek',
+            'is_incomplete' => $incomplete !== 0,
             'bgg_play_id' => $bggPlayId,
         ];
     }

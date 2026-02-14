@@ -36,6 +36,7 @@ class BoardGamePlay extends Model
         'comment',
         'game_length_minutes',
         'source',
+        'is_incomplete',
         'bgg_play_id',
         'bgg_synced_at',
         'bgg_sync_status',
@@ -63,6 +64,7 @@ class BoardGamePlay extends Model
             'bgg_synced_at' => 'datetime',
             'bgg_synced_to_at' => 'datetime',
             'sync_to_bgg' => 'boolean',
+            'is_incomplete' => 'boolean',
             'is_excluded' => 'boolean',
             'excluded_at' => 'datetime',
         ];

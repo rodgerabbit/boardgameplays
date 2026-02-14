@@ -155,6 +155,61 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
         $this->assertNotSame($leadingPlay->created_by_user_id, $excludedPlay->created_by_user_id, 'Excluded must point to different user');
     }
 
+    public function test_incomplete_play_is_never_chosen_as_leading_when_complete_duplicate_exists(): void
+    {
+        $group = Group::factory()->create();
+        $boardGame = BoardGame::factory()->create();
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+        $playerUser = User::factory()->create();
+
+        $completePlay = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $user1->id,
+            'played_at' => '2025-01-07',
+            'bgg_play_id' => '100',
+            'is_incomplete' => false,
+            'location' => 'Unknown',
+            'comment' => null,
+            'game_length_minutes' => null,
+        ]);
+
+        $incompletePlay = BoardGamePlay::factory()->create([
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'created_by_user_id' => $user2->id,
+            'played_at' => '2025-01-07',
+            'bgg_play_id' => '200',
+            'is_incomplete' => true,
+            'location' => 'Home',
+            'comment' => 'Had fun',
+            'game_length_minutes' => 30,
+        ]);
+
+        BoardGamePlayPlayer::factory()->create([
+            'board_game_play_id' => $completePlay->id,
+            'user_id' => $playerUser->id,
+            'board_game_geek_username' => null,
+            'guest_name' => null,
+        ]);
+        BoardGamePlayPlayer::factory()->create([
+            'board_game_play_id' => $incompletePlay->id,
+            'user_id' => $playerUser->id,
+            'board_game_geek_username' => null,
+            'guest_name' => null,
+        ]);
+
+        $this->service->syncDeduplicationForPlay($completePlay);
+
+        $completePlay->refresh();
+        $incompletePlay->refresh();
+
+        $this->assertTrue($completePlay->isLeading(), 'Complete play must be leading');
+        $this->assertTrue($incompletePlay->isExcluded(), 'Incomplete play must be excluded');
+        $this->assertEquals($completePlay->id, $incompletePlay->leading_play_id);
+    }
+
     public function test_selects_lower_bgg_play_id_when_created_at_is_same(): void
     {
         $group = Group::factory()->create();
@@ -331,26 +386,21 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
         $this->assertTrue($leadingPlay->isLeading(), 'One play should be leading');
         $this->assertTrue($excludedPlay->isExcluded(), 'One play should be excluded');
         
-        // Verify the play with more details is leading (play1 has comment, score, and game_length)
-        $play1DetailScore = (!empty($play1->comment) ? 10 : 0) + 
-                           ($play1->players->whereNotNull('score')->count() > 0 ? 5 : 0) +
-                           ($play1->game_length_minutes !== null ? 2 : 0);
-        $play2DetailScore = (!empty($play2->comment) ? 10 : 0) + 
-                           ($play2->players->whereNotNull('score')->count() > 0 ? 5 : 0) +
-                           ($play2->game_length_minutes !== null ? 2 : 0);
-        
-        // Play1 should have more details (comment + score + game_length = 17) vs play2 (0)
+        // Detail score weights: location 10, game_length 8, comment 5, new_player 5, scores 5
+        $scoreFor = function ($p) {
+            $loc = trim((string) ($p->location ?? ''));
+            $locScore = ($loc !== '' && strtolower($loc) !== 'unknown') ? 10 : 0;
+            $newScore = $p->players->where('is_new_player', true)->count() > 0 ? 5 : 0;
+            return $locScore + ($p->game_length_minutes !== null ? 8 : 0) + (!empty($p->comment) ? 5 : 0)
+                + $newScore + ($p->players->whereNotNull('score')->count() > 0 ? 5 : 0);
+        };
+        $play1DetailScore = $scoreFor($play1);
+        $play2DetailScore = $scoreFor($play2);
+
         $this->assertGreaterThan($play2DetailScore, $play1DetailScore, 'Play1 should have more details');
-        
-        // The leading play should be the one with more details when priority is equal
-        // Since they have same created_at and no bgg_play_id, detail score should determine leading
-        // Verify that the leading play has a detail score >= the excluded play's detail score
-        $leadingDetailScore = (!empty($leadingPlay->comment) ? 10 : 0) + 
-                             ($leadingPlay->players->whereNotNull('score')->count() > 0 ? 5 : 0) +
-                             ($leadingPlay->game_length_minutes !== null ? 2 : 0);
-        $excludedDetailScore = (!empty($excludedPlay->comment) ? 10 : 0) + 
-                               ($excludedPlay->players->whereNotNull('score')->count() > 0 ? 5 : 0) +
-                               ($excludedPlay->game_length_minutes !== null ? 2 : 0);
+
+        $leadingDetailScore = $scoreFor($leadingPlay);
+        $excludedDetailScore = $scoreFor($excludedPlay);
         
         // If play1 has more details, it should be leading
         if ($play1DetailScore > $play2DetailScore) {
@@ -494,16 +544,16 @@ class BoardGamePlayDeduplicationServiceTest extends TestCase
         $play1B->refresh();
         $play2B->refresh();
 
-        // With reverse pairing (later BGG IDs reversed): (play1A, play2B) and (play2A, play1B)
-        // Pair 1: play1A leading, play2B excluded
+        // Pair by index (1st with 1st, 2nd with 2nd): (play1A, play1B) and (play2A, play2B)
+        // Pair 1: play1A (detail-rich) leading, play1B excluded
         $this->assertTrue($play1A->isLeading(), 'Play1A should be leading');
-        $this->assertTrue($play2B->isExcluded(), 'Play2B should be excluded');
-        $this->assertEquals($play1A->id, $play2B->leading_play_id);
-
-        // Pair 2: play2A leading, play1B excluded
-        $this->assertTrue($play2A->isLeading(), 'Play2A should be leading');
         $this->assertTrue($play1B->isExcluded(), 'Play1B should be excluded');
-        $this->assertEquals($play2A->id, $play1B->leading_play_id);
+        $this->assertEquals($play1A->id, $play1B->leading_play_id);
+
+        // Pair 2: play2A (detail-rich) leading, play2B excluded
+        $this->assertTrue($play2A->isLeading(), 'Play2A should be leading');
+        $this->assertTrue($play2B->isExcluded(), 'Play2B should be excluded');
+        $this->assertEquals($play2A->id, $play2B->leading_play_id);
     }
 
     public function test_does_not_mark_duplicates_if_different_participants(): void

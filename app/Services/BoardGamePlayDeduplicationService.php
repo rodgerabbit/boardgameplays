@@ -88,10 +88,8 @@ class BoardGamePlayDeduplicationService extends BaseService
                 // Mark excluded plays
                 $this->markExcludedPlays($leadingPlay, $excludedPlays);
 
-                // Ensure leading play is not excluded
-                if ($leadingPlay->is_excluded) {
-                    $this->clearExclusion($leadingPlay);
-                }
+                // Always persist leading play as non-excluded so DB state is correct after sync
+                $this->clearExclusion($leadingPlay);
             }
         });
     }
@@ -151,9 +149,8 @@ class BoardGamePlayDeduplicationService extends BaseService
 
                 $this->markExcludedPlays($leadingPlay, $excludedPlays);
 
-                if ($leadingPlay->is_excluded) {
-                    $this->clearExclusion($leadingPlay);
-                }
+                // Always persist leading play as non-excluded so DB state is correct
+                $this->clearExclusion($leadingPlay);
             }
         }
     }
@@ -239,37 +236,23 @@ class BoardGamePlayDeduplicationService extends BaseService
                 return $creatorPlays->sortBy($sortKey)->values();
             });
 
-            $minLength = $sortedByCreator->min(fn ($list) => $list->count());
-            if ($minLength < 1) {
+            $maxLength = $sortedByCreator->max(fn ($list) => $list->count());
+            if ($maxLength < 1) {
                 continue;
             }
 
-            // 4. Reverse the list of the creator with larger BGG IDs so "earliest" pairs with "latest"
-            $creatorIds = $sortedByCreator->keys()->toArray();
-            $firstCreatorId = $creatorIds[0];
-            $secondCreatorId = $creatorIds[1];
-            $firstMinBgg = $sortedByCreator->get($firstCreatorId)->first()->bgg_play_id !== null
-                ? (int) $sortedByCreator->get($firstCreatorId)->first()->bgg_play_id
-                : PHP_INT_MAX;
-            $secondMinBgg = $sortedByCreator->get($secondCreatorId)->first()->bgg_play_id !== null
-                ? (int) $sortedByCreator->get($secondCreatorId)->first()->bgg_play_id
-                : PHP_INT_MAX;
-            $laterCreatorId = $secondMinBgg > $firstMinBgg ? $secondCreatorId : $firstCreatorId;
-            $sortedByCreator = $sortedByCreator->map(function ($list, $creatorId) use ($laterCreatorId) {
-                if ($creatorId === $laterCreatorId) {
-                    return $list->reverse()->values();
-                }
-
-                return $list;
-            });
-
-            // 5. Pair by index
-            for ($i = 0; $i < $minLength; $i++) {
+            // 4. For each index i, form a group of plays at that index (from every creator that has an i-th play).
+            //    So when creators have different counts (e.g. 2, 2, 1), we get: index 0 → 3 plays, index 1 → 2 plays.
+            for ($i = 0; $i < $maxLength; $i++) {
                 $group = collect();
                 foreach ($sortedByCreator as $creatorPlays) {
-                    $group->push($creatorPlays[$i]);
+                    if ($i < $creatorPlays->count()) {
+                        $group->push($creatorPlays[$i]);
+                    }
                 }
-                $duplicateGroups[] = $group;
+                if ($group->count() >= 2) {
+                    $duplicateGroups[] = $group;
+                }
             }
         }
 
@@ -280,8 +263,9 @@ class BoardGamePlayDeduplicationService extends BaseService
      * Determine the leading play from a collection of duplicate plays.
      *
      * Selection priority:
-     * 1. Play with more details (location, new player indicator, time, comments, scores)
-     * 2. Logged earlier: lowest bgg_play_id when present (BGG order), then earliest created_at
+     * 1. Incomplete plays are never chosen as leading (they are always excluded when a complete duplicate exists).
+     * 2. Play with more details (location, new player indicator, time, comments, scores)
+     * 3. Logged earlier: lowest bgg_play_id when present (BGG order), then earliest created_at
      *
      * @param \Illuminate\Support\Collection<int, BoardGamePlay>|\Illuminate\Database\Eloquent\Collection<int, BoardGamePlay> $duplicatePlays The duplicate plays
      * @return BoardGamePlay The leading play
@@ -295,15 +279,16 @@ class BoardGamePlayDeduplicationService extends BaseService
             }
         });
 
-        // Sort by: (1) detail score descending, (2) bgg_play_id ascending (null last), (3) created_at ascending
+        // Sort by: (1) incomplete last (is_incomplete ? 1 : 0), (2) detail score descending, (3) bgg_play_id ascending, (4) created_at, (5) id
         $sorted = $duplicatePlays->sortBy(function (BoardGamePlay $play) {
             $detailScore = $this->calculateDetailScore($play);
 
             return [
-                -$detailScore, // negative so higher score sorts first
+                $play->is_incomplete ? 1 : 0, // incomplete plays last so they are never chosen as leading when a complete duplicate exists
+                -$detailScore,
                 $play->bgg_play_id !== null ? (int) $play->bgg_play_id : PHP_INT_MAX,
                 $play->created_at->timestamp,
-                $play->id, // deterministic tiebreaker
+                $play->id,
             ];
         });
 
@@ -323,20 +308,19 @@ class BoardGamePlayDeduplicationService extends BaseService
     {
         $detailScore = 0;
 
-        // Non-empty, meaningful location (e.g. not "Unknown" or empty)
+        // Location and game length are weighted above comment (where was it played, how long it took)
         $location = trim((string) ($play->location ?? ''));
         if ($location !== '' && strtolower($location) !== 'unknown') {
-            $detailScore += 5;
-        }
-
-        // Comment adds significant value
-        if (!empty($play->comment)) {
             $detailScore += 10;
         }
 
-        // Game length (time) adds value
         if ($play->game_length_minutes !== null) {
-            $detailScore += 2;
+            $detailScore += 8;
+        }
+
+        // Comment adds value but less than location/game length
+        if (!empty($play->comment)) {
+            $detailScore += 5;
         }
 
         if (!$play->relationLoaded('players')) {
