@@ -65,6 +65,42 @@ docker_compose_cmd() {
     fi
 }
 
+# Frontend-only update using Docker
+update_with_docker_frontend_only() {
+    local DOCKER_COMPOSE=$(docker_compose_cmd)
+    print_info "Ensuring Docker containers are running..."
+    $DOCKER_COMPOSE up -d
+    sleep 3
+    print_step "Updating Node Dependencies"
+    print_info "Updating npm dependencies..."
+    $DOCKER_COMPOSE exec -T node npm update
+    print_success "Node dependencies updated"
+    print_step "Clearing View Cache"
+    $DOCKER_COMPOSE exec -T app php artisan view:clear
+    print_success "View cache cleared"
+    print_step "Rebuilding Frontend Assets"
+    print_info "Building production assets..."
+    $DOCKER_COMPOSE exec -T node npm run build
+    print_success "Frontend assets rebuilt"
+    return 0
+}
+
+# Frontend-only update locally
+update_local_frontend_only() {
+    print_step "Updating Node Dependencies"
+    print_info "Updating npm dependencies..."
+    npm update
+    print_success "Node dependencies updated"
+    print_step "Clearing View Cache"
+    php artisan view:clear
+    print_success "View cache cleared"
+    print_step "Rebuilding Frontend Assets"
+    print_info "Building production assets..."
+    npm run build
+    print_success "Frontend assets rebuilt"
+    return 0
+}
+
 # Update using Docker
 update_with_docker() {
     local DOCKER_COMPOSE=$(docker_compose_cmd)
@@ -437,6 +473,16 @@ run_tests() {
 
 # Main execution
 main() {
+    # Parse arguments
+    FRONTEND_ONLY=0
+    for arg in "$@"; do
+        case "$arg" in
+            --frontend|-f)
+                FRONTEND_ONLY=1
+                ;;
+        esac
+    done
+
     # Check if we're in the project root
     if [ ! -f "artisan" ] && [ ! -f "composer.json" ]; then
         print_error "This script must be run from the project root directory"
@@ -450,7 +496,23 @@ main() {
     echo -e "${GREEN}╚════════════════════════════════════════════════════════╝${NC}"
     echo ""
     
-    # Detect setup method
+    if [ "$FRONTEND_ONLY" -eq 1 ]; then
+        print_info "Frontend-only update (skip PHP, migrations, full cache)"
+        if is_docker_setup; then
+            print_info "Detected Docker setup"
+            update_with_docker_frontend_only
+        else
+            print_info "Detected local setup"
+            update_local_frontend_only
+        fi
+        print_step "Frontend Update Complete!"
+        echo ""
+        print_success "Frontend assets have been rebuilt."
+        echo ""
+        exit 0
+    fi
+    
+    # Detect setup method (full update)
     if is_docker_setup; then
         print_info "Detected Docker setup"
         UPDATE_METHOD="Docker"
@@ -537,8 +599,8 @@ main() {
     echo ""
 }
 
-# Run main function
-main
+# Run main function (pass script arguments so --frontend / -f work)
+main "$@"
 
 
 
