@@ -1,292 +1,325 @@
 <template>
-    <div>
+    <div class="space-y-8">
         <!-- Header -->
-        <div class="row" style="margin-bottom: 2rem;">
-            <div class="twelve columns">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h1 style="margin: 0;">Dashboard</h1>
-                    <form @submit.prevent="logout" style="margin: 0;">
-                        <button type="submit" class="button">Logout</button>
-                    </form>
-                </div>
-            </div>
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <h1 class="text-2xl font-semibold text-text-dark m-0">Dashboard</h1>
+            <form @submit.prevent="logout" class="m-0">
+                <button
+                    type="submit"
+                    class="rounded-lg border border-brand-ink-soft bg-brand-pink px-4 py-2 text-sm font-medium text-brand-ink shadow-cartoon transition hover:bg-brand-pink-dark"
+                >
+                    Logout
+                </button>
+            </form>
         </div>
 
         <!-- Overall Statistics Section -->
-        <div class="row" style="margin-bottom: 2rem;">
-            <div class="twelve columns">
-                <h2>Your Statistics</h2>
-                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px; padding: 1rem; background-color: #f5f5f5; border-radius: 4px;">
-                        <div style="font-size: 2rem; font-weight: bold; color: #333;">
-                            {{ userStatistics.total_games_played }}
-                        </div>
-                        <div style="color: #666; margin-top: 0.5rem;">Total Games Played</div>
+        <section>
+            <h2 class="mb-4 text-lg font-medium text-text-dark">Your Statistics</h2>
+            <div class="flex flex-wrap gap-4">
+                <div class="min-w-[200px] flex-1 rounded-xl border border-surface-darker bg-surface-dark p-4">
+                    <div class="text-3xl font-bold text-text-dark">
+                        {{ userStatistics.total_games_played }}
                     </div>
-                    <div style="flex: 1; min-width: 200px; padding: 1rem; background-color: #f5f5f5; border-radius: 4px;">
-                        <div style="font-size: 2rem; font-weight: bold; color: #333;">
-                            {{ userStatistics.total_games_won }}
-                        </div>
-                        <div style="color: #666; margin-top: 0.5rem;">Games Won</div>
+                    <div class="mt-2 text-sm text-text-muted-dark">Total Games Played</div>
+                </div>
+                <div class="min-w-[200px] flex-1 rounded-xl border border-surface-darker bg-surface-dark p-4">
+                    <div class="text-3xl font-bold text-text-dark">
+                        {{ userStatistics.total_games_won }}
                     </div>
-                    <div style="flex: 1; min-width: 200px; padding: 1rem; background-color: #f5f5f5; border-radius: 4px;">
-                        <div style="font-size: 2rem; font-weight: bold; color: #333;">
-                            {{ userStatistics.total_games_played > 0 
-                                ? ((userStatistics.total_games_won / userStatistics.total_games_played) * 100).toFixed(1) 
-                                : '0' }}%
-                        </div>
-                        <div style="color: #666; margin-top: 0.5rem;">Win Rate</div>
+                    <div class="mt-2 text-sm text-text-muted-dark">Games Won</div>
+                </div>
+                <div class="min-w-[200px] flex-1 rounded-xl border border-surface-darker bg-surface-dark p-4">
+                    <div class="text-3xl font-bold text-text-dark">
+                        {{ userStatistics.total_games_played > 0
+                            ? ((userStatistics.total_games_won / userStatistics.total_games_played) * 100).toFixed(1)
+                            : '0' }}%
                     </div>
+                    <div class="mt-2 text-sm text-text-muted-dark">Win Rate</div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Last Games Played by User Section -->
-        <div class="row" style="margin-bottom: 2rem;">
-            <div class="twelve columns">
-                <h2>Your Recent Games</h2>
-                <p v-if="userPlaysPaginator.total > 0" class="recent-games-hint" style="color: #666; font-size: 0.875rem; margin-bottom: 0.75rem;">
-                    Duplicate plays are shown greyed out and are not counted in your statistics.
-                </p>
-                <table class="u-full-width" v-if="userPlaysPaginator.data && userPlaysPaginator.data.length > 0">
+        <section>
+            <h2 class="mb-4 text-lg font-medium text-text-dark">Your Recent Games</h2>
+            <p
+                v-if="userPlaysPaginator.total > 0"
+                class="mb-3 text-sm text-text-muted-dark"
+            >
+                Duplicate plays are shown greyed out and are not counted in your statistics.
+            </p>
+            <div class="overflow-x-auto rounded-xl border border-surface-darker">
+                <table
+                    v-if="userPlaysPaginator.data && userPlaysPaginator.data.length > 0"
+                    class="w-full border-collapse"
+                >
                     <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Game</th>
-                            <th>Location</th>
-                            <th>Duration</th>
-                            <th>Players</th>
-                            <th>Your Result</th>
-                            <th>Logged by</th>
-                            <th>BGG</th>
+                        <tr class="border-b border-surface-darker bg-surface-darker">
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Date</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Game</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Location</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Duration</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Players</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Your Result</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Logged by</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">BGG</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr
                             v-for="play in userPlaysPaginator.data"
                             :key="play.id"
-                            :class="{ 'play-row-excluded': play.is_excluded }"
+                            :class="[
+                                'border-b border-surface-darker',
+                                play.is_excluded
+                                    ? 'bg-surface-darker/50 text-text-muted-dark [&_img]:opacity-70'
+                                    : 'bg-surface-dark text-text-dark',
+                            ]"
                         >
-                            <td>
-                                <span v-if="play.is_excluded" class="duplicate-label" title="Duplicate play (not counted in statistics)">⊕ </span>
+                            <td class="px-4 py-3 text-sm">
+                                <span
+                                    v-if="play.is_excluded"
+                                    class="text-text-muted-dark"
+                                    title="Duplicate play (not counted in statistics)"
+                                >⊕ </span>
                                 {{ formatDate(play.played_at) }}
                             </td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <img 
-                                        v-if="play.board_game?.thumbnail_url" 
-                                        :src="play.board_game.thumbnail_url" 
-                                        :alt="play.board_game.name + ' thumbnail'"
-                                        style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;"
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <img
+                                        v-if="play.board_game?.thumbnail_url"
+                                        :src="play.board_game.thumbnail_url"
+                                        :alt="(play.board_game?.name || 'Game') + ' thumbnail'"
+                                        class="h-10 w-10 rounded object-cover"
                                     />
                                     <span>{{ play.board_game?.name || 'Unknown Game' }}</span>
                                 </div>
                             </td>
-                            <td>{{ play.location || 'N/A' }}</td>
-                            <td>{{ play.game_length_minutes ? play.game_length_minutes + ' min' : 'N/A' }}</td>
-                            <td>
-                                <div style="font-size: 0.875rem;">
-                                    <div v-for="player in play.players" :key="player.id" style="margin-bottom: 0.25rem;">
-                                        <span :style="{ fontWeight: player.is_winner ? 'bold' : 'normal', color: player.is_winner ? '#4caf50' : '#333' }">
-                                            {{ getPlayerName(player) }}
-                                            <span v-if="player.score !== null"> ({{ player.score }})</span>
-                                            <span v-if="player.is_winner" style="color: #4caf50; margin-left: 0.25rem;">✓</span>
-                                        </span>
-                                    </div>
+                            <td class="px-4 py-3 text-sm">{{ play.location || 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">{{ play.game_length_minutes ? play.game_length_minutes + ' min' : 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                <div v-for="player in play.players" :key="player.id" class="mb-1">
+                                    <span
+                                        :class="[
+                                            player.is_winner ? 'font-bold text-brand-accent' : 'text-text-dark',
+                                        ]"
+                                    >
+                                        {{ getPlayerName(player) }}
+                                        <span v-if="player.score !== null"> ({{ player.score }})</span>
+                                        <span v-if="player.is_winner" class="ml-1 text-brand-accent">✓</span>
+                                    </span>
                                 </div>
                             </td>
-                            <td>
-                                <span v-if="getUserPlayerResult(play)" :style="{ 
-                                    fontWeight: 'bold',
-                                    color: getUserPlayerResult(play).is_winner ? '#4caf50' : '#f44336'
-                                }">
+                            <td class="px-4 py-3 text-sm">
+                                <span
+                                    v-if="getUserPlayerResult(play)"
+                                    :class="[
+                                        'font-bold',
+                                        getUserPlayerResult(play).is_winner ? 'text-brand-accent' : 'text-brand-pink',
+                                    ]"
+                                >
                                     {{ getUserPlayerResult(play).is_winner ? 'Won' : 'Lost' }}
                                     <span v-if="getUserPlayerResult(play).score !== null">
                                         ({{ getUserPlayerResult(play).score }})
                                     </span>
                                 </span>
-                                <span v-else style="color: #999;">N/A</span>
+                                <span v-else class="text-text-muted-dark">N/A</span>
                             </td>
-                            <td>{{ play.creator?.name ?? '—' }}</td>
-                            <td>
+                            <td class="px-4 py-3 text-sm">{{ play.creator?.name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-sm">
                                 <a
                                     v-if="play.bgg_play_id"
                                     :href="`https://boardgamegeek.com/play/details/${play.bgg_play_id}`"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style="color: #1976d2;"
+                                    class="text-brand-accent underline hover:no-underline"
                                 >
                                     BGG
                                 </a>
-                                <span v-else style="color: #999;">—</span>
+                                <span v-else class="text-text-muted-dark">—</span>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <div v-if="userPlaysPaginator.data && userPlaysPaginator.data.length > 0" class="pagination-controls" style="display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-                    <span class="pagination-info" style="color: #666; font-size: 0.875rem;">
-                        Page {{ userPlaysPaginator.current_page }} of {{ userPlaysPaginator.last_page }}
-                        ({{ userPlaysPaginator.total }} total)
-                    </span>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button
-                            type="button"
-                            class="button"
-                            :disabled="!userPlaysPaginator.prev_page_url"
-                            @click="goToUserPlaysPage(userPlaysPaginator.current_page - 1)"
-                        >
-                            Previous
-                        </button>
-                        <button
-                            type="button"
-                            class="button"
-                            :disabled="!userPlaysPaginator.next_page_url"
-                            @click="goToUserPlaysPage(userPlaysPaginator.current_page + 1)"
-                        >
-                            Next
-                        </button>
-                    </div>
-                </div>
-                <p v-else style="color: #666; padding: 1rem;">No games played yet.</p>
             </div>
-        </div>
+            <div
+                v-if="userPlaysPaginator.data && userPlaysPaginator.data.length > 0"
+                class="mt-4 flex flex-wrap items-center justify-between gap-2"
+            >
+                <span class="text-sm text-text-muted-dark">
+                    Page {{ userPlaysPaginator.current_page }} of {{ userPlaysPaginator.last_page }}
+                    ({{ userPlaysPaginator.total }} total)
+                </span>
+                <div class="flex gap-2">
+                    <button
+                        type="button"
+                        class="rounded-lg border border-surface-darker bg-surface-dark px-3 py-1.5 text-sm text-text-dark disabled:cursor-not-allowed disabled:opacity-50 hover:bg-surface-darker"
+                        :disabled="!userPlaysPaginator.prev_page_url"
+                        @click="goToUserPlaysPage(userPlaysPaginator.current_page - 1)"
+                    >
+                        Previous
+                    </button>
+                    <button
+                        type="button"
+                        class="rounded-lg border border-surface-darker bg-surface-dark px-3 py-1.5 text-sm text-text-dark disabled:cursor-not-allowed disabled:opacity-50 hover:bg-surface-darker"
+                        :disabled="!userPlaysPaginator.next_page_url"
+                        @click="goToUserPlaysPage(userPlaysPaginator.current_page + 1)"
+                    >
+                        Next
+                    </button>
+                </div>
+            </div>
+            <p v-else class="py-4 text-text-muted-dark">No games played yet.</p>
+        </section>
 
         <!-- Last Games Played by Group Section -->
-        <div class="row" style="margin-bottom: 2rem;">
-            <div class="twelve columns">
-                <h2>Group Recent Games</h2>
-                <table class="u-full-width" v-if="lastGroupPlays.length > 0">
+        <section>
+            <h2 class="mb-4 text-lg font-medium text-text-dark">Group Recent Games</h2>
+            <div
+                v-if="lastGroupPlays.length > 0"
+                class="overflow-x-auto rounded-xl border border-surface-darker"
+            >
+                <table class="w-full border-collapse">
                     <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Game</th>
-                            <th>Location</th>
-                            <th>Duration</th>
-                            <th>Players</th>
-                            <th>Winners</th>
-                            <th>Logged by</th>
-                            <th>BGG</th>
+                        <tr class="border-b border-surface-darker bg-surface-darker">
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Date</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Game</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Location</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Duration</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Players</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Winners</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Logged by</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">BGG</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="play in lastGroupPlays" :key="play.id">
-                            <td>{{ formatDate(play.played_at) }}</td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <img 
-                                        v-if="play.board_game?.thumbnail_url" 
-                                        :src="play.board_game.thumbnail_url" 
-                                        :alt="play.board_game.name + ' thumbnail'"
-                                        style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;"
+                        <tr
+                            v-for="play in lastGroupPlays"
+                            :key="play.id"
+                            class="border-b border-surface-darker bg-surface-dark text-text-dark"
+                        >
+                            <td class="px-4 py-3 text-sm">{{ formatDate(play.played_at) }}</td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <img
+                                        v-if="play.board_game?.thumbnail_url"
+                                        :src="play.board_game.thumbnail_url"
+                                        :alt="(play.board_game?.name || 'Game') + ' thumbnail'"
+                                        class="h-10 w-10 rounded object-cover"
                                     />
                                     <span>{{ play.board_game?.name || 'Unknown Game' }}</span>
                                 </div>
                             </td>
-                            <td>{{ play.location || 'N/A' }}</td>
-                            <td>{{ play.game_length_minutes ? play.game_length_minutes + ' min' : 'N/A' }}</td>
-                            <td>
-                                <div style="font-size: 0.875rem;">
-                                    <div v-for="player in play.players" :key="player.id" style="margin-bottom: 0.25rem;">
-                                        <span :style="{ fontWeight: player.is_winner ? 'bold' : 'normal', color: player.is_winner ? '#4caf50' : '#333' }">
-                                            {{ getPlayerName(player) }}
-                                            <span v-if="player.score !== null"> ({{ player.score }})</span>
-                                            <span v-if="player.is_winner" style="color: #4caf50; margin-left: 0.25rem;">✓</span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div style="font-size: 0.875rem;">
-                                    <span 
-                                        v-for="(winner, index) in getWinners(play)" 
-                                        :key="winner.id"
-                                        style="color: #4caf50; font-weight: bold;"
+                            <td class="px-4 py-3 text-sm">{{ play.location || 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">{{ play.game_length_minutes ? play.game_length_minutes + ' min' : 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                <div v-for="player in play.players" :key="player.id" class="mb-1">
+                                    <span
+                                        :class="[
+                                            player.is_winner ? 'font-bold text-brand-accent' : 'text-text-dark',
+                                        ]"
                                     >
-                                        {{ getPlayerName(winner) }}<span v-if="index < getWinners(play).length - 1">, </span>
+                                        {{ getPlayerName(player) }}
+                                        <span v-if="player.score !== null"> ({{ player.score }})</span>
+                                        <span v-if="player.is_winner" class="ml-1 text-brand-accent">✓</span>
                                     </span>
-                                    <span v-if="getWinners(play).length === 0" style="color: #999;">No winners</span>
                                 </div>
                             </td>
-                            <td>{{ play.creator?.name ?? '—' }}</td>
-                            <td>
+                            <td class="px-4 py-3 text-sm">
+                                <span
+                                    v-for="(winner, index) in getWinners(play)"
+                                    :key="winner.id"
+                                    class="font-bold text-brand-accent"
+                                >
+                                    {{ getPlayerName(winner) }}<span v-if="index < getWinners(play).length - 1">, </span>
+                                </span>
+                                <span v-if="getWinners(play).length === 0" class="text-text-muted-dark">No winners</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">{{ play.creator?.name ?? '—' }}</td>
+                            <td class="px-4 py-3 text-sm">
                                 <a
                                     v-if="play.bgg_play_id"
                                     :href="`https://boardgamegeek.com/play/details/${play.bgg_play_id}`"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style="color: #1976d2;"
+                                    class="text-brand-accent underline hover:no-underline"
                                 >
                                     BGG
                                 </a>
-                                <span v-else style="color: #999;">—</span>
+                                <span v-else class="text-text-muted-dark">—</span>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <p v-else style="color: #666; padding: 1rem;">No group games played yet.</p>
             </div>
-        </div>
+            <p v-else class="py-4 text-text-muted-dark">No group games played yet.</p>
+        </section>
 
         <!-- Games Table -->
-        <div class="row">
-            <div class="twelve columns">
-                <h2>Random Games</h2>
-                <table class="u-full-width">
+        <section>
+            <h2 class="mb-4 text-lg font-medium text-text-dark">Random Games</h2>
+            <div class="overflow-x-auto rounded-xl border border-surface-darker">
+                <table class="w-full border-collapse">
                     <thead>
-                        <tr>
-                            <th>Thumbnail</th>
-                            <th>Game Name</th>
-                            <th>Players</th>
-                            <th>Playing Time</th>
-                            <th>Year Published</th>
-                            <th>Publisher</th>
-                            <th>BGG Rating</th>
-                            <th>Complexity</th>
-                            <th>Type</th>
+                        <tr class="border-b border-surface-darker bg-surface-darker">
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Thumbnail</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Game Name</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Players</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Playing Time</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Year Published</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Publisher</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">BGG Rating</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Complexity</th>
+                            <th class="px-4 py-3 text-left text-sm font-medium text-text-dark">Type</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="game in games" :key="game.id">
-                            <td>
-                                <img 
-                                    v-if="game.thumbnail_url" 
-                                    :src="game.thumbnail_url" 
+                        <tr
+                            v-for="game in games"
+                            :key="game.id"
+                            class="border-b border-surface-darker bg-surface-dark text-text-dark"
+                        >
+                            <td class="px-4 py-3">
+                                <img
+                                    v-if="game.thumbnail_url"
+                                    :src="game.thumbnail_url"
                                     :alt="game.name + ' thumbnail'"
-                                    style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"
+                                    class="h-12 w-12 rounded object-cover"
                                 />
-                                <span v-else style="color: #999;">N/A</span>
+                                <span v-else class="text-text-muted-dark">N/A</span>
                             </td>
-                            <td>{{ game.name }}</td>
-                            <td>{{ game.min_players }}-{{ game.max_players }}</td>
-                            <td>{{ game.playing_time_minutes ? game.playing_time_minutes + ' min' : 'N/A' }}</td>
-                            <td>{{ game.year_published || 'N/A' }}</td>
-                            <td>{{ game.publisher || 'N/A' }}</td>
-                            <td>
+                            <td class="px-4 py-3 text-sm">{{ game.name }}</td>
+                            <td class="px-4 py-3 text-sm">{{ game.min_players }}-{{ game.max_players }}</td>
+                            <td class="px-4 py-3 text-sm">{{ game.playing_time_minutes ? game.playing_time_minutes + ' min' : 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">{{ game.year_published || 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">{{ game.publisher || 'N/A' }}</td>
+                            <td class="px-4 py-3 text-sm">
                                 <span v-if="game.bgg_rating !== null">
                                     {{ parseFloat(game.bgg_rating).toFixed(3) }}
                                 </span>
-                                <span v-else style="color: #999;">N/A</span>
+                                <span v-else class="text-text-muted-dark">N/A</span>
                             </td>
-                            <td>
+                            <td class="px-4 py-3 text-sm">
                                 <span v-if="game.complexity_rating !== null">
                                     {{ parseFloat(game.complexity_rating).toFixed(3) }}
                                 </span>
-                                <span v-else style="color: #999;">N/A</span>
+                                <span v-else class="text-text-muted-dark">N/A</span>
                             </td>
-                            <td>
-                                <span 
-                                    v-if="game.is_expansion" 
-                                    style="background-color: #ff9800; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;"
+                            <td class="px-4 py-3 text-sm">
+                                <span
+                                    v-if="game.is_expansion"
+                                    class="rounded bg-brand-yellow-dark px-2 py-0.5 text-xs font-medium text-brand-ink"
                                 >
                                     Expansion
                                 </span>
-                                <span v-else style="color: #666;">Base Game</span>
+                                <span v-else class="text-text-muted-dark">Base Game</span>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </div>
+        </section>
     </div>
 </template>
 
@@ -365,50 +398,4 @@ const getWinners = (play) => {
 };
 </script>
 
-<style scoped>
-table {
-    border-collapse: collapse;
-    width: 100%;
-}
-
-table th,
-table td {
-    border: 1px solid #cccccc;
-    padding: 0.75rem;
-    text-align: left;
-}
-
-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-}
-
-table tbody tr:nth-child(even) {
-    background-color: #fafafa;
-}
-
-/* Duplicate (excluded) plays: greyed out, not counted in statistics */
-table tbody tr.play-row-excluded {
-    background-color: #e8e8e8;
-    color: #888;
-}
-
-table tbody tr.play-row-excluded:nth-child(even) {
-    background-color: #e0e0e0;
-}
-
-table tbody tr.play-row-excluded img {
-    opacity: 0.7;
-}
-
-.duplicate-label {
-    color: #888;
-    font-size: 0.875rem;
-}
-
-.pagination-controls .button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-</style>
 

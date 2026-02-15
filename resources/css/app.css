@@ -5,7 +5,43 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/* Dark mode: use <html class="dark"> */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Brand colors */
+    --color-brand-pink: #E78A96;
+    --color-brand-pink-dark: #C45A6A;
+    --color-brand-pink-deeper: #A94858;
+    --color-brand-yellow: #F4D35E;
+    --color-brand-yellow-dark: #D6B449;
+    --color-brand-ink: #6B2F2F;
+    --color-brand-ink-soft: #8B4A4A;
+    --color-brand-accent: #4DB6C1;
+    --color-brand-accent-dark: #3797A1;
+
+    /* Surface */
+    --color-surface-light: #FFF3E8;
+    --color-surface-dark: #2A1F1F;
+    --color-surface-darker: #1E1616;
+
+    /* Background */
+    --color-background-light: #FDF8F3;
+    --color-background-dark: #1A1313;
+
+    /* Text */
+    --color-text-light: #3A2A2A;
+    --color-text-dark: #F5EDE6;
+    --color-text-muted-dark: #CBBFB7;
+
+    /* Border radius */
+    --radius-xl: 16px;
+    --radius-2xl: 20px;
+
+    /* Box shadow */
+    --shadow-cartoon: 0 6px 0 rgba(107, 47, 47, 0.25);
+    --shadow-glow: 0 0 20px rgba(244, 211, 94, 0.35);
 }

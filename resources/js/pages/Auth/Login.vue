@@ -1,75 +1,67 @@
 <template>
-    <div class="container" style="max-width: 500px; margin-top: 5rem;">
-        <div class="row">
-            <div class="twelve columns">
-                <h2 style="text-align: center; margin-bottom: 2rem;">Login</h2>
+    <div class="mx-auto mt-20 max-w-md">
+        <h2 class="mb-8 text-center text-xl font-medium text-text-dark">Login</h2>
 
-                <form @submit.prevent="submit">
-                    <!-- Email -->
-                    <label for="email">Email</label>
-                    <input
-                        class="u-full-width"
-                        type="email"
-                        id="email"
-                        v-model="form.email"
-                        required
-                        autofocus
-                        autocomplete="email"
-                    />
-                    <div v-if="form.errors.email" style="color: #d32f2f; margin-top: 0.5rem;">
-                        {{ form.errors.email }}
-                    </div>
+        <form @submit.prevent="submit" class="space-y-4">
+            <!-- Email -->
+            <label for="email" class="block text-sm font-medium text-text-dark">Email</label>
+            <input
+                id="email"
+                v-model="form.email"
+                type="email"
+                required
+                autofocus
+                autocomplete="email"
+                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+            />
+            <p v-if="form.errors.email" class="text-sm text-brand-pink">
+                {{ form.errors.email }}
+            </p>
 
-                    <!-- Password -->
-                    <label for="password" style="margin-top: 1rem;">Password</label>
-                    <input
-                        class="u-full-width"
-                        type="password"
-                        id="password"
-                        v-model="form.password"
-                        required
-                        autocomplete="current-password"
-                    />
-                    <div v-if="form.errors.password" style="color: #d32f2f; margin-top: 0.5rem;">
-                        {{ form.errors.password }}
-                    </div>
+            <!-- Password -->
+            <label for="password" class="block text-sm font-medium text-text-dark">Password</label>
+            <input
+                id="password"
+                v-model="form.password"
+                type="password"
+                required
+                autocomplete="current-password"
+                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+            />
+            <p v-if="form.errors.password" class="text-sm text-brand-pink">
+                {{ form.errors.password }}
+            </p>
 
-                    <!-- Remember Me -->
-                    <label style="margin-top: 1rem;">
-                        <input
-                            type="checkbox"
-                            v-model="form.remember"
-                        />
-                        <span class="label-body">Remember me</span>
-                    </label>
+            <!-- Remember Me -->
+            <label class="flex items-center gap-2 text-sm text-text-dark">
+                <input
+                    v-model="form.remember"
+                    type="checkbox"
+                    class="rounded border-surface-darker bg-surface-dark text-brand-accent focus:ring-brand-accent"
+                />
+                <span>Remember me</span>
+            </label>
 
-                    <!-- Submit Button -->
-                    <button
-                        class="button-primary u-full-width"
-                        type="submit"
-                        style="margin-top: 1.5rem;"
-                        :disabled="form.processing"
-                    >
-                        {{ form.processing ? 'Logging in...' : 'Login' }}
-                    </button>
-                </form>
+            <!-- Submit Button -->
+            <button
+                type="submit"
+                :disabled="form.processing"
+                class="mt-6 w-full rounded-lg border border-brand-ink bg-brand-pink py-2.5 font-medium text-brand-ink shadow-cartoon disabled:cursor-not-allowed disabled:opacity-50 hover:bg-brand-pink-dark"
+            >
+                {{ form.processing ? 'Logging in...' : 'Login' }}
+            </button>
+        </form>
 
-                <!-- General Errors -->
-                <div v-if="form.errors.message" style="color: #d32f2f; margin-top: 1rem; text-align: center;">
-                    {{ form.errors.message }}
-                </div>
+        <p v-if="form.errors.message" class="mt-4 text-center text-sm text-brand-pink">
+            {{ form.errors.message }}
+        </p>
 
-                <!-- Register Link -->
-                <div style="text-align: center; margin-top: 1.5rem;">
-                    <p style="color: #555555;">
-                        Don't have an account?
-                        <Link :href="route('register')" style="color: #000000; text-decoration: underline;">
-                            Register here
-                        </Link>
-                    </p>
-                </div>
-            </div>
-        </div>
+        <p class="mt-6 text-center text-sm text-text-muted-dark">
+            Don't have an account?
+            <Link :href="route('register')" class="text-brand-accent underline hover:no-underline">
+                Register here
+            </Link>
+        </p>
     </div>
 </template>
 
@@ -88,4 +80,3 @@ const submit = () => {
     });
 };
 </script>
-
