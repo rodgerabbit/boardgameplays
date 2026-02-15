@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Jobs\ImportBoardGamePlayFromBoardGameGeekJob;
 use App\Jobs\SyncBoardGameFromBoardGameGeekJob;
 use App\Models\BoardGame;
 use App\Models\BoardGamePlay;
@@ -134,7 +135,10 @@ class BoardGameGeekPlaySyncService extends BaseService
                 }
 
                 $play = $this->syncPlayFromBggXml($playElement, $user);
-                $processedPlayIds[] = (string) $playElement['id'];
+                if ($play !== null) {
+                    $processedPlayIds[] = (string) $playElement['id'];
+                }
+                // When $play is null, the play was queued for import after board game sync (not skipped)
             } catch (\Exception $e) {
                 Log::error('Failed to sync play from BGG', [
                     'user_id' => $user->id,
@@ -150,24 +154,32 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Sync a single play from BGG XML to database.
      *
+     * If the board game is not yet in the database, queues the board game sync and a chained
+     * play import job, and returns null. Otherwise creates the play and returns it.
+     *
      * @param SimpleXMLElement $playElement The play XML element
      * @param User $user The user to sync for
-     * @return BoardGamePlay The synced play
+     * @return BoardGamePlay|null The synced play, or null if import was deferred (board game queued for sync first)
      */
-    public function syncPlayFromBggXml(SimpleXMLElement $playElement, User $user): BoardGamePlay
+    public function syncPlayFromBggXml(SimpleXMLElement $playElement, User $user): ?BoardGamePlay
     {
         $bggPlayId = (string) $playElement['id'];
         $bggGameId = (string) $playElement->item[0]['objectid'];
 
-        // Check if board game exists, if not trigger sync
+        // If board game does not exist, queue sync first and then import this play after
         $boardGame = BoardGame::where('bgg_id', $bggGameId)->first();
         if ($boardGame === null) {
-            $this->syncBoardGameIfNeeded($bggGameId);
-            // Try to find it again after sync job is queued
-            $boardGame = BoardGame::where('bgg_id', $bggGameId)->first();
-            if ($boardGame === null) {
-                throw new \RuntimeException("Board game with BGG ID {$bggGameId} not found and sync failed");
-            }
+            $playPayload = $this->buildPlayPayloadFromBggXml($playElement, $user);
+            SyncBoardGameFromBoardGameGeekJob::dispatch($bggGameId)
+                ->chain([
+                    new ImportBoardGamePlayFromBoardGameGeekJob($user->id, $playPayload),
+                ]);
+            Log::info('Queued board game sync and play import for later', [
+                'bgg_game_id' => $bggGameId,
+                'bgg_play_id' => $bggPlayId,
+                'user_id' => $user->id,
+            ]);
+            return null;
         }
 
         // Ensure it's not an expansion
@@ -204,6 +216,135 @@ class BoardGameGeekPlaySyncService extends BaseService
         // Expansions would need to be inferred or manually added
 
         return $play->fresh(['boardGame', 'group', 'creator', 'players', 'expansions']);
+    }
+
+    /**
+     * Build a serializable play payload from BGG XML for deferred import (e.g. after board game sync).
+     *
+     * @param SimpleXMLElement $playElement The play XML element
+     * @param User $user The user to sync for
+     * @return array<string, mixed> Play payload (bgg_play_id, bgg_game_id, play fields, players)
+     */
+    public function buildPlayPayloadFromBggXml(SimpleXMLElement $playElement, User $user): array
+    {
+        $bggPlayId = (string) $playElement['id'];
+        $bggGameId = (string) $playElement->item[0]['objectid'];
+        $playedAt = (string) $playElement['date'];
+        $location = (string) $playElement['location'];
+        $comment = (string) ($playElement->comments ?? '');
+        $length = (int) ($playElement['length'] ?? 0);
+        $incomplete = (int) ($playElement['incomplete'] ?? 0);
+
+        $players = [];
+        $playerElements = $playElement->players[0]->player ?? null;
+        if ($playerElements !== null) {
+            foreach ($playerElements as $playerElement) {
+                $players[] = $this->mapBggPlayerToPayload($playerElement);
+            }
+        }
+
+        return [
+            'bgg_play_id' => $bggPlayId,
+            'bgg_game_id' => $bggGameId,
+            'played_at' => $playedAt,
+            'location' => $location !== '' ? $location : 'Unknown',
+            'comment' => $comment !== '' ? $comment : null,
+            'game_length_minutes' => $length > 0 ? $length : null,
+            'is_incomplete' => $incomplete !== 0,
+            'group_id' => $user->default_group_id,
+            'created_by_user_id' => $user->id,
+            'source' => 'boardgamegeek',
+            'players' => $players,
+        ];
+    }
+
+    /**
+     * Create (or update) a play and its players from a serialized payload. Used by ImportBoardGamePlayFromBoardGameGeekJob.
+     *
+     * @param array<string, mixed> $playPayload Payload from buildPlayPayloadFromBggXml
+     * @param User $user The user who owns the play
+     * @param int $boardGameId The local board game ID (board game must already exist)
+     * @return BoardGamePlay The created or updated play
+     */
+    public function createPlayFromPayload(array $playPayload, User $user, int $boardGameId): BoardGamePlay
+    {
+        $bggPlayId = (string) ($playPayload['bgg_play_id'] ?? '');
+        $playData = [
+            'board_game_id' => $boardGameId,
+            'group_id' => $playPayload['group_id'] ?? $user->default_group_id,
+            'created_by_user_id' => $user->id,
+            'played_at' => $playPayload['played_at'] ?? now()->format('Y-m-d'),
+            'location' => $playPayload['location'] ?? 'Unknown',
+            'comment' => $playPayload['comment'] ?? null,
+            'game_length_minutes' => $playPayload['game_length_minutes'] ?? null,
+            'source' => 'boardgamegeek',
+            'is_incomplete' => (bool) ($playPayload['is_incomplete'] ?? false),
+            'bgg_play_id' => $bggPlayId,
+            'bgg_synced_at' => now(),
+            'bgg_sync_status' => 'synced',
+        ];
+
+        $play = BoardGamePlay::updateOrCreate(
+            ['bgg_play_id' => $bggPlayId],
+            $playData
+        );
+
+        $play->players()->delete();
+
+        $playerPayloads = $playPayload['players'] ?? [];
+        foreach ($playerPayloads as $playerPayload) {
+            $playerData = array_merge($playerPayload, ['board_game_play_id' => $play->id]);
+            BoardGamePlayPlayer::create($playerData);
+        }
+
+        return $play->fresh(['boardGame', 'group', 'creator', 'players', 'expansions']);
+    }
+
+    /**
+     * Map BGG player XML to a serializable payload (no board_game_play_id). Used for deferred play import.
+     *
+     * @param SimpleXMLElement $playerElement The player XML element
+     * @return array<string, mixed> Player data for payload
+     */
+    private function mapBggPlayerToPayload(SimpleXMLElement $playerElement): array
+    {
+        $username = (string) ($playerElement['username'] ?? '');
+        $name = (string) ($playerElement['name'] ?? '');
+        $win = (int) ($playerElement['win'] ?? 0);
+        $new = (int) ($playerElement['new'] ?? 0);
+        $score = (string) ($playerElement['score'] ?? '');
+        $startPosition = (string) ($playerElement['startposition'] ?? '');
+
+        $scoreValue = null;
+        if ($score !== '') {
+            $scoreValue = (float) str_replace(',', '.', preg_replace('/[^0-9,.-]/', '', $score));
+        }
+
+        $playerData = [
+            'is_winner' => $win === 1,
+            'is_new_player' => $new === 1,
+            'score' => $scoreValue,
+            'position' => $startPosition !== '' ? (int) $startPosition : null,
+        ];
+
+        if ($username !== '') {
+            $user = User::where('board_game_geek_username', $username)->first();
+            if ($user !== null) {
+                $playerData['user_id'] = $user->id;
+                $playerData['board_game_geek_username'] = null;
+                $playerData['guest_name'] = null;
+            } else {
+                $playerData['user_id'] = null;
+                $playerData['board_game_geek_username'] = $username;
+                $playerData['guest_name'] = null;
+            }
+        } else {
+            $playerData['user_id'] = null;
+            $playerData['board_game_geek_username'] = null;
+            $playerData['guest_name'] = $name !== '' ? $name : 'Unknown';
+        }
+
+        return $playerData;
     }
 
     /**
