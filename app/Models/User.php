@@ -194,6 +194,36 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the user's BGG collection sync runs (history).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<BggCollectionSync>
+     */
+    public function bggCollectionSyncs(): HasMany
+    {
+        return $this->hasMany(BggCollectionSync::class);
+    }
+
+    /**
+     * Get the user's BGG collection items (current snapshot).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<BggCollectionItem>
+     */
+    public function bggCollectionItems(): HasMany
+    {
+        return $this->hasMany(BggCollectionItem::class);
+    }
+
+    /**
+     * Get the user's BGG collection change history.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<BggCollectionItemChange>
+     */
+    public function bggCollectionItemChanges(): HasMany
+    {
+        return $this->hasMany(BggCollectionItemChange::class);
+    }
+
+    /**
      * Get the default group ID, or the first group if no default is set.
      *
      * @return int|null The default group ID, or null if no groups exist

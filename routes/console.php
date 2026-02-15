@@ -18,3 +18,6 @@ Schedule::command('bgg:sync-plays')->dailyAt('04:00');
 
 // Schedule the BGG board games refresh command to run weekly on Sunday at 3 AM
 Schedule::command('boardgamegeek:refresh-all')->weekly()->at('03:00');
+
+// Schedule BGG collection sync for users every 7 days (default interval)
+Schedule::command('bgg:sync-collections')->daily()->at('05:00');

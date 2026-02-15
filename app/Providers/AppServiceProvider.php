@@ -52,6 +52,13 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
+        // Register BoardGameGeekCollectionSyncService
+        $this->app->bind(\App\Services\BoardGameGeekCollectionSyncService::class, function ($app) {
+            return new \App\Services\BoardGameGeekCollectionSyncService(
+                apiClient: $app->make(BoardGameGeekApiClient::class),
+            );
+        });
+
         // Register GroupService
         $this->app->bind(GroupService::class);
 

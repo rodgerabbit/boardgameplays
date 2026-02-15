@@ -179,6 +179,277 @@ class BoardGameGeekApiClient extends BaseService
     }
 
     /**
+     * Fetch a user's board game collection from BoardGameGeek.
+     *
+     * Uses the collection endpoint with stats=1 and version=1. Respects rate limiting
+     * and 202 retries. Intended for use in background jobs only.
+     *
+     * @param string $username The BGG username
+     * @return array<int, array{objectid: string, name: string, yearpublished: ?int, image: ?string, thumbnail: ?string, user_rating: ?float, owned: bool, bgg_base_game_id: ?string}> Parsed collection items
+     * @throws \RuntimeException If the request fails after retries
+     */
+    public function fetchCollection(string $username): array
+    {
+        $urlTemplate = config('boardgamegeek.collection_api_url', 'https://boardgamegeek.com/xmlapi2/collection?username={username}&stats=1&version=1');
+        $url = str_replace('{username}', rawurlencode($username), $urlTemplate);
+
+        $lock = Cache::lock(self::CACHE_LOCK_KEY, self::LOCK_TIMEOUT_SECONDS);
+
+        try {
+            $lock->block(300);
+            $this->enforceRateLimit();
+
+            $attempt = 0;
+            $lastException = null;
+
+            while ($attempt < $this->maxRetryAttempts) {
+                try {
+                    $response = $this->makeHttpRequest($url);
+
+                    if ($response->status() === 200) {
+                        $this->updateLastRequestTime();
+                        return $this->parseCollectionXml($response->body());
+                    }
+
+                    if ($response->status() === 202) {
+                        $attempt++;
+                        if ($attempt < $this->maxRetryAttempts) {
+                            Log::info('BoardGameGeek collection API returned 202, retrying after delay', [
+                                'attempt' => $attempt,
+                                'username' => $username,
+                            ]);
+                            sleep($this->retryAfter202Seconds);
+                            continue;
+                        }
+                    }
+
+                    if ($response->status() === 401) {
+                        Log::error('BoardGameGeek API token not accepted (401)', [
+                            'username' => $username,
+                            'status' => $response->status(),
+                        ]);
+                        throw new \RuntimeException('BoardGameGeek API token was not accepted (401 Unauthorized)');
+                    }
+
+                    $errorMessage = "BoardGameGeek collection API returned status {$response->status()}";
+                    Log::error($errorMessage, [
+                        'username' => $username,
+                        'status' => $response->status(),
+                    ]);
+                    $attempt++;
+                    if ($attempt < $this->maxRetryAttempts) {
+                        sleep($this->retryAfter202Seconds);
+                        continue;
+                    }
+                    throw new \RuntimeException($errorMessage);
+                } catch (RequestException $e) {
+                    $lastException = $e;
+                    $attempt++;
+                    if ($attempt < $this->maxRetryAttempts) {
+                        $backoffSeconds = min(
+                            pow(2, $attempt) + rand(0, 3),
+                            $this->exponentialBackoffMaxSeconds
+                        );
+                        sleep((int) $backoffSeconds);
+                        continue;
+                    }
+                }
+            }
+
+            throw new \RuntimeException(
+                'Failed to fetch collection from BoardGameGeek after ' . $this->maxRetryAttempts . ' attempts',
+                0,
+                $lastException
+            );
+        } finally {
+            $lock->release();
+        }
+    }
+
+    /**
+     * Resolve BGG thing IDs to their base (original) game IDs.
+     *
+     * For base games the base ID is the thing ID; for versions, the thing has a link
+     * to the base board game. Chunks requests to respect max IDs per request.
+     *
+     * @param array<int|string> $thingIds BGG thing/version IDs from collection
+     * @return array<string, string> Map of thingId => baseGameBggId
+     */
+    public function fetchBaseGameIdsForThingIds(array $thingIds): array
+    {
+        $thingIds = array_values(array_unique(array_map('strval', $thingIds)));
+        $result = [];
+
+        foreach (array_chunk($thingIds, $this->maxIdsPerRequest) as $chunk) {
+            $this->enforceRateLimit();
+
+            $idsString = implode(',', $chunk);
+            $url = "{$this->apiBaseUrl}/thing?id={$idsString}&stats=0";
+
+            $response = $this->makeHttpRequest($url);
+            $this->updateLastRequestTime();
+
+            if ($response->status() !== 200) {
+                Log::warning('BoardGameGeek thing API returned non-200 when resolving base game IDs', [
+                    'status' => $response->status(),
+                    'thing_ids' => $chunk,
+                ]);
+                foreach ($chunk as $id) {
+                    $result[$id] = $id;
+                }
+                continue;
+            }
+
+            try {
+                $xml = new SimpleXMLElement($response->body());
+                foreach ($xml->item ?? [] as $item) {
+                    $thingId = (string) $item['id'];
+                    $baseId = $this->extractBaseGameIdFromThingItem($item);
+                    $result[$thingId] = $baseId;
+                }
+            } catch (\Exception $e) {
+                Log::error('Failed to parse thing XML for base game IDs', [
+                    'error' => $e->getMessage(),
+                    'thing_ids' => $chunk,
+                ]);
+                foreach ($chunk as $id) {
+                    $result[$id] = $id;
+                }
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Parse collection XML response into array of item data.
+     *
+     * @param string $xmlContent Raw XML body
+     * @return array<int, array{objectid: string, name: string, yearpublished: ?int, image: ?string, thumbnail: ?string, user_rating: ?float, owned: bool, bgg_base_game_id: ?string, bgg_collid: ?string, numplays: int, prev_owned: bool, for_trade: bool, want: bool, want_to_play: bool, want_to_buy: bool, wishlist: bool, preordered: bool, bgg_last_modified: ?string}>
+     */
+    private function parseCollectionXml(string $xmlContent): array
+    {
+        $items = [];
+        try {
+            $xml = new SimpleXMLElement($xmlContent);
+            foreach ($xml->item ?? [] as $item) {
+                $objectId = (string) $item['objectid'];
+                $name = $this->extractPrimaryNameFromCollectionItem($item);
+                $yearPublished = null;
+                if (isset($item->yearpublished)) {
+                    $yp = $item->yearpublished;
+                    $val = isset($yp['value']) ? (string) $yp['value'] : (string) $yp;
+                    if ($val !== '') {
+                        $yearPublished = (int) $val;
+                        if ($yearPublished <= 0) {
+                            $yearPublished = null;
+                        }
+                    }
+                }
+                $image = isset($item->image) ? (string) $item->image : null;
+                $thumbnail = isset($item->thumbnail) ? (string) $item->thumbnail : null;
+                $userRating = null;
+                if (isset($item->stats->rating) && (string) $item->stats->rating['value'] !== 'N/A') {
+                    $v = (float) (string) $item->stats->rating['value'];
+                    $userRating = $v > 0 ? round($v, 2) : null;
+                }
+                $status = $item->status ?? null;
+                $owned = $status !== null && (int) (string) $status['own'] === 1;
+                $prevOwned = $status !== null && (int) (string) $status['prevowned'] === 1;
+                $forTrade = $status !== null && (int) (string) $status['fortrade'] === 1;
+                $want = $status !== null && (int) (string) $status['want'] === 1;
+                $wantToPlay = $status !== null && (int) (string) $status['wanttoplay'] === 1;
+                $wantToBuy = $status !== null && (int) (string) $status['wanttobuy'] === 1;
+                $wishlist = $status !== null && (int) (string) $status['wishlist'] === 1;
+                $preordered = $status !== null && (int) (string) $status['preordered'] === 1;
+                $bggLastModified = $status !== null && isset($status['lastmodified']) ? (string) $status['lastmodified'] : null;
+                if ($bggLastModified !== null && $bggLastModified === '') {
+                    $bggLastModified = null;
+                }
+                $numplays = 0;
+                if (isset($item->numplays)) {
+                    $numplays = (int) (string) $item->numplays;
+                    $numplays = max(0, $numplays);
+                }
+                $bggCollid = isset($item['collid']) ? (string) $item['collid'] : null;
+                if ($bggCollid !== null && $bggCollid === '') {
+                    $bggCollid = null;
+                }
+
+                $items[] = [
+                    'objectid' => $objectId,
+                    'name' => $name,
+                    'yearpublished' => $yearPublished,
+                    'image' => $image !== '' ? $image : null,
+                    'thumbnail' => $thumbnail !== '' ? $thumbnail : null,
+                    'user_rating' => $userRating,
+                    'owned' => $owned,
+                    'bgg_base_game_id' => null,
+                    'bgg_collid' => $bggCollid,
+                    'numplays' => $numplays,
+                    'prev_owned' => $prevOwned,
+                    'for_trade' => $forTrade,
+                    'want' => $want,
+                    'want_to_play' => $wantToPlay,
+                    'want_to_buy' => $wantToBuy,
+                    'wishlist' => $wishlist,
+                    'preordered' => $preordered,
+                    'bgg_last_modified' => $bggLastModified,
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to parse BoardGameGeek collection XML', [
+                'error' => $e->getMessage(),
+                'xml_preview' => substr($xmlContent, 0, 500),
+            ]);
+            throw new \RuntimeException('Failed to parse BoardGameGeek collection XML: ' . $e->getMessage(), 0, $e);
+        }
+
+        return $items;
+    }
+
+    /**
+     * Extract primary name from a collection item (name can be attribute or child).
+     *
+     * @param SimpleXMLElement $item
+     * @return string
+     */
+    private function extractPrimaryNameFromCollectionItem(SimpleXMLElement $item): string
+    {
+        if (isset($item->name)) {
+            $name = $item->name;
+            if (isset($name['value'])) {
+                return (string) $name['value'];
+            }
+            return (string) $name;
+        }
+        return 'Unknown';
+    }
+
+    /**
+     * From a thing XML item, get the base board game ID (original game).
+     *
+     * If the thing is a version, it has a link type=boardgame with the base game id.
+     * Otherwise the thing id is the base game id.
+     *
+     * @param SimpleXMLElement $item
+     * @return string
+     */
+    private function extractBaseGameIdFromThingItem(SimpleXMLElement $item): string
+    {
+        $thingId = (string) $item['id'];
+        if (isset($item->link)) {
+            foreach ($item->link as $link) {
+                $type = (string) $link['type'];
+                if ($type === 'boardgame') {
+                    return (string) $link['id'];
+                }
+            }
+        }
+        return $thingId;
+    }
+
+    /**
      * Make an HTTP request to the BoardGameGeek API.
      *
      * @param string $url The full URL to request

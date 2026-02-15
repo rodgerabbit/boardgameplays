@@ -94,6 +94,32 @@ return [
     |
     */
     'play_submission_rate_limit_seconds' => env('BOARDGAMEGEEK_PLAY_SUBMISSION_RATE_LIMIT_SECONDS', 2),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Collection Sync
+    |--------------------------------------------------------------------------
+    |
+    | How often to sync each user's BGG collection (in days).
+    | Collection is fetched via async jobs; this interval is used by the
+    | scheduled command to decide which users to queue.
+    |
+    */
+    'collection_sync_interval_days' => (int) env('BOARDGAMEGEEK_COLLECTION_SYNC_INTERVAL_DAYS', 7),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Collection API URL
+    |--------------------------------------------------------------------------
+    |
+    | Full URL pattern for the BGG collection endpoint. Use {username} as placeholder.
+    | stats=1 returns expanded rating/ranking info; version=1 returns version info.
+    |
+    */
+    'collection_api_url' => env(
+        'BOARDGAMEGEEK_COLLECTION_API_URL',
+        'https://boardgamegeek.com/xmlapi2/collection?username={username}&stats=1&version=1'
+    ),
 ];
 
 

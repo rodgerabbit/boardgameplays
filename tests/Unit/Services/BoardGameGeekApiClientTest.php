@@ -207,6 +207,84 @@ class BoardGameGeekApiClientTest extends TestCase
     }
 
     /**
+     * Test that fetchCollection uses token and parses collection XML.
+     */
+    public function test_fetch_collection_uses_token_and_parses_xml(): void
+    {
+        config(['boardgamegeek.collection_api_url' => 'https://boardgamegeek.com/xmlapi2/collection?username={username}&stats=1&version=1']);
+        Http::fake([
+            'boardgamegeek.com/xmlapi2/collection*' => Http::response($this->getSampleCollectionXml(), 200),
+        ]);
+
+        $items = $this->apiClient->fetchCollection('testuser');
+
+        $this->assertCount(2, $items);
+        $this->assertEquals('123', $items[0]['objectid']);
+        $this->assertEquals('Catan', $items[0]['name']);
+        $this->assertEquals(1995, $items[0]['yearpublished']);
+        $this->assertTrue($items[0]['owned']);
+        $this->assertEquals(8.5, $items[1]['user_rating']);
+        Http::assertSent(function (Request $request) {
+            return str_contains($request->url(), 'username=testuser')
+                && $request->hasHeader('Authorization', 'Bearer test-token-123');
+        });
+    }
+
+    /**
+     * Test that fetchBaseGameIdsForThingIds resolves version to base game id.
+     */
+    public function test_fetch_base_game_ids_resolves_version_to_base_game(): void
+    {
+        Http::fake([
+            'boardgamegeek.com/xmlapi2/thing*' => Http::response($this->getSampleThingXmlWithVersion(), 200),
+        ]);
+
+        $result = $this->apiClient->fetchBaseGameIdsForThingIds(['12345', '13']);
+
+        $this->assertEquals('13', $result['12345']);
+        $this->assertEquals('13', $result['13']);
+    }
+
+    private function getSampleCollectionXml(): string
+    {
+        return '<?xml version="1.0" encoding="UTF-8"?>
+<items totalitems="2" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+    <item objectid="123" subtype="boardgame" collid="1">
+        <name>Catan</name>
+        <yearpublished value="1995"/>
+        <image>https://cf.geekdo-images.com/catan.jpg</image>
+        <thumbnail>https://cf.geekdo-images.com/catan_thumb.jpg</thumbnail>
+        <status own="1" prevowned="0" fortrade="0" want="0" wanttoplay="0" wanttobuy="0"/>
+        <stats minplayers="3" maxplayers="4" minplaytime="60" maxplaytime="90">
+            <rating value="N/A"/>
+        </stats>
+    </item>
+    <item objectid="456" subtype="boardgame" collid="2">
+        <name type="primary" value="Pandemic"/>
+        <yearpublished value="2008"/>
+        <status own="1"/>
+        <stats>
+            <rating value="8.5"/>
+        </stats>
+    </item>
+</items>';
+    }
+
+    private function getSampleThingXmlWithVersion(): string
+    {
+        return '<?xml version="1.0" encoding="UTF-8"?>
+<items>
+    <item type="boardgame" id="12345">
+        <name type="primary" value="Catan (5th Edition)"/>
+        <link type="boardgame" id="13" value="Catan"/>
+    </item>
+    <item type="boardgame" id="13">
+        <name type="primary" value="Catan"/>
+    </item>
+</items>';
+    }
+
+    /**
      * Get a sample XML response for testing.
      *
      * @return string
