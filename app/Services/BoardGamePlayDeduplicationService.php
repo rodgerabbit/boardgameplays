@@ -69,15 +69,16 @@ class BoardGamePlayDeduplicationService extends BaseService
             }
 
             // Process each duplicate group
+            $syncedPlayWasLeading = false;
             foreach ($duplicateGroups as $duplicateGroup) {
                 if ($duplicateGroup->count() < 2) {
                     continue;
                 }
 
                 // Ensure all plays have players loaded before determining leading play
-                $duplicateGroup->each(function (BoardGamePlay $play) {
-                    if (!$play->relationLoaded('players')) {
-                        $play->load('players');
+                $duplicateGroup->each(function (BoardGamePlay $p) {
+                    if (!$p->relationLoaded('players')) {
+                        $p->load('players');
                     }
                 });
 
@@ -85,11 +86,20 @@ class BoardGamePlayDeduplicationService extends BaseService
                 $leadingPlay = $this->determineLeadingPlay($duplicateGroup);
                 $excludedPlays = $duplicateGroup->where('id', '!=', $leadingPlay->id);
 
+                if ($leadingPlay->id === $play->id) {
+                    $syncedPlayWasLeading = true;
+                }
+
                 // Mark excluded plays
                 $this->markExcludedPlays($leadingPlay, $excludedPlays);
 
                 // Always persist leading play as non-excluded so DB state is correct after sync
                 $this->clearExclusion($leadingPlay);
+            }
+
+            // Ensure the play we synced is cleared when it was the leading play (same row, possibly different instance)
+            if ($syncedPlayWasLeading) {
+                $this->clearExclusion($play);
             }
         });
     }

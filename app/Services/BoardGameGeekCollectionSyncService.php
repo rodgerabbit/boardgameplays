@@ -92,6 +92,58 @@ class BoardGameGeekCollectionSyncService extends BaseService
     }
 
     /**
+     * Apply collection items from a pre-fetched source (e.g. JSON file) without calling the BGG API.
+     *
+     * Items must already include bgg_base_game_id. Use this when syncing from personal folder files.
+     *
+     * @param User $user The user to sync the collection for
+     * @param array<int, array<string, mixed>> $items Parsed collection items (same shape as fetchCollection), with bgg_base_game_id set
+     * @return void
+     */
+    public function syncCollectionForUserFromItems(User $user, array $items): void
+    {
+        $username = $user->board_game_geek_username;
+        if ($username === null || $username === '') {
+            Log::warning('Cannot sync BGG collection from items: user has no BGG username', ['user_id' => $user->id]);
+            return;
+        }
+
+        $sync = BggCollectionSync::create([
+            'user_id' => $user->id,
+            'synced_at' => now(),
+            'status' => BggCollectionSync::STATUS_PENDING,
+        ]);
+
+        foreach ($items as $i => $item) {
+            if (!isset($item['bgg_base_game_id']) || $item['bgg_base_game_id'] === null) {
+                $items[$i]['bgg_base_game_id'] = $item['objectid'] ?? '';
+            }
+        }
+
+        $previousItems = $user->bggCollectionItems()->get()->keyBy('bgg_object_id');
+        $this->recordChangesAndUpsertItems($user, $sync, $items, $previousItems);
+
+        $missingBggIds = $this->collectMissingBoardGameBggIds($user, $items);
+        foreach ($missingBggIds as $bggId) {
+            SyncBoardGameFromBoardGameGeekJob::dispatch($bggId)
+                ->delay(now()->addSeconds(2));
+        }
+
+        $sync->update([
+            'status' => BggCollectionSync::STATUS_SUCCESS,
+            'items_count' => count($items),
+            'error_message' => null,
+        ]);
+
+        Log::info('BGG collection sync from items completed', [
+            'user_id' => $user->id,
+            'username' => $username,
+            'items_count' => count($items),
+            'missing_games_queued' => count($missingBggIds),
+        ]);
+    }
+
+    /**
      * Record added/removed/rating changes and upsert current collection items.
      *
      * @param array<int, array{objectid: string, name: string, yearpublished: ?int, thumbnail: ?string, user_rating: ?float, owned: bool, bgg_base_game_id: string}> $items
