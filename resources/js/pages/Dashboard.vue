@@ -7,7 +7,7 @@
             <form @submit.prevent="logout" class="m-0">
                 <button
                     type="submit"
-                    class="rounded-lg border border-brand-ink-soft bg-brand-pink px-4 py-2 text-sm font-medium text-brand-ink shadow-cartoon transition hover:bg-brand-pink-dark"
+                    class="rounded-lg border border-border bg-primary px-4 py-2 text-sm font-medium text-text-primary shadow-cartoon transition hover:bg-primary-hover"
                 >
                     Logout
                 </button>
@@ -103,12 +103,12 @@
                                 <div v-for="player in play.players" :key="player.id" class="mb-1">
                                     <span
                                         :class="[
-                                            player.is_winner ? 'font-bold text-brand-accent' : 'text-text-dark',
+                                            player.is_winner ? 'font-bold text-accent' : 'text-text-dark',
                                         ]"
                                     >
                                         {{ getPlayerName(player) }}
                                         <span v-if="player.score !== null"> ({{ player.score }})</span>
-                                        <span v-if="player.is_winner" class="ml-1 text-brand-accent">✓</span>
+                                        <span v-if="player.is_winner" class="ml-1 text-accent">✓</span>
                                     </span>
                                 </div>
                             </td>
@@ -117,7 +117,7 @@
                                     v-if="getUserPlayerResult(play)"
                                     :class="[
                                         'font-bold',
-                                        getUserPlayerResult(play).is_winner ? 'text-brand-accent' : 'text-brand-pink',
+                                        getUserPlayerResult(play).is_winner ? 'text-accent' : 'text-primary',
                                     ]"
                                 >
                                     {{ getUserPlayerResult(play).is_winner ? 'Won' : 'Lost' }}
@@ -134,7 +134,7 @@
                                     :href="`https://boardgamegeek.com/play/details/${play.bgg_play_id}`"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="text-brand-accent underline hover:no-underline"
+                                    class="text-accent underline hover:no-underline"
                                 >
                                     BGG
                                 </a>
@@ -218,12 +218,12 @@
                                 <div v-for="player in play.players" :key="player.id" class="mb-1">
                                     <span
                                         :class="[
-                                            player.is_winner ? 'font-bold text-brand-accent' : 'text-text-dark',
+                                            player.is_winner ? 'font-bold text-accent' : 'text-text-dark',
                                         ]"
                                     >
                                         {{ getPlayerName(player) }}
                                         <span v-if="player.score !== null"> ({{ player.score }})</span>
-                                        <span v-if="player.is_winner" class="ml-1 text-brand-accent">✓</span>
+                                        <span v-if="player.is_winner" class="ml-1 text-accent">✓</span>
                                     </span>
                                 </div>
                             </td>
@@ -231,7 +231,7 @@
                                 <span
                                     v-for="(winner, index) in getWinners(play)"
                                     :key="winner.id"
-                                    class="font-bold text-brand-accent"
+                                    class="font-bold text-accent"
                                 >
                                     {{ getPlayerName(winner) }}<span v-if="index < getWinners(play).length - 1">, </span>
                                 </span>
@@ -244,7 +244,7 @@
                                     :href="`https://boardgamegeek.com/play/details/${play.bgg_play_id}`"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="text-brand-accent underline hover:no-underline"
+                                    class="text-accent underline hover:no-underline"
                                 >
                                     BGG
                                 </a>

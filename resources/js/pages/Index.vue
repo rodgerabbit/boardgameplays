@@ -6,7 +6,7 @@
             <h1 class="text-2xl font-semibold text-text-dark m-0">boardgameplays.com</h1>
             <Link
                 :href="route('login')"
-                class="rounded-lg border border-brand-ink-soft bg-surface-dark px-4 py-2 text-sm font-medium text-text-dark hover:bg-surface-darker"
+                class="rounded-lg border border-border bg-surface-dark px-4 py-2 text-sm font-medium text-text-dark hover:bg-surface-hover"
             >
                 Login
             </Link>
@@ -56,13 +56,13 @@
         <div class="mt-16 flex flex-wrap justify-center gap-4 text-center">
             <Link
                 :href="route('register')"
-                class="inline-block rounded-lg border border-brand-ink bg-brand-pink px-8 py-3 text-lg font-medium text-brand-ink shadow-cartoon hover:bg-brand-pink-dark"
+                class="inline-block rounded-lg border border-border bg-primary px-8 py-3 text-lg font-medium text-text-primary shadow-cartoon hover:bg-primary-hover"
             >
                 Get Started
             </Link>
             <Link
                 :href="route('login')"
-                class="inline-block rounded-lg border border-brand-ink-soft bg-surface-dark px-8 py-3 text-lg font-medium text-text-dark hover:bg-surface-darker"
+                class="inline-block rounded-lg border border-border bg-surface-dark px-8 py-3 text-lg font-medium text-text-dark hover:bg-surface-hover"
             >
                 Login
             </Link>

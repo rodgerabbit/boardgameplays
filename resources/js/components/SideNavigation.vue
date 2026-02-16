@@ -13,8 +13,8 @@
                         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition',
                         item.disabled
                             ? 'cursor-not-allowed text-text-muted-dark opacity-70'
-                            : 'text-text-dark hover:bg-surface-darker hover:text-brand-accent',
-                        isActive(item) && !item.disabled && 'bg-surface-darker text-brand-accent',
+                            : 'text-text-dark hover:bg-surface-darker hover:text-accent',
+                        isActive(item) && !item.disabled && 'bg-surface-darker text-accent',
                     ]"
                     @click="!item.disabled && $emit('navigate')"
                 >

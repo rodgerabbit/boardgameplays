@@ -12,9 +12,9 @@
                 required
                 autofocus
                 autocomplete="name"
-                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <p v-if="form.errors.name" class="text-sm text-brand-pink">
+            <p v-if="form.errors.name" class="text-sm text-primary">
                 {{ form.errors.name }}
             </p>
 
@@ -26,9 +26,9 @@
                 type="email"
                 required
                 autocomplete="email"
-                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <p v-if="form.errors.email" class="text-sm text-brand-pink">
+            <p v-if="form.errors.email" class="text-sm text-primary">
                 {{ form.errors.email }}
             </p>
 
@@ -40,9 +40,9 @@
                 type="password"
                 required
                 autocomplete="new-password"
-                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <p v-if="form.errors.password" class="text-sm text-brand-pink">
+            <p v-if="form.errors.password" class="text-sm text-primary">
                 {{ form.errors.password }}
             </p>
 
@@ -54,9 +54,9 @@
                 type="password"
                 required
                 autocomplete="new-password"
-                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                class="w-full rounded-lg border border-surface-darker bg-surface-dark px-3 py-2 text-text-dark placeholder-text-muted-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             />
-            <p v-if="form.errors.password_confirmation" class="text-sm text-brand-pink">
+            <p v-if="form.errors.password_confirmation" class="text-sm text-primary">
                 {{ form.errors.password_confirmation }}
             </p>
 
@@ -64,19 +64,19 @@
             <button
                 type="submit"
                 :disabled="form.processing"
-                class="mt-6 w-full rounded-lg border border-brand-ink bg-brand-pink py-2.5 font-medium text-brand-ink shadow-cartoon disabled:cursor-not-allowed disabled:opacity-50 hover:bg-brand-pink-dark"
+                class="mt-6 w-full rounded-lg border border-border bg-primary py-2.5 font-medium text-text-primary shadow-cartoon disabled:cursor-not-allowed disabled:opacity-50 hover:bg-primary-hover"
             >
                 {{ form.processing ? 'Registering...' : 'Register' }}
             </button>
         </form>
 
-        <p v-if="form.errors.message" class="mt-4 text-center text-sm text-brand-pink">
+        <p v-if="form.errors.message" class="mt-4 text-center text-sm text-primary">
             {{ form.errors.message }}
         </p>
 
         <p class="mt-6 text-center text-sm text-text-muted-dark">
             Already have an account?
-            <Link :href="route('login')" class="text-brand-accent underline hover:no-underline">
+            <Link :href="route('login')" class="text-accent underline hover:no-underline">
                 Login here
             </Link>
         </p>

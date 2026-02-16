@@ -4,7 +4,7 @@
         <div class="flex items-center gap-2 border-b border-surface-darker bg-surface-dark px-4 py-2 lg:hidden">
             <button
                 type="button"
-                class="rounded-lg p-2 text-text-dark hover:bg-surface-darker focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                class="rounded-lg p-2 text-text-dark hover:bg-surface-darker focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Open menu"
                 :aria-expanded="sidebarOpen"
                 @click="sidebarOpen = true"

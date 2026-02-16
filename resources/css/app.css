@@ -12,38 +12,67 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Brand colors */
-    --color-brand-pink: #E78A96;
-    --color-brand-pink-dark: #C45A6A;
-    --color-brand-pink-deeper: #A94858;
+    /* === BACKGROUND LAYERS (dark mode) === */
+    --color-background-base: #0F0F14;
+    --color-background-subtle: #16161D;
+    --color-background-dark: #0F0F14;
+    --color-background-darker: #16161D;
+
+    /* === SURFACE (cards, modals, hover) === */
+    --color-surface: #1C1C24;
+    --color-surface-elevated: #23232E;
+    --color-surface-hover: #2A2A38;
+    --color-surface-dark: #1C1C24;
+    --color-surface-darker: #23232E;
+
+    /* === PRIMARY (VIOLET) === */
+    --color-primary: #8B5CF6;
+    --color-primary-hover: #7C3AED;
+    --color-primary-soft: #8B5CF633;
+
+    /* === ACCENT (LIME) === */
+    --color-accent: #A3E635;
+    --color-accent-hover: #84CC16;
+    --color-brand-accent: #A3E635;
+    --color-brand-accent-dark: #84CC16;
+
+    /* === STATUS COLORS === */
+    --color-success: #22C55E;
+    --color-warning: #F59E0B;
+    --color-danger: #EF4444;
+    --color-highlight: #F59E0B;
+
+    /* === TEXT === */
+    --color-text-primary: #F3F4F6;
+    --color-text-muted: #9CA3AF;
+    --color-text-subtle: #6B7280;
+    --color-text-dark: #F3F4F6;
+    --color-text-muted-dark: #9CA3AF;
+
+    /* === BORDERS === */
+    --color-border: #2F2F3A;
+
+    /* Legacy brand (alias primary for compatibility) */
+    --color-brand-pink: #8B5CF6;
+    --color-brand-pink-dark: #7C3AED;
     --color-brand-yellow: #F4D35E;
     --color-brand-yellow-dark: #D6B449;
-    --color-brand-ink: #6B2F2F;
-    --color-brand-ink-soft: #8B4A4A;
-    --color-brand-accent: #4DB6C1;
-    --color-brand-accent-dark: #3797A1;
+    --color-brand-ink: #F3F4F6;
+    --color-brand-ink-soft: #2F2F3A;
 
-    /* Surface */
+    /* Light mode (unchanged) */
     --color-surface-light: #FFF3E8;
-    --color-surface-dark: #2A1F1F;
-    --color-surface-darker: #1E1616;
-
-    /* Background */
     --color-background-light: #FDF8F3;
-    --color-background-dark: #1A1313;
-
-    /* Text */
     --color-text-light: #3A2A2A;
-    --color-text-dark: #F5EDE6;
-    --color-text-muted-dark: #CBBFB7;
 
     /* Border radius */
-    --radius-xl: 16px;
-    --radius-2xl: 20px;
+    --radius-xl: 14px;
+    --radius-2xl: 18px;
 
     /* Box shadow */
-    --shadow-cartoon: 0 6px 0 rgba(107, 47, 47, 0.25);
-    --shadow-glow: 0 0 20px rgba(244, 211, 94, 0.35);
+    --shadow-cartoon: 0 6px 0 rgba(139, 92, 246, 0.35);
+    --shadow-soft: 0 6px 16px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.35);
 }
 
 /* Inertia app root: fill main and allow layout to use full height/width */

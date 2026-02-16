@@ -29,7 +29,7 @@
                                 type="search"
                                 name="q"
                                 placeholder="Quick search..."
-                                class="w-full rounded-md border border-surface-darker bg-background-dark py-1.5 pl-7 pr-2 text-sm text-text-dark placeholder-text-muted-dark focus:border-brand-accent focus:outline-none focus:ring-1 focus:ring-brand-accent"
+                                class="w-full rounded-md border border-surface-darker bg-background-dark py-1.5 pl-7 pr-2 text-sm text-text-dark placeholder-text-muted-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                 autocomplete="off"
                             />
                         </div>
@@ -37,11 +37,11 @@
                     @auth
                     <a href="#" class="relative rounded-lg p-2 text-text-muted-dark hover:bg-surface-darker hover:text-text-dark" aria-label="Notifications">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-pink px-1 text-xs font-medium text-brand-ink">3</span>
+                        <span class="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs font-medium text-text-primary">3</span>
                     </a>
                     <div class="relative shrink-0">
                         <details class="relative group/details">
-                            <summary class="list-none cursor-pointer rounded-full ring-2 ring-transparent focus:outline-none focus:ring-2 focus:ring-brand-accent [&::-webkit-details-marker]:hidden">
+                            <summary class="list-none cursor-pointer rounded-full ring-2 ring-transparent focus:outline-none focus:ring-2 focus:ring-primary [&::-webkit-details-marker]:hidden">
                                 @php
                                         $name = auth()->user()->name ?? '';
                                         $parts = preg_split('/\s+/', trim($name), 2);
@@ -63,7 +63,7 @@
                         </details>
                     </div>
                     @else
-                    <a href="{{ route('login') }}" class="rounded-lg border border-brand-ink-soft bg-brand-pink px-3 py-2 text-sm font-medium text-brand-ink shadow-cartoon hover:bg-brand-pink-dark">Log in</a>
+                    <a href="{{ route('login') }}" class="rounded-lg border border-border bg-primary px-3 py-2 text-sm font-medium text-text-primary shadow-cartoon hover:bg-primary-hover">Log in</a>
                     @endauth
                 </div>
             </div>
