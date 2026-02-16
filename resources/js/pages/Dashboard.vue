@@ -1,4 +1,5 @@
 <template>
+    <Head title="Dashboard" />
     <div class="space-y-8">
         <!-- Header -->
         <div class="flex flex-wrap items-center justify-between gap-4">
@@ -324,7 +325,10 @@
 </template>
 
 <script setup>
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
+import AppLayout from '@/layouts/AppLayout.vue';
+
+defineOptions({ layout: AppLayout });
 
 const props = defineProps({
     games: {

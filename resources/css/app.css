@@ -45,3 +45,12 @@
     --shadow-cartoon: 0 6px 0 rgba(107, 47, 47, 0.25);
     --shadow-glow: 0 0 20px rgba(244, 211, 94, 0.35);
 }
+
+/* Inertia app root: fill main and allow layout to use full height/width */
+main > #app {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+}

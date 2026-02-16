@@ -1,4 +1,5 @@
 <template>
+    <Head title="BoardGamePlays" />
     <div class="space-y-12">
         <!-- Header -->
         <div class="flex flex-wrap items-center justify-between gap-4">
@@ -70,5 +71,5 @@
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 </script>

@@ -4,15 +4,16 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>BoardGamePlays</title>
+        <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
 
         <!-- Scripts -->
         @routes
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>
-    <body class="bg-background-dark text-text-dark min-h-screen antialiased">
-        <header class="border-b border-surface-darker bg-surface-dark px-4 py-3">
+    <body class="flex min-h-screen flex-col bg-background-dark text-text-dark antialiased">
+        <header class="shrink-0 border-b border-surface-darker bg-surface-dark px-4 py-3">
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <a href="{{ url('/') }}" class="inline-flex items-center gap-2 shrink-0">
                     <img src="{{ asset('images/logo.png') }}" alt="boardgameplays logo" class="h-10 w-auto" />
@@ -67,7 +68,7 @@
                 </div>
             </div>
         </header>
-        <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <main class="flex min-h-0 flex-1 flex-col w-full">
             @inertia
         </main>
     </body>
