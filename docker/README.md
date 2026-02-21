@@ -71,10 +71,11 @@ docker-compose exec app composer [command]
 docker-compose exec node npm [command]
 ```
 
-### Run tests
+### Run tests (always use Docker Compose to test)
 ```bash
 docker-compose exec app php artisan test
 ```
+Or: `docker compose exec app php artisan test` (Docker Compose V2).
 
 ### View logs
 ```bash
