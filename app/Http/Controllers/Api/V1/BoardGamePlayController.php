@@ -145,6 +145,8 @@ class BoardGamePlayController extends BaseApiController
      * @bodyParam expansions array Optional array of expansion IDs. Example: [2, 3]
      * @bodyParam players array required Array of players (1-30 players). Example: [{"user_id": 1, "score": 100, "is_winner": true}]
      * @bodyParam sync_to_board_game_geek boolean Whether to sync this play to BGG. Example: false
+     * @bodyParam board_game_geek_username string Optional BGG username for sync. Example: mybgguser
+     * @bodyParam board_game_geek_password string Optional BGG password for sync. Example: (optional)
      *
      * @response 201 {
      *   "message": "Board game play created successfully.",
@@ -256,8 +258,12 @@ class BoardGamePlayController extends BaseApiController
      * @bodyParam location string The location where the game was played. Example: Home
      * @bodyParam comment string Optional comment about the play. Example: Great game!
      * @bodyParam game_length_minutes integer Optional game length in minutes. Example: 90
+     * @bodyParam source string The source of the play (website, boardgamegeek). Example: website
      * @bodyParam expansions array Optional array of expansion IDs. Example: [2, 3]
      * @bodyParam players array Array of players (1-30 players). Example: [{"user_id": 1, "score": 100, "is_winner": true}]
+     * @bodyParam sync_to_board_game_geek boolean Whether to sync this play to BGG. Example: false
+     * @bodyParam board_game_geek_username string Optional BGG username for sync. Example: mybgguser
+     * @bodyParam board_game_geek_password string Optional BGG password for sync. Example: (optional)
      *
      * @response 200 {
      *   "message": "Board game play updated successfully.",

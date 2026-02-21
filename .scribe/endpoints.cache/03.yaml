@@ -285,23 +285,23 @@ endpoints:
       board_game_geek_username:
         custom: []
         name: board_game_geek_username
-        description: 'Must not be greater than 255 characters.'
+        description: 'Optional BGG username for sync.'
         required: false
-        example: b
+        example: mybgguser
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
       board_game_geek_password:
         custom: []
         name: board_game_geek_password
-        description: ''
+        description: 'Optional BGG password for sync.'
         required: false
-        example: architecto
+        example: (optional)
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
       'players[].user_id':
@@ -387,8 +387,8 @@ endpoints:
           score: 100
           is_winner: true
       sync_to_board_game_geek: false
-      board_game_geek_username: b
-      board_game_geek_password: architecto
+      board_game_geek_username: mybgguser
+      board_game_geek_password: (optional)
     fileParameters: []
     responses:
       -
@@ -638,14 +638,12 @@ endpoints:
       source:
         custom: []
         name: source
-        description: ''
+        description: 'The source of the play (website, boardgamegeek).'
         required: false
-        example: boardgamegeek
+        example: website
         type: string
-        enumValues:
-          - website
-          - boardgamegeek
-        exampleWasSpecified: false
+        enumValues: []
+        exampleWasSpecified: true
         nullable: false
         deprecated: false
       expansions:
@@ -679,34 +677,34 @@ endpoints:
       sync_to_board_game_geek:
         custom: []
         name: sync_to_board_game_geek
-        description: ''
+        description: 'Whether to sync this play to BGG.'
         required: false
         example: false
         type: boolean
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
       board_game_geek_username:
         custom: []
         name: board_game_geek_username
-        description: 'Must not be greater than 255 characters.'
+        description: 'Optional BGG username for sync.'
         required: false
-        example: g
+        example: mybgguser
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
       board_game_geek_password:
         custom: []
         name: board_game_geek_password
-        description: ''
+        description: 'Optional BGG password for sync.'
         required: false
-        example: architecto
+        example: (optional)
         type: string
         enumValues: []
-        exampleWasSpecified: false
+        exampleWasSpecified: true
         nullable: true
         deprecated: false
       'players[].user_id':
@@ -782,7 +780,7 @@ endpoints:
       location: Home
       comment: 'Great game!'
       game_length_minutes: 90
-      source: boardgamegeek
+      source: website
       expansions:
         - 2
         - 3
@@ -792,8 +790,8 @@ endpoints:
           score: 100
           is_winner: true
       sync_to_board_game_geek: false
-      board_game_geek_username: g
-      board_game_geek_password: architecto
+      board_game_geek_username: mybgguser
+      board_game_geek_password: (optional)
     fileParameters: []
     responses:
       -
