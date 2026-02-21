@@ -292,6 +292,7 @@ class BoardGamePlayDeduplicationTest extends TestCase
             'board_game_geek_username' => null,
             'guest_name' => null,
             'is_new_player' => false,
+            'score' => null,
         ]);
 
         BoardGamePlayPlayer::factory()->create([
@@ -300,6 +301,7 @@ class BoardGamePlayDeduplicationTest extends TestCase
             'board_game_geek_username' => null,
             'guest_name' => null,
             'is_new_player' => false,
+            'score' => null,
         ]);
 
         // Sync deduplication - play1 (lower bgg_play_id) should be leading, play2 excluded

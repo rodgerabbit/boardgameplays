@@ -297,10 +297,10 @@ class BoardGamePlayDeduplicationService extends BaseService
                 $play->is_incomplete ? 1 : 0, // incomplete plays last so they are never chosen as leading when a complete duplicate exists
                 -$detailScore,
                 $play->bgg_play_id !== null ? (int) $play->bgg_play_id : PHP_INT_MAX,
-                $play->created_at->timestamp,
+                $play->created_at instanceof \Carbon\Carbon ? $play->created_at->timestamp : (int) strtotime((string) $play->created_at),
                 $play->id,
             ];
-        });
+        })->values();
 
         return $sorted->first();
     }
@@ -454,9 +454,9 @@ class BoardGamePlayDeduplicationService extends BaseService
         return $play->players
             ->map(function ($player) {
                 return [
-                    'user_id' => $player->user_id,
-                    'bgg_username' => $player->board_game_geek_username,
-                    'guest_name' => $player->guest_name,
+                    'user_id' => $player->user_id !== null ? (int) $player->user_id : null,
+                    'bgg_username' => $player->board_game_geek_username !== null ? trim((string) $player->board_game_geek_username) : null,
+                    'guest_name' => $player->guest_name !== null ? trim((string) $player->guest_name) : null,
                 ];
             })
             ->sortBy(function ($participant) {
