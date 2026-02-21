@@ -163,7 +163,7 @@ The update script will:
 - Rebuild frontend assets
 - Optimize the application (cache config, routes, views)
 - Restart queue workers (Horizon) if applicable
-- Optionally run tests
+- Optionally run tests (with Docker: `docker-compose exec app php artisan test`)
 
 The script automatically detects whether you're using Docker or local setup and runs the appropriate commands.
 
@@ -183,11 +183,22 @@ This will start:
 
 ### Running Tests
 
+**Always test with Docker Compose** when using the Docker setup so tests run in the same environment as the app:
+
+```bash
+docker-compose exec app php artisan test
+```
+
+Or with Composer (inside the app container):
+```bash
+docker-compose exec app composer test
+```
+
+If you are running locally without Docker:
 ```bash
 composer test
 ```
-
-Or with PHPUnit directly:
+or with PHPUnit directly:
 ```bash
 php artisan test
 ```

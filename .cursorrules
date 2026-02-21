@@ -32,6 +32,7 @@ This is a Laravel-based boardgame plays and statistics platform for groups. The 
 
 ### 2. Testing Requirements (MANDATORY)
 - **EVERY feature, class, and significant method MUST have corresponding tests**
+- **Always run tests with Docker Compose** so the test environment matches the app: `docker-compose exec app php artisan test` (or `docker-compose exec app composer test`). Do not run PHP/artisan tests directly on the host unless you are in a non-Docker setup.
 - **Test-Driven Development (TDD) is preferred** - write tests before implementation when possible
 - **Test Coverage**: Aim for minimum 80% coverage, critical paths should be 100%
 - **Test Types**:
@@ -268,7 +269,7 @@ routes/
 ### 13. Code Review Checklist
 
 Before submitting code, ensure:
-- [ ] All tests pass
+- [ ] All tests pass (run with Docker Compose: `docker-compose exec app php artisan test`)
 - [ ] New code has corresponding tests
 - [ ] Code follows naming conventions
 - [ ] Code is properly documented
