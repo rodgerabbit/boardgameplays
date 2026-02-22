@@ -78,7 +78,7 @@ Add indexes:
 
 This service will handle:
 
-- `**findDuplicatePlays(BoardGamePlay $play): Collection**` - Find all potential duplicates for a play
+- `**findDuplicatePlays(BoardGamePlay $play): Collection`** - Find all potential duplicates for a play
 - `**identifyDuplicateGroup(Collection $plays): array**` - Group plays that are actual duplicates (same participants)
 - `**determineLeadingPlay(Collection $duplicatePlays): BoardGamePlay**` - Select leading play based on priority rules
 - `**markExcludedPlays(BoardGamePlay $leadingPlay, Collection $excludedPlays): void**` - Mark plays as excluded
@@ -100,7 +100,7 @@ Add:
 
 - `is_excluded` and `leading_play_id` to fillable array
 - Cast `is_excluded` to boolean
-- `**scopeExcluded($query)**` - Filter excluded plays
+- `**scopeExcluded($query)`** - Filter excluded plays
 - `**scopeNotExcluded($query)**` - Filter non-excluded plays (default for statistics)
 - `**scopeLeading($query)**` - Filter only leading plays
 - `**isExcluded(): bool**` - Check if play is excluded
@@ -114,7 +114,7 @@ Add:
 
 Update:
 
-- `**createBoardGamePlay()**`: After creating play, call `syncDeduplicationForPlay()`
+- `**createBoardGamePlay()`**: After creating play, call `syncDeduplicationForPlay()`
 - `**updateBoardGamePlay()**`: After updating play, call `syncDeduplicationForPlay()` (may affect other plays)
 - `**deleteBoardGamePlay()**`: Before deletion, if play is leading, promote another from excluded group; if excluded, just delete
 
