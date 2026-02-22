@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\BoardGamePlay;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -162,6 +163,25 @@ class BoardGamePlayDeduplicationService extends BaseService
                 // Always persist leading play as non-excluded so DB state is correct
                 $this->clearExclusion($leadingPlay);
             }
+        }
+    }
+
+    /**
+     * Sync deduplication for a group over a date range.
+     *
+     * Calls syncDeduplicationForGroup for each date in the range. Used after bulk
+     * syncs (e.g. BGG plays sync) to refresh leading/excluded state for the scope.
+     *
+     * @param int $groupId The group ID to process
+     * @param Carbon $from Start of date range (inclusive)
+     * @param Carbon $to End of date range (inclusive)
+     * @return void
+     */
+    public function syncDeduplicationForGroupAndDateRange(int $groupId, Carbon $from, Carbon $to): void
+    {
+        $period = CarbonPeriod::create($from->copy()->startOfDay(), $to->copy()->startOfDay());
+        foreach ($period as $date) {
+            $this->syncDeduplicationForGroup($groupId, null, $date);
         }
     }
 

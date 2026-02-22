@@ -8,10 +8,15 @@ use App\Jobs\SyncBoardGamePlaysFromBoardGameGeekJob;
 use App\Jobs\SyncBoardGamePlayToBoardGameGeekJob;
 use App\Models\BoardGame;
 use App\Models\BoardGamePlay;
+use App\Models\Group;
 use App\Models\User;
+use App\Services\BoardGameGeekPlaySyncService;
+use App\Services\BoardGamePlayDeduplicationService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
 /**
@@ -66,6 +71,93 @@ class BoardGamePlayBggSyncTest extends TestCase
             return $request->url() === 'https://boardgamegeek.com/login/api/v1'
                 && $request->method() === 'POST';
         });
+    }
+
+    public function test_sync_plays_from_bgg_job_runs_deduplication_for_affected_groups_and_date_range(): void
+    {
+        $group = Group::factory()->create();
+        $user = User::factory()->create([
+            'board_game_geek_username' => 'bgguser',
+            'default_group_id' => $group->id,
+        ]);
+        $boardGame = BoardGame::factory()->create(['is_expansion' => false]);
+        BoardGamePlay::factory()->create([
+            'created_by_user_id' => $user->id,
+            'board_game_id' => $boardGame->id,
+            'group_id' => $group->id,
+            'source' => 'boardgamegeek',
+            'bgg_play_id' => '999888',
+        ]);
+
+        $minDate = '2025-01-05';
+        $maxDate = '2025-01-10';
+        $processedPlayIds = ['999888'];
+
+        $syncService = $this->createMockSyncService($processedPlayIds);
+        $deduplicationService = $this->createMockDeduplicationServiceExpectingGroupAndDateRange(
+            $group->id,
+            $minDate,
+            $maxDate
+        );
+
+        $job = new SyncBoardGamePlaysFromBoardGameGeekJob($user->id, $minDate, $maxDate);
+        $job->handle($syncService, $deduplicationService);
+
+        $this->addToAssertionCount(1);
+    }
+
+    public function test_sync_plays_from_bgg_job_does_not_run_deduplication_when_no_plays_processed(): void
+    {
+        $user = User::factory()->create([
+            'board_game_geek_username' => 'bgguser',
+        ]);
+
+        $syncService = $this->createMockSyncService([]);
+        $deduplicationService = $this->createMock(BoardGamePlayDeduplicationService::class);
+        $deduplicationService->expects($this->never())
+            ->method('syncDeduplicationForGroupAndDateRange');
+
+        $job = new SyncBoardGamePlaysFromBoardGameGeekJob($user->id, '2025-01-01', '2025-01-15');
+        $job->handle($syncService, $deduplicationService);
+
+        $this->addToAssertionCount(1);
+    }
+
+    /**
+     * @return BoardGameGeekPlaySyncService&MockObject
+     */
+    private function createMockSyncService(array $processedPlayIds): BoardGameGeekPlaySyncService
+    {
+        $mock = $this->createMock(BoardGameGeekPlaySyncService::class);
+        $mock->method('fetchPlaysFromBoardGameGeek')->willReturn([]);
+        $mock->method('processBggPlaysXml')->willReturn($processedPlayIds);
+        $mock->method('cleanupDeletedBggPlays')->willReturnCallback(function (): void {});
+
+        return $mock;
+    }
+
+    /**
+     * @return BoardGamePlayDeduplicationService&MockObject
+     */
+    private function createMockDeduplicationServiceExpectingGroupAndDateRange(
+        int $expectedGroupId,
+        string $expectedFrom,
+        string $expectedTo
+    ): BoardGamePlayDeduplicationService {
+        $mock = $this->createMock(BoardGamePlayDeduplicationService::class);
+        $mock->expects($this->once())
+            ->method('syncDeduplicationForGroupAndDateRange')
+            ->with(
+                $this->identicalTo($expectedGroupId),
+                $this->callback(function (Carbon $from) use ($expectedFrom): bool {
+                    return $from->toDateString() === $expectedFrom;
+                }),
+                $this->callback(function (Carbon $to) use ($expectedTo): bool {
+                    return $to->toDateString() === $expectedTo;
+                })
+            );
+
+        return $mock;
     }
 }
 
