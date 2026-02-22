@@ -6,7 +6,7 @@
         <ul class="flex flex-col gap-1 p-3">
             <li v-for="item in navigationItems" :key="item.name">
                 <component
-                    :is="item.disabled ? 'span' : 'Link'"
+                    :is="item.disabled ? 'span' : Link"
                     :href="item.disabled ? undefined : item.href"
                     :title="item.disabled ? item.disabledTitle : undefined"
                     :class="[
@@ -70,9 +70,13 @@ const navigationItems = [
 function isActive(item) {
     if (item.disabled) return false;
     const current = page.url;
-    const path = typeof item.href === 'string' ? item.href : '';
-    if (path === '#') return false;
+    const rawPath = typeof item.href === 'string' ? item.href : '';
+    if (rawPath === '#') return false;
+    // Normalize href to pathname (handles both /settings and full URL from route())
+    const path = rawPath.startsWith('http')
+        ? new URL(rawPath).pathname
+        : rawPath.split('?')[0];
     if (path === '/dashboard') return current === '/dashboard' || current.startsWith('/dashboard');
-    return path !== '/' && current.startsWith(path.split('?')[0]);
+    return path !== '/' && current.startsWith(path);
 }
 </script>

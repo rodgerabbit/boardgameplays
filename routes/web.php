@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,6 +30,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/play-log', [PlaceholderController::class, 'playLog'])->name('play-log.index');
     Route::get('/statistics', [PlaceholderController::class, 'statistics'])->name('statistics.index');
     Route::get('/boardgames', [PlaceholderController::class, 'boardgames'])->name('boardgames.index');
-    Route::get('/settings', [PlaceholderController::class, 'settings'])->name('settings.index');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

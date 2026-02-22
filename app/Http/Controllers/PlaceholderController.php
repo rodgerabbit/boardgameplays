@@ -36,9 +36,4 @@ class PlaceholderController extends Controller
     {
         return Inertia::render('Placeholder', ['title' => 'Boardgames']);
     }
-
-    public function settings(): Response
-    {
-        return Inertia::render('Placeholder', ['title' => 'Settings']);
-    }
 }

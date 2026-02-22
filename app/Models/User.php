@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -40,6 +42,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'profile_picture_path',
+        'biography',
         'default_group_id',
         'theme_preference',
         'play_notification_delay_hours',
@@ -59,6 +63,15 @@ class User extends Authenticatable
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'profile_picture_url',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -70,6 +83,19 @@ class User extends Authenticatable
             'password' => 'hashed',
             'play_notification_delay_hours' => 'integer',
         ];
+    }
+
+    /**
+     * Get the URL for the user's profile picture.
+     */
+    protected function profilePictureUrl(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            if (! $this->profile_picture_path) {
+                return null;
+            }
+            return Storage::disk('public')->url($this->profile_picture_path);
+        });
     }
 
     /**
