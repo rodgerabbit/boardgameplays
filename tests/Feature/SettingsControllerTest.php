@@ -123,7 +123,15 @@ class SettingsControllerTest extends TestCase
             $this->markTestSkipped('GD extension required for image upload test');
         }
 
-        Storage::fake('public');
+        // Use a unique writable root so we avoid cleanDirectory() (which can hit "Permission denied"
+        // on leftover storage/framework/testing/disks/public from a previous run) and ensure we can create dirs.
+        $uniqueRoot = storage_path('framework/testing/disks/public_'.uniqid('', true));
+        mkdir($uniqueRoot, 0755, true);
+        $originalConfig = config('filesystems.disks.public', []);
+        $config = array_merge($originalConfig, ['root' => $uniqueRoot]);
+        $fake = $this->app['filesystem']->createLocalDriver($config);
+        $this->app['filesystem']->set('public', $fake);
+
         $user = User::factory()->create(['name' => 'Photo User']);
         $file = UploadedFile::fake()->image('avatar.jpg', 100, 100);
 
