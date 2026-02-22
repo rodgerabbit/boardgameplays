@@ -150,6 +150,11 @@ update_with_docker() {
     $DOCKER_COMPOSE exec -T app php artisan migrate --force
     print_success "Database migrations completed"
     
+    # Ensure storage link exists (public/storage -> storage/app/public for profile pictures, etc.)
+    print_info "Ensuring storage link exists..."
+    $DOCKER_COMPOSE exec -T app php artisan storage:link
+    print_success "Storage link ready"
+    
     # Clear all caches
     print_step "Clearing Application Caches"
     print_info "Clearing configuration cache..."
@@ -240,6 +245,11 @@ update_local() {
     print_info "Running migrations..."
     php artisan migrate --force
     print_success "Database migrations completed"
+    
+    # Ensure storage link exists (public/storage -> storage/app/public for profile pictures, etc.)
+    print_info "Ensuring storage link exists..."
+    php artisan storage:link
+    print_success "Storage link ready"
     
     # Clear all caches
     print_step "Clearing Application Caches"

@@ -240,6 +240,15 @@ setup_with_docker() {
     fi
     print_success "Permissions set"
     
+    # Create storage link so public/storage serves storage/app/public (e.g. profile pictures)
+    print_info "Linking public storage..."
+    if docker compose version >/dev/null 2>&1; then
+        docker compose exec -T app php artisan storage:link
+    else
+        docker-compose exec -T app php artisan storage:link
+    fi
+    print_success "Storage link created"
+    
     # Run migrations
     print_info "Running database migrations..."
     if docker compose version >/dev/null 2>&1; then
@@ -334,6 +343,11 @@ setup_local() {
     print_info "Setting storage and cache permissions..."
     chmod -R 775 storage bootstrap/cache || true
     print_success "Permissions set"
+    
+    # Create storage link so public/storage serves storage/app/public (e.g. profile pictures)
+    print_info "Linking public storage..."
+    php artisan storage:link
+    print_success "Storage link created"
     
     # Test database connection
     print_info "Testing database connection..."
