@@ -5,14 +5,15 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
-/* Dark mode: use <html class="dark"> */
+/* Theme: <html class="dark"> or <html class="light">. Default is dark. */
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(.light, .light *));
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* === BACKGROUND LAYERS (dark mode) === */
+    /* === BACKGROUND LAYERS (dark mode default) === */
     --color-background-base: #0F0F14;
     --color-background-subtle: #16161D;
     --color-background-dark: #0F0F14;
@@ -60,11 +61,6 @@
     --color-brand-ink: #F3F4F6;
     --color-brand-ink-soft: #2F2F3A;
 
-    /* Light mode (unchanged) */
-    --color-surface-light: #FFF3E8;
-    --color-background-light: #FDF8F3;
-    --color-text-light: #3A2A2A;
-
     /* Border radius */
     --radius-xl: 14px;
     --radius-2xl: 18px;
@@ -73,6 +69,30 @@
     --shadow-cartoon: 0 6px 0 rgba(139, 92, 246, 0.35);
     --shadow-soft: 0 6px 16px rgba(0, 0, 0, 0.4);
     --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.35);
+}
+
+/* Light mode: override theme variables when <html class="light"> */
+.light {
+    --color-background-base: #FDF8F3;
+    --color-background-subtle: #F5EDE4;
+    --color-background-dark: #FDF8F3;
+    --color-background-darker: #F5EDE4;
+
+    --color-surface: #FFFFFF;
+    --color-surface-elevated: #FFF3E8;
+    --color-surface-hover: #F5EDE4;
+    --color-surface-dark: #FFFFFF;
+    --color-surface-darker: #FFF3E8;
+
+    --color-text-primary: #2D2320;
+    --color-text-muted: #6B5B4F;
+    --color-text-subtle: #8B7355;
+    --color-text-dark: #2D2320;
+    --color-text-muted-dark: #6B5B4F;
+
+    --color-border: #E5DED5;
+    --color-brand-ink: #2D2320;
+    --color-brand-ink-soft: #6B5B4F;
 }
 
 /* Inertia app root: fill main and allow layout to use full height/width */

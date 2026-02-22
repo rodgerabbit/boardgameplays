@@ -50,6 +50,8 @@ class SettingsControllerTest extends TestCase
             ->where('user.name', 'Jane Doe')
             ->where('user.email', 'jane@example.com')
             ->where('user.biography', 'Board game enthusiast.')
+            ->has('user.theme_preference')
+            ->has('theme_preference')  // shared globally by HandleInertiaRequests
         );
     }
 
@@ -145,5 +147,58 @@ class SettingsControllerTest extends TestCase
         $user->refresh();
         $this->assertNotNull($user->profile_picture_path);
         Storage::disk('public')->assertExists($user->profile_picture_path);
+    }
+
+    public function test_update_preferences_redirects_guests_to_login(): void
+    {
+        $response = $this->put('/settings/preferences', [
+            'theme_preference' => 'dark',
+        ]);
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_update_preferences_updates_theme_preference(): void
+    {
+        $user = User::factory()->create(['theme_preference' => User::THEME_SYSTEM]);
+
+        $response = $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => User::THEME_DARK,
+        ]);
+
+        $response->assertRedirect('/settings');
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertSame(User::THEME_DARK, $user->theme_preference);
+    }
+
+    public function test_update_preferences_accepts_light_and_system(): void
+    {
+        $user = User::factory()->create(['theme_preference' => User::THEME_DARK]);
+
+        $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => User::THEME_LIGHT,
+        ])->assertRedirect('/settings');
+        $user->refresh();
+        $this->assertSame(User::THEME_LIGHT, $user->theme_preference);
+
+        $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => User::THEME_SYSTEM,
+        ])->assertRedirect('/settings');
+        $user->refresh();
+        $this->assertSame(User::THEME_SYSTEM, $user->theme_preference);
+    }
+
+    public function test_update_preferences_validates_theme_preference(): void
+    {
+        $user = User::factory()->create(['theme_preference' => User::THEME_DARK]);
+
+        $response = $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => 'invalid',
+        ]);
+
+        $response->assertSessionHasErrors('theme_preference');
+        $user->refresh();
+        $this->assertSame(User::THEME_DARK, $user->theme_preference);
     }
 }

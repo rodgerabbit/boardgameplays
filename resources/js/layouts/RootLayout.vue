@@ -9,4 +9,7 @@
 
 <script setup>
 import AppHeader from '@/components/AppHeader.vue';
+import { useTheme } from '@/composables/useTheme';
+
+useTheme();
 </script>

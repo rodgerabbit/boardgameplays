@@ -32,5 +32,6 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/boardgames', [PlaceholderController::class, 'boardgames'])->name('boardgames.index');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
+    Route::put('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name('settings.preferences.update');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

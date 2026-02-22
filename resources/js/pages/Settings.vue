@@ -165,6 +165,40 @@
                         </p>
                     </div>
                 </form>
+
+                <!-- Preferences -->
+                <div class="border-t border-surface-darker pt-6">
+                    <h2 class="mb-4 text-lg font-medium text-text-dark">Preferences</h2>
+                    <form @submit.prevent="submitPreferences" class="space-y-4 max-w-xl">
+                        <div>
+                            <label for="theme_preference" class="block text-sm font-medium text-text-dark">Theme</label>
+                            <select
+                                id="theme_preference"
+                                v-model="preferencesForm.theme_preference"
+                                class="mt-1 w-full rounded-lg border border-surface-darker bg-surface-darker px-3 py-2 text-text-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                            >
+                                <option value="system">System preference</option>
+                                <option value="dark">Dark</option>
+                                <option value="light">Light</option>
+                            </select>
+                            <p v-if="preferencesForm.errors.theme_preference" class="mt-1 text-sm text-primary">
+                                {{ preferencesForm.errors.theme_preference }}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button
+                                type="submit"
+                                :disabled="preferencesForm.processing"
+                                class="rounded-lg border border-border bg-primary px-4 py-2 text-sm font-medium text-text-primary shadow-cartoon transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {{ preferencesForm.processing ? 'Saving...' : 'Save preferences' }}
+                            </button>
+                            <p v-if="preferencesForm.recentlySuccessful" class="text-sm text-success">
+                                Preferences updated.
+                            </p>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- BoardGameGeek tab (placeholder) -->
@@ -197,6 +231,10 @@ import AppLayout from '@/layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout });
 
+const THEME_SYSTEM = 'system';
+const THEME_DARK = 'dark';
+const THEME_LIGHT = 'light';
+
 const props = defineProps({
     user: {
         type: Object,
@@ -207,6 +245,7 @@ const props = defineProps({
             email: '',
             profile_picture_url: null,
             biography: null,
+            theme_preference: THEME_SYSTEM,
         }),
     },
 });
@@ -219,6 +258,10 @@ const profileForm = useForm({
     name: props.user.name,
     biography: props.user.biography ?? '',
     profile_picture: null,
+});
+
+const preferencesForm = useForm({
+    theme_preference: props.user.theme_preference ?? THEME_SYSTEM,
 });
 
 function onProfilePictureChange(event) {
@@ -243,6 +286,12 @@ function submitProfile() {
                 profilePictureInputRef.value.value = '';
             }
         },
+    });
+}
+
+function submitPreferences() {
+    preferencesForm.put(route('settings.preferences.update'), {
+        preserveScroll: true,
     });
 }
 </script>

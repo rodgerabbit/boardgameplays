@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UpdatePreferencesRequest;
 use App\Http\Requests\UpdateProfileRequest;
+use App\Models\User;
+use App\Services\UserSettingsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -31,6 +34,7 @@ class SettingsController extends Controller
                 'email' => $user->email,
                 'profile_picture_url' => $user->profile_picture_url,
                 'biography' => $user->biography,
+                'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
             ],
         ]);
     }
@@ -62,5 +66,16 @@ class SettingsController extends Controller
         $user->save();
 
         return redirect()->route('settings.index')->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Update the authenticated user's preferences (e.g. theme).
+     */
+    public function updatePreferences(UpdatePreferencesRequest $request, UserSettingsService $userSettingsService): RedirectResponse
+    {
+        $user = Auth::user();
+        $userSettingsService->updateUserSettings($user, $request->validated());
+
+        return redirect()->route('settings.index')->with('success', 'Preferences updated.');
     }
 }
