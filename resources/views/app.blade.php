@@ -43,14 +43,20 @@
                         <details class="relative group/details">
                             <summary class="list-none cursor-pointer rounded-full ring-2 ring-transparent focus:outline-none focus:ring-2 focus:ring-primary [&::-webkit-details-marker]:hidden">
                                 @php
-                                        $name = auth()->user()->name ?? '';
+                                        $user = auth()->user();
+                                        $profilePictureUrl = $user->profile_picture_url;
+                                        $name = $user->name ?? '';
                                         $parts = preg_split('/\s+/', trim($name), 2);
                                         $initials = strtoupper(mb_substr($parts[0] ?? '', 0, 1)) . strtoupper(mb_substr($parts[1] ?? '', 0, 1));
                                         if ($initials === '') { $initials = 'U'; }
                                     @endphp
-                                    <span class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-surface-darker text-sm font-medium text-text-dark ring-2 ring-surface-darker">
-                                        {{ $initials }}
-                                    </span>
+                                    @if($profilePictureUrl)
+                                        <img src="{{ $profilePictureUrl }}" alt="{{ __('Profile') }}" class="h-9 w-9 shrink-0 overflow-hidden rounded-full object-cover ring-2 ring-surface-darker" />
+                                    @else
+                                        <span class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-surface-darker text-sm font-medium text-text-dark ring-2 ring-surface-darker">
+                                            {{ $initials }}
+                                        </span>
+                                    @endif
                             </summary>
                             <div class="absolute right-0 top-full z-10 mt-2 w-48 rounded-lg border border-surface-darker bg-surface-dark py-1 shadow-lg">
                                 <form method="post" action="{{ route('logout') }}" class="block">
