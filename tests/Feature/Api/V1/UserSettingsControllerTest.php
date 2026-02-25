@@ -38,6 +38,7 @@ class UserSettingsControllerTest extends TestCase
                     'default_group_id',
                     'effective_default_group_id',
                     'theme_preference',
+                    'is_profile_public',
                     'play_notification_delay_hours',
                     'board_game_geek_username',
                 ],
@@ -46,6 +47,7 @@ class UserSettingsControllerTest extends TestCase
                 'data' => [
                     'default_group_id' => null,
                     'theme_preference' => 'system',
+                    'is_profile_public' => false,
                     'play_notification_delay_hours' => 0,
                     'board_game_geek_username' => null,
                 ],
@@ -273,6 +275,25 @@ class UserSettingsControllerTest extends TestCase
 
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['theme_preference']);
+    }
+
+    /**
+     * Test that update can set is_profile_public.
+     */
+    public function test_update_can_set_is_profile_public(): void
+    {
+        $user = User::factory()->create(['is_profile_public' => false]);
+        $token = $user->createToken('test-token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', "Bearer {$token}")
+            ->patchJson('/api/v1/user/settings', [
+                'is_profile_public' => true,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.is_profile_public', true);
+        $user->refresh();
+        $this->assertTrue($user->is_profile_public);
     }
 
     /**

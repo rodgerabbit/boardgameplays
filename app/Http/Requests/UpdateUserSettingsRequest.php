@@ -48,6 +48,7 @@ class UpdateUserSettingsRequest extends FormRequest
                 'string',
                 Rule::in([User::THEME_LIGHT, User::THEME_DARK, User::THEME_SYSTEM]),
             ],
+            'is_profile_public' => ['nullable', 'boolean'],
             'play_notification_delay_hours' => [
                 'nullable',
                 'integer',

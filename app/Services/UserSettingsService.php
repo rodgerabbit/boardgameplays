@@ -57,6 +57,13 @@ class UserSettingsService extends BaseService
                 }
             }
 
+            // Validate is_profile_public if provided
+            if (array_key_exists('is_profile_public', $settingsData)) {
+                if (!is_bool($settingsData['is_profile_public'])) {
+                    throw new \InvalidArgumentException('Profile visibility must be true or false.');
+                }
+            }
+
             // Validate play_notification_delay_hours if provided
             if (isset($settingsData['play_notification_delay_hours'])) {
                 $delay = (int) $settingsData['play_notification_delay_hours'];

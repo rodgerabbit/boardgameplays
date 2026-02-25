@@ -47,6 +47,7 @@ class User extends Authenticatable
         'default_group_id',
         'theme_preference',
         'play_notification_delay_hours',
+        'is_profile_public',
         'board_game_geek_username',
         'board_game_geek_password_encrypted',
         'sync_plays_to_board_game_geek',
@@ -82,6 +83,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'play_notification_delay_hours' => 'integer',
+            'is_profile_public' => 'boolean',
         ];
     }
 

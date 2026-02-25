@@ -98,6 +98,41 @@ class UserSettingsServiceTest extends TestCase
     }
 
     /**
+     * Test that updateUserSettings can update is_profile_public.
+     */
+    public function test_update_user_settings_can_update_is_profile_public(): void
+    {
+        $user = User::factory()->create();
+
+        $updatedUser = $this->userSettingsService->updateUserSettings($user, [
+            'is_profile_public' => true,
+        ]);
+
+        $this->assertTrue($updatedUser->is_profile_public);
+
+        $updatedUser = $this->userSettingsService->updateUserSettings($user->fresh(), [
+            'is_profile_public' => false,
+        ]);
+
+        $this->assertFalse($updatedUser->is_profile_public);
+    }
+
+    /**
+     * Test that updateUserSettings throws exception for non-boolean is_profile_public.
+     */
+    public function test_update_user_settings_throws_exception_for_invalid_is_profile_public(): void
+    {
+        $user = User::factory()->create();
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Profile visibility must be true or false.');
+
+        $this->userSettingsService->updateUserSettings($user, [
+            'is_profile_public' => 'yes',
+        ]);
+    }
+
+    /**
      * Test that updateUserSettings can update play notification delay.
      */
     public function test_update_user_settings_can_update_play_notification_delay(): void

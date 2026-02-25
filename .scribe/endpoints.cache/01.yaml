@@ -120,6 +120,17 @@ endpoints:
         exampleWasSpecified: true
         nullable: true
         deprecated: false
+      is_profile_public:
+        custom: []
+        name: is_profile_public
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
       play_notification_delay_hours:
         custom: []
         name: play_notification_delay_hours
@@ -145,6 +156,7 @@ endpoints:
     cleanBodyParameters:
       default_group_id: 1
       theme_preference: dark
+      is_profile_public: true
       play_notification_delay_hours: 2
       board_game_geek_username: myusername
     fileParameters: []

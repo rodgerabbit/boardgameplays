@@ -51,6 +51,7 @@ class SettingsControllerTest extends TestCase
             ->where('user.email', 'jane@example.com')
             ->where('user.biography', 'Board game enthusiast.')
             ->has('user.theme_preference')
+            ->has('user.is_profile_public')
             ->has('theme_preference')  // shared globally by HandleInertiaRequests
         );
     }
@@ -200,5 +201,34 @@ class SettingsControllerTest extends TestCase
         $response->assertSessionHasErrors('theme_preference');
         $user->refresh();
         $this->assertSame(User::THEME_DARK, $user->theme_preference);
+    }
+
+    public function test_update_preferences_updates_is_profile_public(): void
+    {
+        $user = User::factory()->create(['is_profile_public' => false]);
+
+        $response = $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
+            'is_profile_public' => true,
+        ]);
+
+        $response->assertRedirect('/settings');
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertTrue($user->is_profile_public);
+    }
+
+    public function test_update_preferences_can_set_is_profile_public_to_false(): void
+    {
+        $user = User::factory()->create(['is_profile_public' => true]);
+
+        $response = $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
+            'is_profile_public' => false,
+        ]);
+
+        $response->assertRedirect('/settings');
+        $user->refresh();
+        $this->assertFalse($user->is_profile_public);
     }
 }

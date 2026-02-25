@@ -31,6 +31,7 @@ class UserSettingsResource extends JsonResource
             'default_group_id' => $user->default_group_id,
             'effective_default_group_id' => $effectiveDefaultGroupId,
             'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
+            'is_profile_public' => $user->is_profile_public ?? false,
             'play_notification_delay_hours' => $user->play_notification_delay_hours ?? 0,
             'board_game_geek_username' => $user->board_game_geek_username,
         ];

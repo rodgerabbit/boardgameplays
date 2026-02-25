@@ -35,6 +35,7 @@ class SettingsController extends Controller
                 'profile_picture_url' => $user->profile_picture_url,
                 'biography' => $user->biography,
                 'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
+                'is_profile_public' => $user->is_profile_public ?? false,
             ],
         ]);
     }

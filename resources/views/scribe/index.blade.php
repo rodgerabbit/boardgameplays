@@ -30,9 +30,9 @@
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
-    <script src="{{ asset("/vendor/scribe/js/tryitout-5.7.0.js") }}"></script>
+    <script src="{{ asset("/vendor/scribe/js/tryitout-5.8.0.js") }}"></script>
 
-    <script src="{{ asset("/vendor/scribe/js/theme-default-5.7.0.js") }}"></script>
+    <script src="{{ asset("/vendor/scribe/js/theme-default-5.8.0.js") }}"></script>
 
 </head>
 
@@ -187,7 +187,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: February 16, 2026</li>
+        <li>Last updated: February 25, 2026</li>
     </ul>
 </div>
 
@@ -243,6 +243,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "POST",
@@ -427,6 +428,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -1036,6 +1038,7 @@ const headers = {
     "Accept": "application/json",
 };
 
+
 fetch(url, {
     method: "POST",
     headers,
@@ -1181,6 +1184,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -1350,6 +1354,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -1582,8 +1587,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
         }
     ],
     \"sync_to_board_game_geek\": false,
-    \"board_game_geek_username\": \"b\",
-    \"board_game_geek_password\": \"architecto\"
+    \"board_game_geek_username\": \"mybgguser\",
+    \"board_game_geek_password\": \"(optional)\"
 }"
 </code></pre></div>
 
@@ -1619,8 +1624,8 @@ let body = {
         }
     ],
     "sync_to_board_game_geek": false,
-    "board_game_geek_username": "b",
-    "board_game_geek_password": "architecto"
+    "board_game_geek_username": "mybgguser",
+    "board_game_geek_password": "(optional)"
 };
 
 fetch(url, {
@@ -1975,10 +1980,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="board_game_geek_username"                data-endpoint="POSTapi-v1-board-game-plays"
-               value="b"
+               value="mybgguser"
                data-component="body">
     <br>
-<p>Must not be greater than 255 characters. Example: <code>b</code></p>
+<p>Optional BGG username for sync. Example: <code>mybgguser</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>board_game_geek_password</code></b>&nbsp;&nbsp;
@@ -1987,10 +1992,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="board_game_geek_password"                data-endpoint="POSTapi-v1-board-game-plays"
-               value="architecto"
+               value="(optional)"
                data-component="body">
     <br>
-<p>Example: <code>architecto</code></p>
+<p>Optional BGG password for sync. Example: <code>(optional)</code></p>
         </div>
         </form>
 
@@ -2030,6 +2035,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -2213,7 +2219,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     \"location\": \"Home\",
     \"comment\": \"Great game!\",
     \"game_length_minutes\": 90,
-    \"source\": \"boardgamegeek\",
+    \"source\": \"website\",
     \"expansions\": [
         2,
         3
@@ -2226,8 +2232,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
         }
     ],
     \"sync_to_board_game_geek\": false,
-    \"board_game_geek_username\": \"g\",
-    \"board_game_geek_password\": \"architecto\"
+    \"board_game_geek_username\": \"mybgguser\",
+    \"board_game_geek_password\": \"(optional)\"
 }"
 </code></pre></div>
 
@@ -2250,7 +2256,7 @@ let body = {
     "location": "Home",
     "comment": "Great game!",
     "game_length_minutes": 90,
-    "source": "boardgamegeek",
+    "source": "website",
     "expansions": [
         2,
         3
@@ -2263,8 +2269,8 @@ let body = {
         }
     ],
     "sync_to_board_game_geek": false,
-    "board_game_geek_username": "g",
-    "board_game_geek_password": "architecto"
+    "board_game_geek_username": "mybgguser",
+    "board_game_geek_password": "(optional)"
 };
 
 fetch(url, {
@@ -2495,12 +2501,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="source"                data-endpoint="PUTapi-v1-board-game-plays--id-"
-               value="boardgamegeek"
+               value="website"
                data-component="body">
     <br>
-<p>Example: <code>boardgamegeek</code></p>
-Must be one of:
-<ul style="list-style-type: square;"><li><code>website</code></li> <li><code>boardgamegeek</code></li></ul>
+<p>The source of the play (website, boardgamegeek). Example: <code>website</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>expansions</code></b>&nbsp;&nbsp;
@@ -2594,7 +2598,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>position</code></b>&nbsp;&nbsp;
@@ -2630,7 +2634,7 @@ Must be one of:
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Whether to sync this play to BGG. Example: <code>false</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>board_game_geek_username</code></b>&nbsp;&nbsp;
@@ -2639,10 +2643,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="board_game_geek_username"                data-endpoint="PUTapi-v1-board-game-plays--id-"
-               value="g"
+               value="mybgguser"
                data-component="body">
     <br>
-<p>Must not be greater than 255 characters. Example: <code>g</code></p>
+<p>Optional BGG username for sync. Example: <code>mybgguser</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>board_game_geek_password</code></b>&nbsp;&nbsp;
@@ -2651,10 +2655,10 @@ Must be one of:
  &nbsp;
                 <input type="text" style="display: none"
                               name="board_game_geek_password"                data-endpoint="PUTapi-v1-board-game-plays--id-"
-               value="architecto"
+               value="(optional)"
                data-component="body">
     <br>
-<p>Example: <code>architecto</code></p>
+<p>Optional BGG password for sync. Example: <code>(optional)</code></p>
         </div>
         </form>
 
@@ -2688,6 +2692,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "DELETE",
@@ -2865,6 +2870,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -3047,6 +3053,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -3232,6 +3239,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -3486,6 +3494,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -3947,6 +3956,7 @@ const headers = {
     "Content-Type": "application/json",
     "Accept": "application/json",
 };
+
 
 fetch(url, {
     method: "GET",
@@ -4438,6 +4448,7 @@ const headers = {
     "Accept": "application/json",
 };
 
+
 fetch(url, {
     method: "DELETE",
     headers,
@@ -4610,6 +4621,7 @@ const headers = {
     "Accept": "application/json",
 };
 
+
 fetch(url, {
     method: "GET",
     headers,
@@ -4752,6 +4764,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"default_group_id\": 1,
     \"theme_preference\": \"dark\",
+    \"is_profile_public\": true,
     \"play_notification_delay_hours\": 2,
     \"board_game_geek_username\": \"myusername\"
 }"
@@ -4772,6 +4785,7 @@ const headers = {
 let body = {
     "default_group_id": 1,
     "theme_preference": "dark",
+    "is_profile_public": true,
     "play_notification_delay_hours": 2,
     "board_game_geek_username": "myusername"
 };
@@ -4939,6 +4953,28 @@ You can check the Dev Tools console for debugging information.</code></pre>
                data-component="body">
     <br>
 <p>nullable The user's theme preference. Must be one of: light, dark, system. Example: <code>dark</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>is_profile_public</code></b>&nbsp;&nbsp;
+<small>boolean</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <label data-endpoint="PUTapi-v1-user-settings" style="display: none">
+            <input type="radio" name="is_profile_public"
+                   value="true"
+                   data-endpoint="PUTapi-v1-user-settings"
+                   data-component="body"             >
+            <code>true</code>
+        </label>
+        <label data-endpoint="PUTapi-v1-user-settings" style="display: none">
+            <input type="radio" name="is_profile_public"
+                   value="false"
+                   data-endpoint="PUTapi-v1-user-settings"
+                   data-component="body"             >
+            <code>false</code>
+        </label>
+    <br>
+<p>Example: <code>true</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>play_notification_delay_hours</code></b>&nbsp;&nbsp;

@@ -185,6 +185,26 @@
                                 {{ preferencesForm.errors.theme_preference }}
                             </p>
                         </div>
+                        <div class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <input
+                                    id="is_profile_public"
+                                    v-model="preferencesForm.is_profile_public"
+                                    type="checkbox"
+                                    class="h-4 w-4 rounded border-surface-darker bg-surface-darker text-primary focus:ring-primary"
+                                    :title="publicProfileTooltip"
+                                />
+                                <label for="is_profile_public" class="text-sm font-medium text-text-dark cursor-pointer">
+                                    Public profile
+                                </label>
+                            </div>
+                            <p class="text-xs text-text-muted-dark" :title="publicProfileTooltip">
+                                {{ publicProfileTooltip }}
+                            </p>
+                            <p v-if="preferencesForm.errors.is_profile_public" class="text-sm text-primary">
+                                {{ preferencesForm.errors.is_profile_public }}
+                            </p>
+                        </div>
                         <div class="flex items-center gap-3">
                             <button
                                 type="submit"
@@ -246,6 +266,7 @@ const props = defineProps({
             profile_picture_url: null,
             biography: null,
             theme_preference: THEME_SYSTEM,
+            is_profile_public: false,
         }),
     },
 });
@@ -262,7 +283,10 @@ const profileForm = useForm({
 
 const preferencesForm = useForm({
     theme_preference: props.user.theme_preference ?? THEME_SYSTEM,
+    is_profile_public: Boolean(props.user.is_profile_public),
 });
+
+const publicProfileTooltip = 'When enabled, your profile and play statistics are visible to others.';
 
 function onProfilePictureChange(event) {
     const file = event.target.files?.[0];
