@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
-use App\Jobs\SyncBoardGameFromBoardGameGeekJob;
 use App\Models\BoardGame;
 use App\Models\BggCollectionItem;
 use App\Models\BggCollectionItemChange;
@@ -13,7 +12,7 @@ use App\Models\User;
 use App\Services\BoardGameGeekApiClient;
 use App\Services\BoardGameGeekCollectionSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Queue;
+use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
 class BoardGameGeekCollectionSyncServiceTest extends TestCase
@@ -22,7 +21,7 @@ class BoardGameGeekCollectionSyncServiceTest extends TestCase
 
     private BoardGameGeekCollectionSyncService $service;
 
-    private BoardGameGeekApiClient $apiClient;
+    private BoardGameGeekApiClient&MockObject $apiClient;
 
     protected function setUp(): void
     {
@@ -41,7 +40,6 @@ class BoardGameGeekCollectionSyncServiceTest extends TestCase
 
     public function test_sync_collection_fetches_and_upserts_items_and_records_changes(): void
     {
-        Queue::fake();
         $user = User::factory()->create(['board_game_geek_username' => 'bgguser']);
         $boardGame = BoardGame::factory()->create(['bgg_id' => '13']);
 
@@ -84,9 +82,8 @@ class BoardGameGeekCollectionSyncServiceTest extends TestCase
         $this->assertEquals(BggCollectionItemChange::CHANGE_TYPE_ADDED, $change->change_type);
     }
 
-    public function test_sync_collection_dispatches_board_game_sync_for_missing_games(): void
+    public function test_sync_collection_returns_missing_bgg_ids_and_caches_when_games_missing(): void
     {
-        Queue::fake();
         $user = User::factory()->create(['board_game_geek_username' => 'bgguser']);
         $collectionItems = [
             [
@@ -103,10 +100,15 @@ class BoardGameGeekCollectionSyncServiceTest extends TestCase
         $this->apiClient->method('fetchCollection')->willReturn($collectionItems);
         $this->apiClient->method('fetchBaseGameIdsForThingIds')->willReturn(['999' => '999']);
 
-        $this->service->syncCollectionForUser($user);
+        $result = $this->service->syncCollectionForUser($user);
 
-        Queue::assertPushed(SyncBoardGameFromBoardGameGeekJob::class, function ($job) {
-            return $job->bggId === '999';
-        });
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('missing_bgg_ids', $result);
+        $this->assertSame(['999'], $result['missing_bgg_ids']);
+        $this->assertArrayHasKey('sync_id', $result);
+        $sync = BggCollectionSync::find($result['sync_id']);
+        $this->assertNotNull($sync);
+        $this->assertSame(BggCollectionSync::STATUS_PENDING, $sync->status);
+        $this->assertDatabaseCount('bgg_collection_items', 0);
     }
 }

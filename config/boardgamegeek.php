@@ -120,6 +120,28 @@ return [
         'BOARDGAMEGEEK_COLLECTION_API_URL',
         'https://boardgamegeek.com/xmlapi2/collection?username={username}&stats=1&version=1'
     ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sync Flow: Board Games First, Then Import
+    |--------------------------------------------------------------------------
+    |
+    | When collection or plays sync runs, missing board games are scheduled
+    | in batches (with priority). After this delay, the collection/plays
+    | import is scheduled again so it runs after board games exist.
+    |
+    */
+    'import_phase_delay_minutes' => (int) env('BOARDGAMEGEEK_IMPORT_PHASE_DELAY_MINUTES', 10),
+
+    /*
+    | Queue used for board game sync batch jobs (run with priority before import).
+    */
+    'board_game_sync_queue' => env('BOARDGAMEGEEK_BOARD_GAME_SYNC_QUEUE', 'default'),
+
+    /*
+    | Cache TTL in minutes for pending collection/plays data between phases.
+    */
+    'pending_import_cache_ttl_minutes' => (int) env('BOARDGAMEGEEK_PENDING_IMPORT_CACHE_TTL_MINUTES', 60),
 ];
 
 

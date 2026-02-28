@@ -4,39 +4,52 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Jobs\SyncBoardGameFromBoardGameGeekJob;
 use App\Models\BoardGame;
 use App\Models\BggCollectionItem;
 use App\Models\BggCollectionItemChange;
 use App\Models\BggCollectionSync;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Syncs a user's BoardGameGeek collection via the BGG XML API.
  *
- * Fetches collection (with stats=1, version=1), resolves version IDs to base game IDs,
- * tracks changes (added/removed/rating), upserts collection items, and queues board game
- * sync for any missing games.
+ * Two-phase flow: (1) Fetch collection, scan for missing board games, schedule batch syncs
+ * and cache data; (2) After board games are synced, import phase runs and upserts from cache.
  */
 class BoardGameGeekCollectionSyncService extends BaseService
 {
+    private const CACHE_KEY_PREFIX = 'bgg_collection_pending_';
+
     public function __construct(
         private readonly BoardGameGeekApiClient $apiClient,
     ) {
     }
 
     /**
-     * Sync the BGG collection for the given user (async-safe; call from job).
+     * Run collection sync for the given user.
      *
+     * When isImportPhase is false: fetches collection, finds missing board games. If any missing,
+     * caches items and returns ['missing_bgg_ids' => [...], 'sync_id' => int] so the job can
+     * schedule batch syncs and re-dispatch with isImportPhase true. If none missing, upserts and returns null.
+     *
+     * When isImportPhase is true: loads cached items, upserts collection, clears cache. Returns null.
+     *
+     * @return array{missing_bgg_ids: array<string>, sync_id: int}|null Null when sync completed (upsert done)
      * @throws \RuntimeException On API or parsing errors
      */
-    public function syncCollectionForUser(User $user): void
+    public function syncCollectionForUser(User $user, bool $isImportPhase = false): ?array
     {
+        if ($isImportPhase) {
+            $this->importCollectionFromCache($user);
+            return null;
+        }
+
         $username = $user->board_game_geek_username;
         if ($username === null || $username === '') {
             Log::warning('Cannot sync BGG collection: user has no BGG username', ['user_id' => $user->id]);
-            return;
+            return null;
         }
 
         $sync = BggCollectionSync::create([
@@ -67,34 +80,88 @@ class BoardGameGeekCollectionSyncService extends BaseService
             $items[$i]['bgg_base_game_id'] = $baseGameIds[$item['objectid']] ?? $item['objectid'];
         }
 
-        $previousItems = $user->bggCollectionItems()->get()->keyBy('bgg_object_id');
-
-        $this->recordChangesAndUpsertItems($user, $sync, $items, $previousItems);
-
         $missingBggIds = $this->collectMissingBoardGameBggIds($user, $items);
-        foreach ($missingBggIds as $bggId) {
-            SyncBoardGameFromBoardGameGeekJob::dispatch($bggId)
-                ->delay(now()->addSeconds(2));
+
+        if ($missingBggIds === []) {
+            $previousItems = $user->bggCollectionItems()->get()->keyBy('bgg_object_id');
+            $this->recordChangesAndUpsertItems($user, $sync, $items, $previousItems);
+            $sync->update([
+                'status' => BggCollectionSync::STATUS_SUCCESS,
+                'items_count' => count($items),
+                'error_message' => null,
+            ]);
+            Log::info('BGG collection sync completed (no missing games)', [
+                'user_id' => $user->id,
+                'username' => $username,
+                'items_count' => count($items),
+            ]);
+            return null;
         }
 
+        $ttlMinutes = config('boardgamegeek.pending_import_cache_ttl_minutes', 60);
+        Cache::put(self::CACHE_KEY_PREFIX . $user->id, [
+            'items' => $items,
+            'sync_id' => $sync->id,
+        ], now()->addMinutes($ttlMinutes));
+
+        Log::info('BGG collection fetch done; missing games will be synced then import scheduled', [
+            'user_id' => $user->id,
+            'username' => $username,
+            'items_count' => count($items),
+            'missing_bgg_ids_count' => count($missingBggIds),
+        ]);
+
+        return [
+            'missing_bgg_ids' => $missingBggIds,
+            'sync_id' => $sync->id,
+        ];
+    }
+
+    /**
+     * Import collection from cached items (phase 2). Call after board game batch syncs have run.
+     */
+    public function importCollectionFromCache(User $user): void
+    {
+        $key = self::CACHE_KEY_PREFIX . $user->id;
+        $cached = Cache::get($key);
+        if ($cached === null) {
+            Log::warning('BGG collection import phase: no cached data found', ['user_id' => $user->id]);
+            return;
+        }
+
+        $items = $cached['items'] ?? [];
+        $syncId = (int) ($cached['sync_id'] ?? 0);
+        if ($items === [] || $syncId === 0) {
+            Cache::forget($key);
+            return;
+        }
+
+        $sync = BggCollectionSync::find($syncId);
+        if ($sync === null || $sync->user_id !== $user->id) {
+            Cache::forget($key);
+            return;
+        }
+
+        $previousItems = $user->bggCollectionItems()->get()->keyBy('bgg_object_id');
+        $this->recordChangesAndUpsertItems($user, $sync, $items, $previousItems);
         $sync->update([
             'status' => BggCollectionSync::STATUS_SUCCESS,
             'items_count' => count($items),
             'error_message' => null,
         ]);
+        Cache::forget($key);
 
-        Log::info('BGG collection sync completed', [
+        Log::info('BGG collection import phase completed', [
             'user_id' => $user->id,
-            'username' => $username,
             'items_count' => count($items),
-            'missing_games_queued' => count($missingBggIds),
         ]);
     }
 
     /**
      * Apply collection items from a pre-fetched source (e.g. JSON file) without calling the BGG API.
      *
-     * Items must already include bgg_base_game_id. Use this when syncing from personal folder files.
+     * Items must already include bgg_base_game_id. Missing board games are not synced here;
+     * use the normal sync flow for that. This method upserts with whatever board_game_id exists.
      *
      * @param User $user The user to sync the collection for
      * @param array<int, array<string, mixed>> $items Parsed collection items (same shape as fetchCollection), with bgg_base_game_id set
@@ -123,12 +190,6 @@ class BoardGameGeekCollectionSyncService extends BaseService
         $previousItems = $user->bggCollectionItems()->get()->keyBy('bgg_object_id');
         $this->recordChangesAndUpsertItems($user, $sync, $items, $previousItems);
 
-        $missingBggIds = $this->collectMissingBoardGameBggIds($user, $items);
-        foreach ($missingBggIds as $bggId) {
-            SyncBoardGameFromBoardGameGeekJob::dispatch($bggId)
-                ->delay(now()->addSeconds(2));
-        }
-
         $sync->update([
             'status' => BggCollectionSync::STATUS_SUCCESS,
             'items_count' => count($items),
@@ -139,7 +200,6 @@ class BoardGameGeekCollectionSyncService extends BaseService
             'user_id' => $user->id,
             'username' => $username,
             'items_count' => count($items),
-            'missing_games_queued' => count($missingBggIds),
         ]);
     }
 

@@ -203,7 +203,11 @@ class BoardGameGeekPlaySubmissionService extends BaseService
     }
 
     /**
-     * Get BGG credentials for a play using three methods.
+     * Get BGG credentials for a play.
+     *
+     * Order: (1) Provided credentials if both given (one-off API use),
+     * (2) Generic .env credentials when user preference use_generic_user_for_bgg_plays is true,
+     * (3) User's stored BGG username and encrypted password when preference is false and set.
      *
      * @param BoardGamePlay $play The play
      * @param string|null $providedUsername Optional provided username
@@ -216,7 +220,7 @@ class BoardGameGeekPlaySubmissionService extends BaseService
         ?string $providedUsername = null,
         ?string $providedPassword = null
     ): array {
-        // Method 3: Provided credentials (highest priority)
+        // One-off provided credentials (e.g. from API)
         if ($providedUsername !== null && $providedPassword !== null) {
             return [
                 'username' => $providedUsername,
@@ -224,8 +228,21 @@ class BoardGameGeekPlaySubmissionService extends BaseService
             ];
         }
 
-        // Method 2: User's stored credentials
         $user = $play->creator;
+
+        // Generic credentials when user has chosen "use generic account"
+        if ($user->use_generic_user_for_bgg_plays ?? true) {
+            $genericUsername = config('boardgamegeek.generic_username');
+            $genericPassword = config('boardgamegeek.generic_password');
+            if ($genericUsername !== null && $genericPassword !== null) {
+                return [
+                    'username' => $genericUsername,
+                    'password' => $genericPassword,
+                ];
+            }
+        }
+
+        // User's own BGG credentials (when not using generic and sync to BGG is enabled)
         if ($user->sync_plays_to_board_game_geek
             && $user->board_game_geek_username !== null
             && $user->board_game_geek_password_encrypted !== null
@@ -233,17 +250,6 @@ class BoardGameGeekPlaySubmissionService extends BaseService
             return [
                 'username' => $user->board_game_geek_username,
                 'password' => Crypt::decryptString($user->board_game_geek_password_encrypted),
-            ];
-        }
-
-        // Method 1: Generic credentials from config
-        $genericUsername = config('boardgamegeek.generic_username');
-        $genericPassword = config('boardgamegeek.generic_password');
-
-        if ($genericUsername !== null && $genericPassword !== null) {
-            return [
-                'username' => $genericUsername,
-                'password' => $genericPassword,
             ];
         }
 

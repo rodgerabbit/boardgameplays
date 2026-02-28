@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Jobs\SyncBoardGamePlaysFromBoardGameGeekJob;
+use App\Jobs\SyncUserCollectionFromBoardGameGeekJob;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -52,6 +55,8 @@ class SettingsControllerTest extends TestCase
             ->where('user.biography', 'Board game enthusiast.')
             ->has('user.theme_preference')
             ->has('user.is_profile_public')
+            ->has('boardGameGeek')
+            ->has('user.board_game_geek_username')
             ->has('theme_preference')  // shared globally by HandleInertiaRequests
         );
     }
@@ -230,5 +235,107 @@ class SettingsControllerTest extends TestCase
         $response->assertRedirect('/settings');
         $user->refresh();
         $this->assertFalse($user->is_profile_public);
+    }
+
+    public function test_update_boardgamegeek_saves_username_and_dispatches_sync_jobs(): void
+    {
+        Queue::fake();
+        $user = User::factory()->create(['board_game_geek_username' => null]);
+
+        $response = $this->actingAs($user)->put('/settings/boardgamegeek', [
+            'board_game_geek_username' => 'bgguser',
+            'sync_plays_to_board_game_geek' => false,
+            'use_generic_user_for_bgg_plays' => true,
+        ]);
+
+        $response->assertRedirect('/settings');
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertSame('bgguser', $user->board_game_geek_username);
+
+        Queue::assertPushed(SyncUserCollectionFromBoardGameGeekJob::class);
+        Queue::assertPushed(SyncBoardGamePlaysFromBoardGameGeekJob::class);
+    }
+
+    public function test_update_boardgamegeek_rejects_duplicate_username(): void
+    {
+        $existing = User::factory()->create(['board_game_geek_username' => 'taken']);
+        $user = User::factory()->create(['board_game_geek_username' => null]);
+
+        $response = $this->actingAs($user)->put('/settings/boardgamegeek', [
+            'board_game_geek_username' => 'taken',
+            'sync_plays_to_board_game_geek' => false,
+            'use_generic_user_for_bgg_plays' => true,
+        ]);
+
+        $response->assertSessionHasErrors('board_game_geek_username');
+        $user->refresh();
+        $this->assertNull($user->board_game_geek_username);
+    }
+
+    public function test_update_boardgamegeek_updates_toggles_without_changing_username(): void
+    {
+        Queue::fake();
+        $user = User::factory()->create([
+            'board_game_geek_username' => 'mybgg',
+            'sync_plays_to_board_game_geek' => false,
+            'use_generic_user_for_bgg_plays' => true,
+        ]);
+
+        $response = $this->actingAs($user)->put('/settings/boardgamegeek', [
+            'board_game_geek_username' => 'mybgg',
+            'sync_plays_to_board_game_geek' => true,
+            'use_generic_user_for_bgg_plays' => true,
+        ]);
+
+        $response->assertRedirect('/settings');
+        $user->refresh();
+        $this->assertTrue($user->sync_plays_to_board_game_geek);
+        $this->assertSame('mybgg', $user->board_game_geek_username);
+        // Username unchanged so no sync jobs dispatched
+        Queue::assertNotPushed(SyncUserCollectionFromBoardGameGeekJob::class);
+    }
+
+    public function test_request_manual_boardgamegeek_sync_requires_username(): void
+    {
+        $user = User::factory()->create(['board_game_geek_username' => null]);
+
+        $response = $this->actingAs($user)->post('/settings/boardgamegeek/sync');
+
+        $response->assertRedirect('/settings');
+        $response->assertSessionHas('error');
+    }
+
+    public function test_request_manual_boardgamegeek_sync_allowed_when_cooldown_passed(): void
+    {
+        Queue::fake();
+        $user = User::factory()->create([
+            'board_game_geek_username' => 'bgguser',
+            'bgg_manual_sync_requested_at' => now()->subHours(25),
+        ]);
+
+        $response = $this->actingAs($user)->post('/settings/boardgamegeek/sync');
+
+        $response->assertRedirect('/settings');
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertNotNull($user->bgg_manual_sync_requested_at);
+        Queue::assertPushed(SyncUserCollectionFromBoardGameGeekJob::class);
+        Queue::assertPushed(SyncBoardGamePlaysFromBoardGameGeekJob::class);
+    }
+
+    public function test_request_manual_boardgamegeek_sync_denied_within_24_hours(): void
+    {
+        Queue::fake();
+        $user = User::factory()->create([
+            'board_game_geek_username' => 'bgguser',
+            'bgg_manual_sync_requested_at' => now()->subHours(1),
+        ]);
+
+        $response = $this->actingAs($user)->post('/settings/boardgamegeek/sync');
+
+        $response->assertRedirect('/settings');
+        $response->assertSessionHas('error');
+        Queue::assertNotPushed(SyncUserCollectionFromBoardGameGeekJob::class);
     }
 }

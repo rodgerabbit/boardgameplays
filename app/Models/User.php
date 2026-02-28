@@ -51,6 +51,8 @@ class User extends Authenticatable
         'board_game_geek_username',
         'board_game_geek_password_encrypted',
         'sync_plays_to_board_game_geek',
+        'use_generic_user_for_bgg_plays',
+        'bgg_manual_sync_requested_at',
     ];
 
     /**
@@ -84,6 +86,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'play_notification_delay_hours' => 'integer',
             'is_profile_public' => 'boolean',
+            'use_generic_user_for_bgg_plays' => 'boolean',
+            'bgg_manual_sync_requested_at' => 'datetime',
         ];
     }
 
@@ -249,6 +253,16 @@ class User extends Authenticatable
     public function bggCollectionItemChanges(): HasMany
     {
         return $this->hasMany(BggCollectionItemChange::class);
+    }
+
+    /**
+     * Get the user's BGG plays sync runs (history).
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<BggPlaysSync>
+     */
+    public function bggPlaysSyncs(): HasMany
+    {
+        return $this->hasMany(BggPlaysSync::class);
     }
 
     /**

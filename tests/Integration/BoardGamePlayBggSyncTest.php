@@ -6,6 +6,7 @@ namespace Tests\Integration;
 
 use App\Jobs\SyncBoardGamePlaysFromBoardGameGeekJob;
 use App\Jobs\SyncBoardGamePlayToBoardGameGeekJob;
+use App\Models\BggPlaysSync;
 use App\Models\BoardGame;
 use App\Models\BoardGamePlay;
 use App\Models\Group;
@@ -121,6 +122,26 @@ class BoardGamePlayBggSyncTest extends TestCase
         $job->handle($syncService, $deduplicationService);
 
         $this->addToAssertionCount(1);
+    }
+
+    public function test_sync_plays_from_bgg_job_creates_and_updates_bgg_plays_sync_record(): void
+    {
+        $user = User::factory()->create([
+            'board_game_geek_username' => 'bgguser',
+        ]);
+
+        $syncService = $this->createMockSyncService(['play1', 'play2']);
+        $deduplicationService = $this->createMock(BoardGamePlayDeduplicationService::class);
+        $deduplicationService->expects($this->any())->method('syncDeduplicationForGroupAndDateRange');
+
+        $job = new SyncBoardGamePlaysFromBoardGameGeekJob($user->id, '2025-01-01', '2025-01-15', true);
+        $job->handle($syncService, $deduplicationService);
+
+        $playsSync = BggPlaysSync::where('user_id', $user->id)->latest('id')->first();
+        $this->assertNotNull($playsSync);
+        $this->assertSame(BggPlaysSync::STATUS_SUCCESS, $playsSync->status);
+        $this->assertSame(2, $playsSync->plays_count);
+        $this->assertTrue($playsSync->requested_manually);
     }
 
     /**

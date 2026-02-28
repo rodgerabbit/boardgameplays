@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
-use App\Jobs\SyncBoardGameFromBoardGameGeekJob;
 use App\Models\BoardGame;
 use App\Models\BoardGamePlay;
 use App\Models\User;
 use App\Services\BoardGameGeekPlaySyncService;
+use App\Services\BoardGameGeekSyncService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Queue;
 use SimpleXMLElement;
 use Tests\TestCase;
 
 /**
  * Unit tests for BoardGameGeekPlaySyncService.
  *
- * These tests verify play sync behavior, including deferred import when board game is missing.
+ * These tests verify play sync behavior, including inline board game sync when board game is missing.
  */
 class BoardGameGeekPlaySyncServiceTest extends TestCase
 {
@@ -31,23 +30,21 @@ class BoardGameGeekPlaySyncServiceTest extends TestCase
         $this->syncService = $this->app->make(BoardGameGeekPlaySyncService::class);
     }
 
-    public function test_sync_play_from_bgg_xml_queues_board_game_sync_and_play_import_when_board_game_missing(): void
+    public function test_sync_play_from_bgg_xml_returns_null_when_board_game_missing_and_inline_sync_fails(): void
     {
-        Queue::fake();
+        $syncServiceMock = $this->createMock(BoardGameGeekSyncService::class);
+        $syncServiceMock->method('syncBoardGameByBggId')
+            ->with('224517')
+            ->willThrowException(new \RuntimeException('BGG API unavailable'));
+        $syncService = new BoardGameGeekPlaySyncService($syncServiceMock);
 
         $user = User::factory()->create(['board_game_geek_username' => 'testuser', 'default_group_id' => null]);
         $playXml = $this->createMinimalPlayXml('12345', '224517', '2025-01-15');
 
-        $result = $this->syncService->syncPlayFromBggXml($playXml, $user);
+        $result = $syncService->syncPlayFromBggXml($playXml, $user);
 
         $this->assertNull($result);
-
-        Queue::assertPushed(SyncBoardGameFromBoardGameGeekJob::class, function ($job) {
-            return $job->bggId === '224517';
-        });
-
-        // Chained job is not pushed separately; it runs after the sync job completes
-        Queue::assertPushed(SyncBoardGameFromBoardGameGeekJob::class, 1);
+        $this->assertDatabaseMissing('board_game_plays', ['bgg_play_id' => '12345']);
     }
 
     public function test_sync_play_from_bgg_xml_creates_play_when_board_game_exists(): void
@@ -64,15 +61,19 @@ class BoardGameGeekPlaySyncServiceTest extends TestCase
         $this->assertEquals($user->id, $result->created_by_user_id);
     }
 
-    public function test_process_bgg_plays_xml_does_not_add_to_processed_when_play_deferred(): void
+    public function test_process_bgg_plays_xml_does_not_add_to_processed_when_inline_board_game_sync_fails(): void
     {
-        Queue::fake();
+        $syncServiceMock = $this->createMock(BoardGameGeekSyncService::class);
+        $syncServiceMock->method('syncBoardGameByBggId')
+            ->with('224517')
+            ->willThrowException(new \RuntimeException('BGG API unavailable'));
+        $syncService = new BoardGameGeekPlaySyncService($syncServiceMock);
 
         $user = User::factory()->create(['default_group_id' => null]);
         $playXml = $this->createMinimalPlayXml('12345', '224517', '2025-01-15');
         $plays = [$playXml];
 
-        $processedPlayIds = $this->syncService->processBggPlaysXml($plays, $user);
+        $processedPlayIds = $syncService->processBggPlaysXml($plays, $user);
 
         $this->assertSame([], $processedPlayIds);
     }

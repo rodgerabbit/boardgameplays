@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Jobs\ImportBoardGamePlayFromBoardGameGeekJob;
-use App\Jobs\SyncBoardGameFromBoardGameGeekJob;
 use App\Models\BoardGame;
 use App\Models\BoardGamePlay;
 use App\Models\BoardGamePlayPlayer;
@@ -166,19 +164,8 @@ class BoardGameGeekPlaySyncService extends BaseService
         $bggPlayId = (string) $playElement['id'];
         $bggGameId = (string) $playElement->item[0]['objectid'];
 
-        // If board game does not exist, queue sync first and then import this play after
         $boardGame = BoardGame::where('bgg_id', $bggGameId)->first();
         if ($boardGame === null) {
-            $playPayload = $this->buildPlayPayloadFromBggXml($playElement, $user);
-            SyncBoardGameFromBoardGameGeekJob::dispatch($bggGameId)
-                ->chain([
-                    new ImportBoardGamePlayFromBoardGameGeekJob($user->id, $playPayload),
-                ]);
-            Log::info('Queued board game sync and play import for later', [
-                'bgg_game_id' => $bggGameId,
-                'bgg_play_id' => $bggPlayId,
-                'user_id' => $user->id,
-            ]);
             return null;
         }
 
@@ -216,6 +203,30 @@ class BoardGameGeekPlaySyncService extends BaseService
         // Expansions would need to be inferred or manually added
 
         return $play->fresh(['boardGame', 'group', 'creator', 'players', 'expansions']);
+    }
+
+    /**
+     * Return BGG game IDs from play payloads that do not yet have a BoardGame record.
+     *
+     * @param array<int, array<string, mixed>> $playPayloads Payloads from buildPlayPayloadFromBggXml
+     * @return array<string> Unique BGG game IDs that are missing locally
+     */
+    public function getMissingBggGameIdsFromPayloads(array $playPayloads): array
+    {
+        $bggGameIds = [];
+        foreach ($playPayloads as $payload) {
+            $id = $payload['bgg_game_id'] ?? null;
+            if ($id !== null && $id !== '') {
+                $bggGameIds[(string) $id] = true;
+            }
+        }
+        $bggGameIds = array_keys($bggGameIds);
+        if ($bggGameIds === []) {
+            return [];
+        }
+        $existing = BoardGame::whereIn('bgg_id', $bggGameIds)->pluck('bgg_id')->all();
+        $existingSet = array_flip($existing);
+        return array_values(array_filter($bggGameIds, fn (string $id) => ! isset($existingSet[$id])));
     }
 
     /**
