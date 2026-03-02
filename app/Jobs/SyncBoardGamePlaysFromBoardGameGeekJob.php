@@ -45,8 +45,6 @@ class SyncBoardGamePlaysFromBoardGameGeekJob implements ShouldQueue
      */
     public int $timeout;
 
-    public function __construct(
-
     /**
      * @param int $userId The user ID to sync plays for
      * @param string|null $minDate Minimum date (Y-m-d format), defaults to 30 days ago

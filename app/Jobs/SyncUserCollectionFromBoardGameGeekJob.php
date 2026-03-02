@@ -16,8 +16,9 @@ use Illuminate\Support\Facades\Log;
 /**
  * Job to sync a single user's BGG collection (async).
  *
- * Phase 1: Fetches collection, scans for missing board games. Schedules batch sync jobs
- * (with priority) for missing games, then re-dispatches this job as import phase.
+ * Phase 1: Fetches collection only, caches items, and dispatches SyncCollectionThingIdsChunkJob
+ * per chunk so thing-ID resolution runs in separate jobs (avoids timeout). The last chunk job
+ * finalizes and may schedule board game batch syncs + import phase.
  * Phase 2 (import): Imports collection from cache after board games exist.
  */
 class SyncUserCollectionFromBoardGameGeekJob implements ShouldQueue
@@ -28,10 +29,18 @@ class SyncUserCollectionFromBoardGameGeekJob implements ShouldQueue
 
     public int $backoff = 60;
 
+    /**
+     * Seconds the job may run. Phase 1 only fetches collection (one request); chunk jobs do the rest.
+     *
+     * @var int
+     */
+    public int $timeout;
+
     public function __construct(
         public readonly int $userId,
         public readonly bool $isImportPhase = false,
     ) {
+        $this->timeout = (int) config('boardgamegeek.collection_sync_job_timeout_seconds', 180);
     }
 
     public function handle(BoardGameGeekCollectionSyncService $collectionSyncService): void
@@ -49,26 +58,28 @@ class SyncUserCollectionFromBoardGameGeekJob implements ShouldQueue
 
         $result = $collectionSyncService->syncCollectionForUser($user, $this->isImportPhase);
 
-        if ($result !== null && isset($result['missing_bgg_ids'], $result['sync_id'])) {
-            $missingBggIds = $result['missing_bgg_ids'];
-            $batchSize = (int) config('boardgamegeek.rate_limiting.max_ids_per_request', 20);
-            $boardGameQueue = config('boardgamegeek.board_game_sync_queue', 'default');
-            $delayMinutes = (int) config('boardgamegeek.import_phase_delay_minutes', 10);
-
-            $importQueue = $this->queue ?? 'default';
-            self::dispatch($this->userId, true)
-                ->onQueue($importQueue)
-                ->delay(now()->addMinutes($delayMinutes));
-
-            $batches = array_chunk($missingBggIds, $batchSize);
-            $delaySeconds = 2;
-            foreach ($batches as $batch) {
-                SyncBoardGamesBatchFromBoardGameGeekJob::dispatch($batch)
-                    ->onQueue($boardGameQueue)
-                    ->delay(now()->addSeconds($delaySeconds));
-                $delaySeconds += 2;
-            }
+        if ($result === null) {
+            return;
         }
+
+        $chunkThingIds = $result['chunk_thing_ids'] ?? [];
+        if ($chunkThingIds === []) {
+            return;
+        }
+
+        $queueName = $this->queue ?? 'default';
+        $delaySeconds = (int) config('boardgamegeek.rate_limiting.minimum_seconds_between_requests', 2);
+
+        foreach ($chunkThingIds as $index => $thingIds) {
+            SyncCollectionThingIdsChunkJob::dispatch($this->userId, $index, count($chunkThingIds), $thingIds)
+                ->onQueue($queueName)
+                ->delay(now()->addSeconds($delaySeconds * $index));
+        }
+
+        Log::info('SyncUserCollectionFromBoardGameGeekJob: dispatched thing-ID chunk jobs', [
+            'user_id' => $this->userId,
+            'chunks' => count($chunkThingIds),
+        ]);
     }
 
     public function failed(\Throwable $exception): void

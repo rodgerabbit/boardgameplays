@@ -166,6 +166,28 @@ return [
     |
     */
     'plays_sync_job_timeout_seconds' => (int) env('BOARDGAMEGEEK_PLAYS_SYNC_JOB_TIMEOUT_SECONDS', 120),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Collection Sync Job Timeout (seconds)
+    |--------------------------------------------------------------------------
+    |
+    | Initial job only fetches the collection (one request). Thing-ID resolution
+    | runs in SyncCollectionThingIdsChunkJob. Worker should use --timeout >= this.
+    |
+    */
+    'collection_sync_job_timeout_seconds' => (int) env('BOARDGAMEGEEK_COLLECTION_SYNC_JOB_TIMEOUT_SECONDS', 180),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Collection Thing-ID Chunk Job Timeout (seconds)
+    |--------------------------------------------------------------------------
+    |
+    | Each chunk job does one rate-limited request to resolve thing IDs to base
+    | game IDs. Worker should use --timeout >= this.
+    |
+    */
+    'collection_chunk_job_timeout_seconds' => (int) env('BOARDGAMEGEEK_COLLECTION_CHUNK_JOB_TIMEOUT_SECONDS', 120),
 ];
 
 

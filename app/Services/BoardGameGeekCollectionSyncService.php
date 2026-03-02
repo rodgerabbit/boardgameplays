@@ -22,6 +22,8 @@ class BoardGameGeekCollectionSyncService extends BaseService
 {
     private const CACHE_KEY_PREFIX = 'bgg_collection_pending_';
 
+    private const CACHE_KEY_BASE_IDS_SUFFIX = '_base_ids';
+
     public function __construct(
         private readonly BoardGameGeekApiClient $apiClient,
     ) {
@@ -30,13 +32,13 @@ class BoardGameGeekCollectionSyncService extends BaseService
     /**
      * Run collection sync for the given user.
      *
-     * When isImportPhase is false: fetches collection, finds missing board games. If any missing,
-     * caches items and returns ['missing_bgg_ids' => [...], 'sync_id' => int] so the job can
-     * schedule batch syncs and re-dispatch with isImportPhase true. If none missing, upserts and returns null.
+     * When isImportPhase is false: fetches collection only, caches items, and returns chunk info
+     * so the job can dispatch SyncCollectionThingIdsChunkJob per chunk. Chunk jobs resolve thing IDs
+     * and the last chunk finalizes (upsert or schedule board game syncs + import phase).
      *
      * When isImportPhase is true: loads cached items, upserts collection, clears cache. Returns null.
      *
-     * @return array{missing_bgg_ids: array<string>, sync_id: int}|null Null when sync completed (upsert done)
+     * @return array{sync_id: int, chunk_thing_ids: array<int, array<string>>}|null Null when import phase completed
      * @throws \RuntimeException On API or parsing errors
      */
     public function syncCollectionForUser(User $user, bool $isImportPhase = false): ?array
@@ -46,10 +48,21 @@ class BoardGameGeekCollectionSyncService extends BaseService
             return null;
         }
 
+        return $this->fetchCollectionAndPrepareChunks($user);
+    }
+
+    /**
+     * Fetch collection from BGG, create sync record, cache items (without base game IDs), and return thing-ID chunks for resolution in separate jobs.
+     *
+     * @return array{sync_id: int, chunk_thing_ids: array<int, array<string>>} Chunk arrays of thing IDs (max config max_ids_per_request per chunk)
+     * @throws \RuntimeException On API or parsing errors
+     */
+    public function fetchCollectionAndPrepareChunks(User $user): array
+    {
         $username = $user->board_game_geek_username;
         if ($username === null || $username === '') {
             Log::warning('Cannot sync BGG collection: user has no BGG username', ['user_id' => $user->id]);
-            return null;
+            return ['sync_id' => 0, 'chunk_thing_ids' => []];
         }
 
         $sync = BggCollectionSync::create([
@@ -74,13 +87,95 @@ class BoardGameGeekCollectionSyncService extends BaseService
         }
 
         $objectIds = array_column($items, 'objectid');
-        $baseGameIds = $this->apiClient->fetchBaseGameIdsForThingIds($objectIds);
+        if ($objectIds === []) {
+            $sync->update([
+                'status' => BggCollectionSync::STATUS_SUCCESS,
+                'items_count' => 0,
+                'error_message' => null,
+            ]);
+            Log::info('BGG collection sync completed (empty collection)', ['user_id' => $user->id, 'username' => $username]);
+            return ['sync_id' => $sync->id, 'chunk_thing_ids' => []];
+        }
+
+        $chunkSize = (int) config('boardgamegeek.rate_limiting.max_ids_per_request', 20);
+        $chunkSize = max(1, $chunkSize);
+        $chunkThingIds = array_values(array_chunk($objectIds, $chunkSize));
+
+        $ttlMinutes = (int) config('boardgamegeek.pending_import_cache_ttl_minutes', 60);
+        $mainKey = self::CACHE_KEY_PREFIX . $user->id;
+        Cache::put($mainKey, [
+            'items' => $items,
+            'sync_id' => $sync->id,
+        ], now()->addMinutes($ttlMinutes));
+
+        Cache::put(self::baseIdsCacheKey($user->id), [], now()->addMinutes($ttlMinutes));
+
+        Log::info('BGG collection fetched; thing-ID resolution will run in chunk jobs', [
+            'user_id' => $user->id,
+            'username' => $username,
+            'items_count' => count($items),
+            'chunks_count' => count($chunkThingIds),
+        ]);
+
+        return [
+            'sync_id' => $sync->id,
+            'chunk_thing_ids' => $chunkThingIds,
+        ];
+    }
+
+    /**
+     * Merge resolved thing ID -> base game ID map into the cached base IDs for this user. Call from each chunk job.
+     *
+     * @param array<string, string> $thingIdToBaseId Map of thingId => baseGameBggId
+     */
+    public function mergeResolvedBaseGameIds(User $user, array $thingIdToBaseId): void
+    {
+        $key = self::baseIdsCacheKey($user->id);
+        $existing = Cache::get($key);
+        $merged = is_array($existing) ? $existing : [];
+        foreach ($thingIdToBaseId as $thingId => $baseId) {
+            $merged[(string) $thingId] = (string) $baseId;
+        }
+        $ttlMinutes = (int) config('boardgamegeek.pending_import_cache_ttl_minutes', 60);
+        Cache::put($key, $merged, now()->addMinutes($ttlMinutes));
+    }
+
+    /**
+     * After all chunk jobs have merged their base IDs, load items + base IDs, attach base IDs to items, then complete sync or schedule import. Call only from the last chunk job.
+     *
+     * @return array{missing_bgg_ids: array<string>, sync_id: int}|null Null when sync completed (no missing games); otherwise returns missing IDs and sync_id for the job to schedule batch syncs and import phase
+     */
+    public function finalizeCollectionSyncAfterChunks(User $user): ?array
+    {
+        $mainKey = self::CACHE_KEY_PREFIX . $user->id;
+        $baseIdsKey = self::baseIdsCacheKey($user->id);
+        $cached = Cache::get($mainKey);
+        $baseIds = Cache::get($baseIdsKey);
+
+        if ($cached === null || ! isset($cached['items'], $cached['sync_id']) || ! is_array($baseIds)) {
+            Log::warning('BGG collection finalize: missing cache for user', ['user_id' => $user->id]);
+            Cache::forget($mainKey);
+            Cache::forget($baseIdsKey);
+            return null;
+        }
+
+        $items = $cached['items'];
+        $syncId = (int) $cached['sync_id'];
+        $sync = BggCollectionSync::find($syncId);
+        if ($sync === null || $sync->user_id !== $user->id) {
+            Cache::forget($mainKey);
+            Cache::forget($baseIdsKey);
+            return null;
+        }
 
         foreach ($items as $i => $item) {
-            $items[$i]['bgg_base_game_id'] = $baseGameIds[$item['objectid']] ?? $item['objectid'];
+            $objectId = $item['objectid'] ?? '';
+            $items[$i]['bgg_base_game_id'] = $baseIds[$objectId] ?? $objectId;
         }
 
         $missingBggIds = $this->collectMissingBoardGameBggIds($user, $items);
+
+        Cache::forget($baseIdsKey);
 
         if ($missingBggIds === []) {
             $previousItems = $user->bggCollectionItems()->get()->keyBy('bgg_object_id');
@@ -90,23 +185,22 @@ class BoardGameGeekCollectionSyncService extends BaseService
                 'items_count' => count($items),
                 'error_message' => null,
             ]);
-            Log::info('BGG collection sync completed (no missing games)', [
+            Cache::forget($mainKey);
+            Log::info('BGG collection sync completed (no missing games, chunked)', [
                 'user_id' => $user->id,
-                'username' => $username,
                 'items_count' => count($items),
             ]);
             return null;
         }
 
-        $ttlMinutes = config('boardgamegeek.pending_import_cache_ttl_minutes', 60);
-        Cache::put(self::CACHE_KEY_PREFIX . $user->id, [
+        $ttlMinutes = (int) config('boardgamegeek.pending_import_cache_ttl_minutes', 60);
+        Cache::put($mainKey, [
             'items' => $items,
             'sync_id' => $sync->id,
         ], now()->addMinutes($ttlMinutes));
 
-        Log::info('BGG collection fetch done; missing games will be synced then import scheduled', [
+        Log::info('BGG collection finalize: missing games will be synced then import scheduled', [
             'user_id' => $user->id,
-            'username' => $username,
             'items_count' => count($items),
             'missing_bgg_ids_count' => count($missingBggIds),
         ]);
@@ -115,6 +209,11 @@ class BoardGameGeekCollectionSyncService extends BaseService
             'missing_bgg_ids' => $missingBggIds,
             'sync_id' => $sync->id,
         ];
+    }
+
+    private static function baseIdsCacheKey(int $userId): string
+    {
+        return self::CACHE_KEY_PREFIX . $userId . self::CACHE_KEY_BASE_IDS_SUFFIX;
     }
 
     /**
