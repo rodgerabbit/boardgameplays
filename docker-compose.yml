@@ -99,6 +99,38 @@ services:
     depends_on:
       - app
 
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: boardgameplays_queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    networks:
+      - boardgameplays
+    depends_on:
+      - postgres
+      - redis
+      - meilisearch
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=boardgameplays
+      - DB_USERNAME=boardgameplays
+      - DB_PASSWORD=boardgameplays
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_STORE=redis
+      - SESSION_DRIVER=redis
+      - QUEUE_CONNECTION=redis
+      - MEILISEARCH_HOST=http://meilisearch:7700
+      - MEILISEARCH_KEY=masterKey
+    user: "${DOCKER_UID}:${DOCKER_GID}"
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+
 volumes:
   postgres_data:
     driver: local

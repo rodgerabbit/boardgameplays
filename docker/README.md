@@ -53,6 +53,7 @@ This project includes a complete Docker Compose setup for local development.
 - **redis**: Redis cache and queue
 - **meilisearch**: Full-text search engine
 - **node**: Node.js for frontend asset compilation
+- **queue**: Laravel queue worker (processes BGG sync and other queued jobs)
 
 ## Common Commands
 
@@ -144,4 +145,7 @@ docker-compose exec app php artisan config:clear
 docker-compose exec app php artisan route:clear
 docker-compose exec app php artisan view:clear
 ```
+
+### BoardGameGeek sync not running
+BGG collection and plays sync run as **queued jobs**. The **queue** service must be running so jobs are processed. With `docker-compose up -d`, the queue worker starts automatically. If you run only the `app` container (e.g. without the queue service), jobs will stay in Redis and sync will never run. Check that the queue container is up: `docker-compose ps` and look for `boardgameplays_queue`. View queue worker logs: `docker-compose logs -f queue`.
 
