@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Services\BoardGameGeekSyncService;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Log;
  */
 class SyncBoardGamesBatchFromBoardGameGeekJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     /**
      * The number of times the job may be attempted.
@@ -55,6 +56,10 @@ class SyncBoardGamesBatchFromBoardGameGeekJob implements ShouldQueue
      */
     public function handle(BoardGameGeekSyncService $syncService): void
     {
+        if ($this->batch()?->cancelled()) {
+            return;
+        }
+
         try {
             Log::info('Starting BoardGameGeek batch sync job', [
                 'bgg_ids' => $this->bggIds,

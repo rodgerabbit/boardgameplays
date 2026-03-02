@@ -122,18 +122,6 @@ return [
     ),
 
     /*
-    |--------------------------------------------------------------------------
-    | Sync Flow: Board Games First, Then Import
-    |--------------------------------------------------------------------------
-    |
-    | When collection or plays sync runs, missing board games are scheduled
-    | in batches (with priority). After this delay, the collection/plays
-    | import is scheduled again so it runs after board games exist.
-    |
-    */
-    'import_phase_delay_minutes' => (int) env('BOARDGAMEGEEK_IMPORT_PHASE_DELAY_MINUTES', 10),
-
-    /*
     | Queue used for board game sync batch jobs (run with priority before import).
     */
     'board_game_sync_queue' => env('BOARDGAMEGEEK_BOARD_GAME_SYNC_QUEUE', 'default'),

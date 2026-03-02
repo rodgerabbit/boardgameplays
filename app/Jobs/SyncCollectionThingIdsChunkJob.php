@@ -7,11 +7,13 @@ namespace App\Jobs;
 use App\Models\User;
 use App\Services\BoardGameGeekApiClient;
 use App\Services\BoardGameGeekCollectionSyncService;
+use Illuminate\Bus\Batch;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -78,6 +80,9 @@ class SyncCollectionThingIdsChunkJob implements ShouldQueue
     }
 
     /**
+     * Schedule board game sync batches; when all complete, batch then() dispatches the
+     * collection import phase immediately (no static delay).
+     *
      * @param array{missing_bgg_ids: array<string>, sync_id: int}|null $result
      */
     private function scheduleBatchesAndImportIfNeeded(?array $result): void
@@ -89,26 +94,43 @@ class SyncCollectionThingIdsChunkJob implements ShouldQueue
         $missingBggIds = $result['missing_bgg_ids'];
         $batchSize = (int) config('boardgamegeek.rate_limiting.max_ids_per_request', 20);
         $boardGameQueue = config('boardgamegeek.board_game_sync_queue', 'default');
-        $delayMinutes = (int) config('boardgamegeek.import_phase_delay_minutes', 10);
-
         $importQueue = $this->queue ?? 'default';
-        SyncUserCollectionFromBoardGameGeekJob::dispatch($this->userId, true)
-            ->onQueue($importQueue)
-            ->delay(now()->addMinutes($delayMinutes));
 
-        $batches = array_chunk($missingBggIds, $batchSize);
+        $chunks = array_chunk($missingBggIds, $batchSize);
+        $batchJobs = [];
         $delaySeconds = 2;
-        foreach ($batches as $batch) {
-            SyncBoardGamesBatchFromBoardGameGeekJob::dispatch($batch)
+        foreach ($chunks as $chunk) {
+            $batchJobs[] = (new SyncBoardGamesBatchFromBoardGameGeekJob($chunk))
                 ->onQueue($boardGameQueue)
                 ->delay(now()->addSeconds($delaySeconds));
             $delaySeconds += 2;
         }
 
-        Log::info('BGG collection chunk job: scheduled board game batches and import phase', [
+        Bus::batch($batchJobs)
+            ->name('bgg-board-games-then-collection-import')
+            ->withOption('import_type', 'collection')
+            ->withOption('user_id', $this->userId)
+            ->withOption('import_queue', $importQueue)
+            ->then(function (Batch $batch): void {
+                $opts = $batch->options ?? [];
+                if (($opts['import_type'] ?? '') !== 'collection') {
+                    return;
+                }
+                $userId = (int) ($opts['user_id'] ?? 0);
+                if ($userId === 0) {
+                    Log::warning('BGG collection import batch then: missing user_id in options');
+                    return;
+                }
+                SyncUserCollectionFromBoardGameGeekJob::dispatch($userId, true)
+                    ->onQueue($opts['import_queue'] ?? 'default');
+            })
+            ->onQueue($boardGameQueue)
+            ->dispatch();
+
+        Log::info('BGG collection chunk job: scheduled board game batch and import phase via then()', [
             'user_id' => $this->userId,
             'missing_bgg_ids_count' => count($missingBggIds),
-            'batches' => count($batches),
+            'batches' => count($batchJobs),
         ]);
     }
 

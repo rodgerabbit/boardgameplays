@@ -11,11 +11,13 @@ use App\Models\User;
 use App\Services\BoardGameGeekPlaySyncService;
 use App\Services\BoardGamePlayDeduplicationService;
 use Carbon\Carbon;
+use Illuminate\Bus\Batch;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
@@ -220,30 +222,55 @@ class SyncBoardGamePlaysFromBoardGameGeekJob implements ShouldQueue
             }
 
             // There are missing games – keep the payloads in cache and schedule board game sync
-            // batches plus a separate import-phase job which will run after games are synced.
+            // batches; when all batches complete, the batch then() runs and dispatches the
+            // import phase immediately (no static delay).
             $batchSize = (int) config('boardgamegeek.rate_limiting.max_ids_per_request', 20);
             $boardGameQueue = config('boardgamegeek.board_game_sync_queue', 'default');
-            $delayMinutes = (int) config('boardgamegeek.import_phase_delay_minutes', 10);
-
-            // Schedule import phase first so it is always queued even if batch dispatch fails
             $importQueue = $this->queue ?? 'default';
-            self::dispatch($this->userId, $minDate, $maxDate, $this->requestedManually, true)
-                ->onQueue($importQueue)
-                ->delay(now()->addMinutes($delayMinutes));
 
-            $batches = array_chunk($missingBggIds, $batchSize);
+            $chunks = array_chunk($missingBggIds, $batchSize);
+            $batchJobs = [];
             $delaySeconds = 2;
-            foreach ($batches as $batch) {
-                SyncBoardGamesBatchFromBoardGameGeekJob::dispatch($batch)
+            foreach ($chunks as $chunk) {
+                $batchJobs[] = (new SyncBoardGamesBatchFromBoardGameGeekJob($chunk))
                     ->onQueue($boardGameQueue)
                     ->delay(now()->addSeconds($delaySeconds));
                 $delaySeconds += 2;
             }
 
-            Log::info('BGG plays sync: scheduled board game batches and import phase (per-page)', [
+            Bus::batch($batchJobs)
+                ->name('bgg-board-games-then-plays-import')
+                ->withOption('import_type', 'plays')
+                ->withOption('user_id', $this->userId)
+                ->withOption('min_date', $minDate)
+                ->withOption('max_date', $maxDate)
+                ->withOption('requested_manually', $this->requestedManually)
+                ->withOption('import_queue', $importQueue)
+                ->then(function (Batch $batch): void {
+                    $opts = $batch->options ?? [];
+                    if (($opts['import_type'] ?? '') !== 'plays') {
+                        return;
+                    }
+                    $userId = (int) ($opts['user_id'] ?? 0);
+                    if ($userId === 0) {
+                        Log::warning('BGG plays import batch then: missing user_id in options');
+                        return;
+                    }
+                    SyncBoardGamePlaysFromBoardGameGeekJob::dispatch(
+                        $userId,
+                        $opts['min_date'] ?? null,
+                        $opts['max_date'] ?? null,
+                        (bool) ($opts['requested_manually'] ?? false),
+                        true
+                    )->onQueue($opts['import_queue'] ?? 'default');
+                })
+                ->onQueue($boardGameQueue)
+                ->dispatch();
+
+            Log::info('BGG plays sync: scheduled board game batch and import phase via then()', [
                 'user_id' => $this->userId,
                 'missing_bgg_ids_count' => count($missingBggIds),
-                'batches' => count($batches),
+                'batches' => count($batchJobs),
             ]);
         } catch (\Exception $e) {
             Log::error('BGG plays sync job failed', [
