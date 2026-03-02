@@ -38,11 +38,22 @@ class SyncBoardGamePlaysFromBoardGameGeekJob implements ShouldQueue
     public int $backoff = 3;
 
     /**
+     * Seconds the job may run before the worker kills it.
+     * Each run fetches one BGG page; config allows for slow API + processing.
+     *
+     * @var int
+     */
+    public int $timeout;
+
+    public function __construct(
+
+    /**
      * @param int $userId The user ID to sync plays for
      * @param string|null $minDate Minimum date (Y-m-d format), defaults to 30 days ago
      * @param string|null $maxDate Maximum date (Y-m-d format), defaults to today
      * @param bool $requestedManually Whether the user triggered this sync from Settings
      * @param bool $isImportPhase True when running the deferred import after board games are synced
+     * @param int $page Page number to fetch from BGG (1-based) when not in import phase
      */
     public function __construct(
         public readonly int $userId,
@@ -50,7 +61,9 @@ class SyncBoardGamePlaysFromBoardGameGeekJob implements ShouldQueue
         public readonly ?string $maxDate = null,
         public readonly bool $requestedManually = false,
         public readonly bool $isImportPhase = false,
+        public readonly int $page = 1,
     ) {
+        $this->timeout = (int) config('boardgamegeek.plays_sync_job_timeout_seconds', 120);
     }
 
     public function handle(
@@ -76,12 +89,23 @@ class SyncBoardGamePlaysFromBoardGameGeekJob implements ShouldQueue
         $maxDate = $this->maxDate ?? now()->format('Y-m-d');
         $minDate = $this->minDate ?? now()->subDays(30)->format('Y-m-d');
 
-        $playsSync = BggPlaysSync::create([
-            'user_id' => $this->userId,
-            'synced_at' => now(),
-            'status' => BggPlaysSync::STATUS_PENDING,
-            'requested_manually' => $this->requestedManually,
-        ]);
+        $cacheKey = self::CACHE_KEY_PREFIX . $this->userId;
+
+        // Create or reuse the BggPlaysSync tracking record. We only create it on the
+        // first page and reuse it for subsequent pages via the cached sync_id.
+        $existingCached = Cache::get($cacheKey);
+        if ($this->page === 1 || ! is_array($existingCached) || ! isset($existingCached['sync_id'])) {
+            $playsSync = BggPlaysSync::create([
+                'user_id' => $this->userId,
+                'synced_at' => now(),
+                'status' => BggPlaysSync::STATUS_PENDING,
+                'requested_manually' => $this->requestedManually,
+            ]);
+            $syncId = $playsSync->id;
+        } else {
+            $syncId = (int) $existingCached['sync_id'];
+            $playsSync = BggPlaysSync::find($syncId);
+        }
 
         try {
             Log::info('Starting BGG plays sync job (phase 1)', [
@@ -89,43 +113,116 @@ class SyncBoardGamePlaysFromBoardGameGeekJob implements ShouldQueue
                 'bgg_username' => $user->board_game_geek_username,
                 'min_date' => $minDate,
                 'max_date' => $maxDate,
+                'page' => $this->page,
             ]);
 
-            $plays = $syncService->fetchPlaysFromBoardGameGeek(
+            $pageResult = $syncService->fetchPlaysPageFromBoardGameGeek(
                 $user->board_game_geek_username,
                 $minDate,
-                $maxDate
+                $maxDate,
+                $this->page
             );
 
-            $payloads = $this->buildPayloadsFromPlays($plays, $user, $syncService);
-            $missingBggIds = $syncService->getMissingBggGameIdsFromPayloads($payloads);
+            $plays = $pageResult['plays'];
+            $hasMorePages = $pageResult['has_more_pages'];
 
-            if ($missingBggIds === []) {
-                $processedPlayIds = $syncService->processBggPlaysXml($plays, $user);
-                $syncService->cleanupDeletedBggPlays($user, $processedPlayIds, $minDate, $maxDate);
-                $this->markPlaysSynced($user, $processedPlayIds);
-                $playsSync->update([
-                    'status' => BggPlaysSync::STATUS_SUCCESS,
-                    'plays_count' => count($processedPlayIds),
-                    'error_message' => null,
-                ]);
-                $this->runDeduplicationForSyncedPlays($deduplicationService, $minDate, $maxDate, $processedPlayIds);
-                Log::info('Completed BGG plays sync job (no missing games)', [
+            $payloadsForPage = $this->buildPayloadsFromPlays($plays, $user, $syncService);
+
+            // Merge this page's payloads into the cached collection so that the
+            // final page has all plays available for missing-game detection and import.
+            $ttlMinutes = (int) config('boardgamegeek.pending_import_cache_ttl_minutes', 60);
+            $cached = Cache::get($cacheKey);
+            $existingPayloads = [];
+            if (is_array($cached) && isset($cached['payloads']) && is_array($cached['payloads'])) {
+                $existingPayloads = $cached['payloads'];
+            }
+
+            $allPayloads = array_merge($existingPayloads, $payloadsForPage);
+
+            Cache::put($cacheKey, [
+                'payloads' => $allPayloads,
+                'min_date' => $minDate,
+                'max_date' => $maxDate,
+                'sync_id' => $syncId,
+            ], now()->addMinutes($ttlMinutes));
+
+            if ($hasMorePages) {
+                // Queue the next page with a small delay to respect BGG rate limits.
+                $nextPage = $this->page + 1;
+                $queueName = $this->queue ?? 'default';
+
+                self::dispatch(
+                    $this->userId,
+                    $this->minDate,
+                    $this->maxDate,
+                    $this->requestedManually,
+                    false,
+                    $nextPage
+                )
+                    ->onQueue($queueName)
+                    ->delay(now()->addSeconds(2));
+
+                Log::info('BGG plays sync: queued next page', [
                     'user_id' => $this->userId,
-                    'plays_synced' => count($processedPlayIds),
+                    'current_page' => $this->page,
+                    'next_page' => $nextPage,
                 ]);
+
                 return;
             }
 
-            $ttlMinutes = (int) config('boardgamegeek.pending_import_cache_ttl_minutes', 60);
-            $cacheKey = self::CACHE_KEY_PREFIX . $this->userId;
-            Cache::put($cacheKey, [
-                'payloads' => $payloads,
-                'min_date' => $minDate,
-                'max_date' => $maxDate,
-                'sync_id' => $playsSync->id,
-            ], now()->addMinutes($ttlMinutes));
+            // We are on the last page: compute missing games based on all payloads and either
+            // perform immediate import (when everything exists) or schedule board game sync
+            // batches plus a deferred import phase.
+            $missingBggIds = $syncService->getMissingBggGameIdsFromPayloads($allPayloads);
 
+            if ($missingBggIds === []) {
+                $processedPlayIds = [];
+                foreach ($allPayloads as $payload) {
+                    $bggGameId = $payload['bgg_game_id'] ?? null;
+                    if ($bggGameId === null || $bggGameId === '') {
+                        continue;
+                    }
+                    $boardGame = BoardGame::where('bgg_id', (string) $bggGameId)->first();
+                    if ($boardGame === null || $boardGame->is_expansion) {
+                        continue;
+                    }
+                    $play = $syncService->createPlayFromPayload($payload, $user, $boardGame->id);
+                    $processedPlayIds[] = $play->bgg_play_id;
+                }
+
+                $allBggPlayIdsFromBgg = array_values(array_filter(array_column($allPayloads, 'bgg_play_id')));
+                $syncService->cleanupDeletedBggPlays($user, $allBggPlayIdsFromBgg, $minDate, $maxDate);
+                $this->markPlaysSynced($user, $processedPlayIds);
+
+                if ($playsSync !== null) {
+                    $playsSync->update([
+                        'status' => BggPlaysSync::STATUS_SUCCESS,
+                        'plays_count' => count($processedPlayIds),
+                        'error_message' => null,
+                    ]);
+                } else {
+                    BggPlaysSync::where('id', $syncId)->update([
+                        'status' => BggPlaysSync::STATUS_SUCCESS,
+                        'plays_count' => count($processedPlayIds),
+                        'error_message' => null,
+                    ]);
+                }
+
+                Cache::forget($cacheKey);
+
+                $this->runDeduplicationForSyncedPlays($deduplicationService, $minDate, $maxDate, $processedPlayIds);
+
+                Log::info('Completed BGG plays sync job (no missing games, per-page)', [
+                    'user_id' => $this->userId,
+                    'plays_synced' => count($processedPlayIds),
+                ]);
+
+                return;
+            }
+
+            // There are missing games – keep the payloads in cache and schedule board game sync
+            // batches plus a separate import-phase job which will run after games are synced.
             $batchSize = (int) config('boardgamegeek.rate_limiting.max_ids_per_request', 20);
             $boardGameQueue = config('boardgamegeek.board_game_sync_queue', 'default');
             $delayMinutes = (int) config('boardgamegeek.import_phase_delay_minutes', 10);
@@ -145,7 +242,7 @@ class SyncBoardGamePlaysFromBoardGameGeekJob implements ShouldQueue
                 $delaySeconds += 2;
             }
 
-            Log::info('BGG plays sync: scheduled board game batches and import phase', [
+            Log::info('BGG plays sync: scheduled board game batches and import phase (per-page)', [
                 'user_id' => $this->userId,
                 'missing_bgg_ids_count' => count($missingBggIds),
                 'batches' => count($batches),
@@ -156,10 +253,17 @@ class SyncBoardGamePlaysFromBoardGameGeekJob implements ShouldQueue
                 'error' => $e->getMessage(),
                 'attempt' => $this->attempts(),
             ]);
-            $playsSync->update([
-                'status' => BggPlaysSync::STATUS_FAILED,
-                'error_message' => substr($e->getMessage(), 0, 500),
-            ]);
+            if (isset($playsSync) && $playsSync !== null) {
+                $playsSync->update([
+                    'status' => BggPlaysSync::STATUS_FAILED,
+                    'error_message' => substr($e->getMessage(), 0, 500),
+                ]);
+            } elseif (isset($syncId)) {
+                BggPlaysSync::where('id', $syncId)->update([
+                    'status' => BggPlaysSync::STATUS_FAILED,
+                    'error_message' => substr($e->getMessage(), 0, 500),
+                ]);
+            }
             throw $e;
         }
     }

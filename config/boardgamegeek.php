@@ -142,6 +142,30 @@ return [
     | Cache TTL in minutes for pending collection/plays data between phases.
     */
     'pending_import_cache_ttl_minutes' => (int) env('BOARDGAMEGEEK_PENDING_IMPORT_CACHE_TTL_MINUTES', 60),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Plays Sync: Full History Date Range
+    |--------------------------------------------------------------------------
+    |
+    | When syncing all plays (adding a BGG user or manual sync from Settings),
+    | this is the earliest date used for the BGG plays API (mindate). BGG
+    | launched in 2000; use an earlier date to include all possible plays.
+    |
+    */
+    'plays_sync_earliest_date' => env('BOARDGAMEGEEK_PLAYS_SYNC_EARLIEST_DATE', '2000-01-01'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Plays Sync Job Timeout (seconds)
+    |--------------------------------------------------------------------------
+    |
+    | Each plays sync job fetches one BGG page. Timeout should allow for one
+    | HTTP request (BGG can be slow) plus payload building and cache merge.
+    | Worker must be started with at least this timeout (e.g. --timeout=120).
+    |
+    */
+    'plays_sync_job_timeout_seconds' => (int) env('BOARDGAMEGEEK_PLAYS_SYNC_JOB_TIMEOUT_SECONDS', 120),
 ];
 
 

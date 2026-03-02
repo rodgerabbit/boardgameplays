@@ -153,10 +153,17 @@ class SettingsController extends Controller
         $usernameSetOrChanged = $nowHasUsername && (! $hadUsernameBefore || $previousUsername !== $currentUsername);
 
         if ($usernameSetOrChanged) {
+            $importPhaseDelayMinutes = (int) config('boardgamegeek.import_phase_delay_minutes', 10);
+            $playsMinDate = config('boardgamegeek.plays_sync_earliest_date', '2000-01-01');
+            $playsMaxDate = now()->format('Y-m-d');
+
             SyncUserCollectionFromBoardGameGeekJob::dispatch($user->id)
                 ->delay(now()->addSeconds(2));
-            SyncBoardGamePlaysFromBoardGameGeekJob::dispatch($user->id)
+            SyncBoardGamePlaysFromBoardGameGeekJob::dispatch($user->id, $playsMinDate, $playsMaxDate)
                 ->delay(now()->addSeconds(4));
+
+            SyncBoardGamePlaysFromBoardGameGeekJob::dispatch($user->id, $playsMinDate, $playsMaxDate)
+                ->delay(now()->addMinutes($importPhaseDelayMinutes));
         }
 
         return redirect()->route('settings.index')
@@ -190,9 +197,12 @@ class SettingsController extends Controller
         $user->bgg_manual_sync_requested_at = now();
         $user->save();
 
+        $playsMinDate = config('boardgamegeek.plays_sync_earliest_date', '2000-01-01');
+        $playsMaxDate = now()->format('Y-m-d');
+
         SyncUserCollectionFromBoardGameGeekJob::dispatch($user->id)
             ->delay(now()->addSeconds(2));
-        SyncBoardGamePlaysFromBoardGameGeekJob::dispatch($user->id, null, null, true)
+        SyncBoardGamePlaysFromBoardGameGeekJob::dispatch($user->id, $playsMinDate, $playsMaxDate, true)
             ->delay(now()->addSeconds(4));
 
         return redirect()->route('settings.index')

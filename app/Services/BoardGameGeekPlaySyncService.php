@@ -24,12 +24,105 @@ class BoardGameGeekPlaySyncService extends BaseService
     private const PLAYS_API_URL = 'https://boardgamegeek.com/xmlapi2/plays';
 
     /**
-     * Fetch plays from BoardGameGeek API with pagination.
+     * Fetch plays from BoardGameGeek API for a single page.
+     *
+     * This method is used by queue jobs so that each job only performs one
+     * HTTP request to BGG. Rate limiting between pages should be handled by
+     * scheduling follow-up jobs with a delay rather than sleeping inside
+     * the worker process.
+     *
+     * @param string $username The BGG username
+     * @param string|null $minDate Minimum date (Y-m-d format)
+     * @param string|null $maxDate Maximum date (Y-m-d format)
+     * @param int $page Page number to fetch (1-based)
+     * @return array{plays: array<int, SimpleXMLElement>, has_more_pages: bool}
+     *
+     * @throws \RuntimeException If API request fails
+     */
+    public function fetchPlaysPageFromBoardGameGeek(
+        string $username,
+        ?string $minDate,
+        ?string $maxDate,
+        int $page
+    ): array {
+        try {
+            $url = self::PLAYS_API_URL . '?' . http_build_query([
+                'username' => $username,
+                'maxdate' => $maxDate,
+                'mindate' => $minDate,
+                'page' => $page,
+            ]);
+
+            $request = Http::timeout(30)
+                ->retry(3, 1000)
+                ->withHeaders([
+                    'Accept' => 'application/xml',
+                ]);
+
+            $apiToken = config('boardgamegeek.api_token');
+            if ($apiToken !== null) {
+                $request->withToken($apiToken);
+            }
+
+            $response = $request->get($url);
+
+            if (! $response->successful()) {
+                if ($response->status() === 401) {
+                    $errorMessage = 'BoardGameGeek API token was not accepted (401 Unauthorized). Please check BOARDGAMEGEEK_API_TOKEN in .env file.';
+                    Log::error($errorMessage, [
+                        'username' => $username,
+                        'page' => $page,
+                        'status' => $response->status(),
+                    ]);
+                    throw new \RuntimeException($errorMessage);
+                }
+
+                throw new \RuntimeException('HTTP request returned status code ' . $response->status());
+            }
+
+            $xml = new SimpleXMLElement($response->body());
+            $plays = $xml->play ?? null;
+
+            $playArray = [];
+            if ($plays !== null) {
+                foreach ($plays as $play) {
+                    $playArray[] = $play;
+                }
+            }
+
+            $playCount = count($playArray);
+
+            return [
+                'plays' => $playArray,
+                'has_more_pages' => $playCount === 100,
+            ];
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch plays from BGG', [
+                'username' => $username,
+                'page' => $page,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw new \RuntimeException(
+                'Failed to fetch plays from BoardGameGeek: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
+    }
+
+    /**
+     * Fetch all plays from BoardGameGeek API with pagination.
+     *
+     * This method is retained for use outside of queued jobs where a
+     * single long-running process is acceptable (e.g. CLI tooling
+     * or tests). Queue jobs should prefer fetchPlaysPageFromBoardGameGeek().
      *
      * @param string $username The BGG username
      * @param string|null $minDate Minimum date (Y-m-d format)
      * @param string|null $maxDate Maximum date (Y-m-d format)
      * @return array<int, SimpleXMLElement> Array of XML play elements
+     *
      * @throws \RuntimeException If API request fails
      */
     public function fetchPlaysFromBoardGameGeek(
@@ -42,68 +135,14 @@ class BoardGameGeekPlaySyncService extends BaseService
         $hasMorePages = true;
 
         while ($hasMorePages) {
-            try {
-                $url = self::PLAYS_API_URL . '?' . http_build_query([
-                    'username' => $username,
-                    'maxdate' => $maxDate,
-                    'mindate' => $minDate,
-                    'page' => $page,
-                ]);
+            $result = $this->fetchPlaysPageFromBoardGameGeek($username, $minDate, $maxDate, $page);
+            $allPlays = array_merge($allPlays, $result['plays']);
+            $hasMorePages = $result['has_more_pages'];
+            $page++;
 
-                $request = Http::timeout(30)
-                    ->retry(3, 1000)
-                    ->withHeaders([
-                        'Accept' => 'application/xml',
-                    ]);
-
-                $apiToken = config('boardgamegeek.api_token');
-                if ($apiToken !== null) {
-                    $request->withToken($apiToken);
-                }
-
-                $response = $request->get($url);
-
-                if (!$response->successful()) {
-                    if ($response->status() === 401) {
-                        $errorMessage = 'BoardGameGeek API token was not accepted (401 Unauthorized). Please check BOARDGAMEGEEK_API_TOKEN in .env file.';
-                        Log::error($errorMessage, [
-                            'username' => $username,
-                            'page' => $page,
-                            'status' => $response->status(),
-                        ]);
-                        throw new \RuntimeException($errorMessage);
-                    }
-                    throw new \RuntimeException('HTTP request returned status code ' . $response->status());
-                }
-
-                $xml = new SimpleXMLElement($response->body());
-                $plays = $xml->play ?? null;
-
-                $playCount = 0;
-                if ($plays !== null) {
-                    $playArray = [];
-                    foreach ($plays as $play) {
-                        $playArray[] = $play;
-                    }
-                    $playCount = count($playArray);
-                    $allPlays = array_merge($allPlays, $playArray);
-                }
-
-                // If we got less than 100 plays, we've reached the last page
-                $hasMorePages = $playCount === 100;
-                $page++;
-
-                // Rate limiting: wait 2 seconds between requests
-                if ($hasMorePages) {
-                    sleep(2);
-                }
-            } catch (\Exception $e) {
-                Log::error('Failed to fetch plays from BGG', [
-                    'username' => $username,
-                    'page' => $page,
-                    'error' => $e->getMessage(),
-                ]);
-                throw new \RuntimeException('Failed to fetch plays from BoardGameGeek: ' . $e->getMessage(), 0, $e);
+            if ($hasMorePages) {
+                // Rate limiting when fetching all pages in-process.
+                sleep(2);
             }
         }
 
