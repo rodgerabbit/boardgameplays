@@ -13,6 +13,7 @@ use App\Models\BggCollectionSync;
 use App\Models\BggPlaysSync;
 use App\Models\User;
 use App\Services\UserSettingsService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,16 +40,7 @@ class SettingsController extends Controller
         $user = Auth::user();
         $user->loadMissing([]);
 
-        $lastCollectionSync = $user->bggCollectionSyncs()
-            ->orderByDesc('synced_at')
-            ->first();
-        $lastPlaysSync = $user->bggPlaysSyncs()
-            ->orderByDesc('synced_at')
-            ->first();
-
-        $bggManualSyncRequestedAt = $user->bgg_manual_sync_requested_at;
-        $manualSyncAllowed = $bggManualSyncRequestedAt === null
-            || $bggManualSyncRequestedAt->diffInHours(now(), false) >= self::BGG_MANUAL_SYNC_COOLDOWN_HOURS;
+        $boardGameGeek = $this->buildBoardGameGeekSyncStatusPayload($user);
 
         return Inertia::render('Settings', [
             'activeTab' => $request->session()->get('activeTab', 'profile'),
@@ -68,21 +60,53 @@ class SettingsController extends Controller
                 'sync_plays_to_board_game_geek' => (bool) $user->sync_plays_to_board_game_geek,
                 'use_generic_user_for_bgg_plays' => $user->use_generic_user_for_bgg_plays ?? true,
             ],
-            'boardGameGeek' => [
-                'last_collection_sync' => $lastCollectionSync ? [
-                    'synced_at' => $lastCollectionSync->synced_at->toIso8601String(),
-                    'status' => $lastCollectionSync->status,
-                    'error_message' => $lastCollectionSync->error_message,
-                ] : null,
-                'last_plays_sync' => $lastPlaysSync ? [
-                    'synced_at' => $lastPlaysSync->synced_at->toIso8601String(),
-                    'status' => $lastPlaysSync->status,
-                    'error_message' => $lastPlaysSync->error_message,
-                ] : null,
-                'bgg_manual_sync_requested_at' => $bggManualSyncRequestedAt?->toIso8601String(),
-                'manual_sync_allowed' => $manualSyncAllowed,
-            ],
+            'boardGameGeek' => $boardGameGeek,
         ]);
+    }
+
+    /**
+     * Return BoardGameGeek sync status as JSON for polling (e.g. from the settings page).
+     */
+    public function boardGameGeekSyncStatus(): JsonResponse
+    {
+        $user = Auth::user();
+        $payload = $this->buildBoardGameGeekSyncStatusPayload($user);
+
+        return response()->json($payload);
+    }
+
+    /**
+     * Build the boardGameGeek sync status payload for the given user.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildBoardGameGeekSyncStatusPayload(User $user): array
+    {
+        $lastCollectionSync = $user->bggCollectionSyncs()
+            ->orderByDesc('synced_at')
+            ->first();
+        $lastPlaysSync = $user->bggPlaysSyncs()
+            ->orderByDesc('synced_at')
+            ->first();
+
+        $bggManualSyncRequestedAt = $user->bgg_manual_sync_requested_at;
+        $manualSyncAllowed = $bggManualSyncRequestedAt === null
+            || $bggManualSyncRequestedAt->diffInHours(now(), false) >= self::BGG_MANUAL_SYNC_COOLDOWN_HOURS;
+
+        return [
+            'last_collection_sync' => $lastCollectionSync ? [
+                'synced_at' => $lastCollectionSync->synced_at->toIso8601String(),
+                'status' => $lastCollectionSync->status,
+                'error_message' => $lastCollectionSync->error_message,
+            ] : null,
+            'last_plays_sync' => $lastPlaysSync ? [
+                'synced_at' => $lastPlaysSync->synced_at->toIso8601String(),
+                'status' => $lastPlaysSync->status,
+                'error_message' => $lastPlaysSync->error_message,
+            ] : null,
+            'bgg_manual_sync_requested_at' => $bggManualSyncRequestedAt?->toIso8601String(),
+            'manual_sync_allowed' => $manualSyncAllowed,
+        ];
     }
 
     /**

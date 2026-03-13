@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/statistics', [PlaceholderController::class, 'statistics'])->name('statistics.index');
     Route::get('/boardgames', [PlaceholderController::class, 'boardgames'])->name('boardgames.index');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::get('/settings/boardgamegeek/status', [SettingsController::class, 'boardGameGeekSyncStatus'])->name('settings.boardgamegeek.status');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');
     Route::put('/settings/preferences', [SettingsController::class, 'updatePreferences'])->name('settings.preferences.update');
     Route::put('/settings/boardgamegeek', [SettingsController::class, 'updateBoardGameGeek'])->name('settings.boardgamegeek.update');

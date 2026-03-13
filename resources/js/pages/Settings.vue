@@ -365,18 +365,18 @@
                     </template>
                 </form>
 
-                <!-- Sync status log (when username set) -->
+                <!-- Sync status log (when username set); boardGameGeekStatus updates via polling -->
                 <div v-if="user.board_game_geek_username" class="border-t border-surface-darker pt-6">
                     <h2 class="mb-4 text-lg font-medium text-text-dark">Sync status</h2>
                     <dl class="space-y-2 text-sm">
                         <div>
                             <dt class="inline font-medium text-text-muted-dark">Collection: </dt>
                             <dd class="inline text-text-dark">
-                                <template v-if="boardGameGeek?.last_collection_sync">
-                                    {{ formatSyncTime(boardGameGeek.last_collection_sync.synced_at) }}
-                                    ({{ boardGameGeek.last_collection_sync.status }})
-                                    <span v-if="boardGameGeek.last_collection_sync.error_message" class="text-primary">
-                                        — {{ boardGameGeek.last_collection_sync.error_message }}
+                                <template v-if="boardGameGeekStatus?.last_collection_sync">
+                                    {{ formatSyncTime(boardGameGeekStatus.last_collection_sync.synced_at) }}
+                                    ({{ boardGameGeekStatus.last_collection_sync.status }})
+                                    <span v-if="boardGameGeekStatus.last_collection_sync.error_message" class="text-primary">
+                                        — {{ boardGameGeekStatus.last_collection_sync.error_message }}
                                     </span>
                                 </template>
                                 <span v-else class="text-text-muted-dark">Not synced yet</span>
@@ -385,18 +385,18 @@
                         <div>
                             <dt class="inline font-medium text-text-muted-dark">Plays: </dt>
                             <dd class="inline text-text-dark">
-                                <template v-if="boardGameGeek?.last_plays_sync">
-                                    {{ formatSyncTime(boardGameGeek.last_plays_sync.synced_at) }}
-                                    ({{ boardGameGeek.last_plays_sync.status }})
-                                    <span v-if="boardGameGeek.last_plays_sync.error_message" class="text-primary">
-                                        — {{ boardGameGeek.last_plays_sync.error_message }}
+                                <template v-if="boardGameGeekStatus?.last_plays_sync">
+                                    {{ formatSyncTime(boardGameGeekStatus.last_plays_sync.synced_at) }}
+                                    ({{ boardGameGeekStatus.last_plays_sync.status }})
+                                    <span v-if="boardGameGeekStatus.last_plays_sync.error_message" class="text-primary">
+                                        — {{ boardGameGeekStatus.last_plays_sync.error_message }}
                                     </span>
                                 </template>
                                 <span v-else class="text-text-muted-dark">Not synced yet</span>
                             </dd>
                         </div>
-                        <div v-if="boardGameGeek?.bgg_manual_sync_requested_at && manualSyncRecentlyRequested" class="mt-2 text-text-muted-dark">
-                            Manual sync requested at {{ formatSyncTime(boardGameGeek.bgg_manual_sync_requested_at) }}. Sync may be in queue or running.
+                        <div v-if="boardGameGeekStatus?.bgg_manual_sync_requested_at && manualSyncRecentlyRequested" class="mt-2 text-text-muted-dark">
+                            Manual sync requested at {{ formatSyncTime(boardGameGeekStatus.bgg_manual_sync_requested_at) }}. Sync may be in queue or running.
                         </div>
                     </dl>
 
@@ -404,14 +404,14 @@
                     <div class="mt-4">
                         <button
                             type="button"
-                            :disabled="!boardGameGeek?.manual_sync_allowed || manualSyncForm.processing"
-                            :title="!boardGameGeek?.manual_sync_allowed ? 'You can trigger a manual sync once every 24 hours.' : ''"
+                            :disabled="!boardGameGeekStatus?.manual_sync_allowed || manualSyncForm.processing"
+                            :title="!boardGameGeekStatus?.manual_sync_allowed ? 'You can trigger a manual sync once every 24 hours.' : ''"
                             class="rounded-lg border border-border bg-primary px-4 py-2 text-sm font-medium text-text-primary shadow-cartoon transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
                             @click="triggerManualSync"
                         >
                             {{ manualSyncForm.processing ? 'Requesting...' : 'Sync now' }}
                         </button>
-                        <p v-if="!boardGameGeek?.manual_sync_allowed" class="mt-1 text-xs text-text-muted-dark">
+                        <p v-if="!boardGameGeekStatus?.manual_sync_allowed" class="mt-1 text-xs text-text-muted-dark">
                             You can request a manual sync once every 24 hours.
                         </p>
                     </div>
@@ -433,7 +433,8 @@
 
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onUnmounted } from 'vue';
+import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 defineOptions({ layout: AppLayout });
@@ -444,6 +445,9 @@ const THEME_LIGHT = 'light';
 
 /** Minutes after manual sync request to show "in queue or running" message */
 const MANUAL_SYNC_RECENT_MINUTES = 10;
+
+/** Poll interval (ms) for sync status when BoardGameGeek tab is active */
+const SYNC_STATUS_POLL_INTERVAL_MS = 4000;
 
 const props = defineProps({
     activeTab: { type: String, default: 'profile' },
@@ -477,6 +481,13 @@ const activeTab = ref(props.activeTab);
 const profilePictureInputRef = ref(null);
 const profilePicturePreview = ref(null);
 
+/** Reactive sync status: initialized from props, updated by polling so the UI updates without refresh */
+const boardGameGeekStatus = ref({ ...props.boardGameGeek });
+
+watch(() => props.boardGameGeek, (newVal) => {
+    boardGameGeekStatus.value = { ...newVal };
+}, { deep: true });
+
 watch(() => props.activeTab, (val) => {
     if (val) activeTab.value = val;
 });
@@ -504,11 +515,52 @@ const manualSyncForm = useForm({});
 const publicProfileTooltip = 'When enabled, your profile and play statistics are visible to others.';
 
 const manualSyncRecentlyRequested = computed(() => {
-    const at = props.boardGameGeek?.bgg_manual_sync_requested_at;
+    const at = boardGameGeekStatus.value?.bgg_manual_sync_requested_at;
     if (!at) return false;
     const requested = new Date(at);
     const now = new Date();
     return (now - requested) / (60 * 1000) <= MANUAL_SYNC_RECENT_MINUTES;
+});
+
+let syncStatusPollingTimerId = null;
+
+function fetchSyncStatus() {
+    if (!props.user?.board_game_geek_username) return;
+    axios.get(route('settings.boardgamegeek.status'))
+        .then((response) => {
+            if (response.data && typeof response.data === 'object') {
+                boardGameGeekStatus.value = { ...response.data };
+            }
+        })
+        .catch(() => {
+            // Ignore errors (e.g. network) to avoid console noise; next poll will retry
+        });
+}
+
+function startSyncStatusPolling() {
+    if (!props.user?.board_game_geek_username) return;
+    fetchSyncStatus();
+    syncStatusPollingTimerId = setInterval(() => {
+        fetchSyncStatus();
+    }, SYNC_STATUS_POLL_INTERVAL_MS);
+}
+
+function stopSyncStatusPolling() {
+    if (syncStatusPollingTimerId !== null) {
+        clearInterval(syncStatusPollingTimerId);
+        syncStatusPollingTimerId = null;
+    }
+}
+
+watch([activeTab, () => props.user?.board_game_geek_username], ([tab, username]) => {
+    stopSyncStatusPolling();
+    if (tab === 'boardgamegeek' && username) {
+        startSyncStatusPolling();
+    }
+}, { immediate: true });
+
+onUnmounted(() => {
+    stopSyncStatusPolling();
 });
 
 function formatSyncTime(isoString) {

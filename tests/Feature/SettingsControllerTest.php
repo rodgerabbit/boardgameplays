@@ -6,6 +6,8 @@ namespace Tests\Feature;
 
 use App\Jobs\SyncBoardGamePlaysFromBoardGameGeekJob;
 use App\Jobs\SyncUserCollectionFromBoardGameGeekJob;
+use App\Models\BggCollectionSync;
+use App\Models\BggPlaysSync;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -337,5 +339,56 @@ class SettingsControllerTest extends TestCase
         $response->assertRedirect('/settings');
         $response->assertSessionHas('error');
         Queue::assertNotPushed(SyncUserCollectionFromBoardGameGeekJob::class);
+    }
+
+    public function test_boardgamegeek_sync_status_redirects_guests_to_login(): void
+    {
+        $response = $this->get(route('settings.boardgamegeek.status'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_boardgamegeek_sync_status_returns_json_for_authenticated_user(): void
+    {
+        $user = User::factory()->create(['board_game_geek_username' => 'bgguser']);
+
+        $response = $this->actingAs($user)->getJson(route('settings.boardgamegeek.status'));
+
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'last_collection_sync',
+            'last_plays_sync',
+            'bgg_manual_sync_requested_at',
+            'manual_sync_allowed',
+        ]);
+        $response->assertJsonPath('manual_sync_allowed', true);
+    }
+
+    public function test_boardgamegeek_sync_status_includes_last_collection_and_plays_sync(): void
+    {
+        $user = User::factory()->create(['board_game_geek_username' => 'bgguser']);
+        BggCollectionSync::create([
+            'user_id' => $user->id,
+            'synced_at' => now()->subHour(),
+            'status' => BggCollectionSync::STATUS_SUCCESS,
+            'error_message' => null,
+            'items_count' => 10,
+        ]);
+        BggPlaysSync::create([
+            'user_id' => $user->id,
+            'synced_at' => now()->subMinutes(30),
+            'status' => BggPlaysSync::STATUS_SUCCESS,
+            'error_message' => null,
+            'plays_count' => 5,
+            'requested_manually' => false,
+        ]);
+
+        $response = $this->actingAs($user)->getJson(route('settings.boardgamegeek.status'));
+
+        $response->assertStatus(200);
+        $response->assertJsonPath('last_collection_sync.status', 'success');
+        $response->assertJsonPath('last_plays_sync.status', 'success');
+        $this->assertArrayHasKey('synced_at', $response->json('last_collection_sync'));
+        $this->assertArrayHasKey('synced_at', $response->json('last_plays_sync'));
     }
 }
