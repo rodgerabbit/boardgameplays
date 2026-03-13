@@ -187,7 +187,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: March 2, 2026</li>
+        <li>Last updated: March 13, 2026</li>
     </ul>
 </div>
 
@@ -4764,7 +4764,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"default_group_id\": 1,
     \"theme_preference\": \"dark\",
-    \"is_profile_public\": false,
+    \"is_profile_public\": true,
     \"play_notification_delay_hours\": 2,
     \"board_game_geek_username\": \"myusername\"
 }"
@@ -4785,7 +4785,7 @@ const headers = {
 let body = {
     "default_group_id": 1,
     "theme_preference": "dark",
-    "is_profile_public": false,
+    "is_profile_public": true,
     "play_notification_delay_hours": 2,
     "board_game_geek_username": "myusername"
 };
@@ -4974,7 +4974,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>play_notification_delay_hours</code></b>&nbsp;&nbsp;
