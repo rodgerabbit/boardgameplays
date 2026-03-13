@@ -25,6 +25,7 @@ class GroupMemberResource extends JsonResource
             'id' => $this->id,
             'user' => new UserResource($this->whenLoaded('user')),
             'role' => $this->role,
+            'display_name' => $this->display_name,
             'joined_at' => $this->joined_at->toIso8601String(),
         ];
     }

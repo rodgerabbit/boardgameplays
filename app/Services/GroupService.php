@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Jobs\SyncBoardGamePlaysFromBoardGameGeekJob;
+use App\Jobs\SyncUserCollectionFromBoardGameGeekJob;
 use App\Models\Group;
+use App\Models\GroupInvite;
 use App\Models\GroupMember;
 use App\Models\User;
 use App\Services\UserSettingsService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * Service class for managing groups.
@@ -19,6 +24,11 @@ use Illuminate\Support\Facades\DB;
  */
 class GroupService extends BaseService
 {
+    public function __construct(
+        private readonly GroupAuditLogService $groupAuditLogService
+    ) {
+    }
+
     /**
      * Create a new group and add the creator as an admin.
      *
@@ -93,14 +103,16 @@ class GroupService extends BaseService
      * @param Group $group The group to add the member to
      * @param User $user The user to add
      * @param string $role The role to assign (default: group_member)
+     * @param string|null $displayName Optional display name for the member in this group
      * @return GroupMember The created group member record
      */
-    public function addMemberToGroup(Group $group, User $user, string $role = GroupMember::ROLE_GROUP_MEMBER): GroupMember
+    public function addMemberToGroup(Group $group, User $user, string $role = GroupMember::ROLE_GROUP_MEMBER, ?string $displayName = null): GroupMember
     {
         $groupMember = GroupMember::create([
             'group_id' => $group->id,
             'user_id' => $user->id,
             'role' => $role,
+            'display_name' => $displayName,
             'joined_at' => now(),
         ]);
 
@@ -110,7 +122,92 @@ class GroupService extends BaseService
             $userSettingsService->setDefaultGroupToFirst($user);
         }
 
+        $this->groupAuditLogService->logMemberJoined($group, $user);
+
         return $groupMember;
+    }
+
+    /**
+     * Add a member to a group by BoardGameGeek username. If no user exists with that BGG username,
+     * creates a minimal user and triggers async BGG collection and plays sync.
+     *
+     * @param Group $group The group to add the member to
+     * @param string $bggUsername The BoardGameGeek username
+     * @param User $addedBy The user adding the member (e.g. group admin)
+     * @param string|null $displayName Optional display name for the member in this group
+     * @param string $role The role to assign (default: group_member)
+     * @return GroupMember The created group member record
+     */
+    public function addMemberByBggUsername(Group $group, string $bggUsername, User $addedBy, ?string $displayName = null, string $role = GroupMember::ROLE_GROUP_MEMBER): GroupMember
+    {
+        $bggUsername = trim($bggUsername);
+        if ($bggUsername === '') {
+            throw new \InvalidArgumentException('BoardGameGeek username cannot be empty.');
+        }
+
+        $user = User::where('board_game_geek_username', $bggUsername)->first();
+
+        if ($user === null) {
+            $user = $this->createMinimalUserForBggUsername($bggUsername);
+            $this->groupAuditLogService->logMemberJoined($group, $user);
+            $groupMember = GroupMember::create([
+                'group_id' => $group->id,
+                'user_id' => $user->id,
+                'role' => $role,
+                'display_name' => $displayName,
+                'joined_at' => now(),
+            ]);
+            if ($user->default_group_id === null) {
+                $userSettingsService = new UserSettingsService();
+                $userSettingsService->setDefaultGroupToFirst($user);
+            }
+            SyncUserCollectionFromBoardGameGeekJob::dispatch($user->id)->delay(now()->addSeconds(2));
+            SyncBoardGamePlaysFromBoardGameGeekJob::dispatch($user->id, null, null)->delay(now()->addSeconds(4));
+
+            return $groupMember;
+        }
+
+        return $this->addMemberToGroup($group, $user, $role, $displayName);
+    }
+
+    /**
+     * Create a minimal User record for a BGG username (no existing app user).
+     * Email is a unique placeholder; password is random. BGG sync is dispatched by caller.
+     */
+    private function createMinimalUserForBggUsername(string $bggUsername): User
+    {
+        $domain = config('groups.bgg_invite_placeholder_email_domain', 'boardgameplays.invite');
+        $localPart = 'bgg_' . md5(strtolower($bggUsername));
+        $email = $localPart . '@' . $domain;
+
+        return User::create([
+            'name' => $bggUsername,
+            'email' => $email,
+            'password' => Hash::make(Str::random(32)),
+            'board_game_geek_username' => $bggUsername,
+        ]);
+    }
+
+    /**
+     * Create an invitation for a group. Returns the GroupInvite with token; URL can be built from token.
+     *
+     * @param Group $group The group
+     * @param User $createdBy The user creating the invite
+     * @param \DateTimeInterface|null $expiresAt Optional expiration
+     * @param int|null $maxUses Optional max number of uses
+     * @return GroupInvite The created invite
+     */
+    public function createInvite(Group $group, User $createdBy, ?\DateTimeInterface $expiresAt = null, ?int $maxUses = null): GroupInvite
+    {
+        $token = Str::random(32);
+
+        return GroupInvite::create([
+            'group_id' => $group->id,
+            'token' => $token,
+            'created_by_user_id' => $createdBy->id,
+            'expires_at' => $expiresAt,
+            'max_uses' => $maxUses,
+        ]);
     }
 
     /**

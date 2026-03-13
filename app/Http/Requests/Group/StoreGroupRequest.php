@@ -30,6 +30,8 @@ class StoreGroupRequest extends FormRequest
             'website_link' => ['nullable', 'url', 'max:255'],
             'discord_link' => ['nullable', 'url', 'max:255'],
             'slack_link' => ['nullable', 'url', 'max:255'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'visibility' => ['nullable', 'string', 'in:private,viewable,publicly_joinable'],
         ];
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\BoardGamePlay;
 use App\Models\Group;
 use App\Models\GroupAuditLog;
 use App\Models\User;
@@ -199,6 +200,45 @@ class GroupAuditLogService extends BaseService
                 'demoted_user_name' => $demotedUser->name,
             ]
         );
+    }
+
+    /**
+     * Log a play logged action for a group.
+     *
+     * @param Group $group The group the play was logged in
+     * @param User $user The user who logged the play
+     * @param BoardGamePlay $play The play that was logged
+     * @return GroupAuditLog The created audit log entry
+     */
+    public function logPlayLogged(Group $group, User $user, BoardGamePlay $play): GroupAuditLog
+    {
+        return $this->logGroupAction(
+            group: $group,
+            action: GroupAuditLog::ACTION_PLAY_LOGGED,
+            user: $user,
+            metadata: [
+                'board_game_id' => $play->board_game_id,
+                'play_id' => $play->id,
+                'played_at' => $play->played_at?->toIso8601String(),
+            ]
+        );
+    }
+
+    /**
+     * Get paginated activity across all groups the user is a member of.
+     *
+     * @param User $user The user
+     * @param int $perPage Number of items per page
+     * @return LengthAwarePaginator The paginated activity (audit logs with group and user)
+     */
+    public function getActivityForUserGroups(User $user, int $perPage = 15): LengthAwarePaginator
+    {
+        $groupIds = $user->groups()->pluck('groups.id');
+
+        return GroupAuditLog::whereIn('group_id', $groupIds)
+            ->with(['user', 'group:id,friendly_name'])
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 
     /**

@@ -123,7 +123,7 @@ endpoints:
         name: is_profile_public
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -154,7 +154,7 @@ endpoints:
     cleanBodyParameters:
       default_group_id: 1
       theme_preference: dark
-      is_profile_public: true
+      is_profile_public: false
       play_notification_delay_hours: 2
       board_game_geek_username: myusername
     fileParameters: []

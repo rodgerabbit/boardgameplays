@@ -59,6 +59,8 @@ Route::prefix('v1')->group(function (): void {
     // Protected Groups API routes
     Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/groups', [GroupController::class, 'index'])->name('api.groups.index');
+        Route::get('/users/me/groups', [GroupController::class, 'myGroups'])->name('api.users.me.groups');
+        Route::get('/users/me/groups/activity', [GroupController::class, 'myGroupsActivity'])->name('api.users.me.groups.activity');
         Route::post('/groups', [GroupController::class, 'store'])
             ->middleware(ThrottleGroupCreation::class)
             ->name('api.groups.store');
@@ -68,6 +70,8 @@ Route::prefix('v1')->group(function (): void {
             ->name('api.groups.update');
         Route::delete('/groups/{id}', [GroupController::class, 'destroy'])->name('api.groups.destroy');
         Route::get('/groups/{id}/audit-logs', [GroupAuditLogController::class, 'index'])->name('api.groups.audit-logs.index');
+        Route::post('/groups/{id}/join', [GroupController::class, 'join'])->name('api.groups.join');
+        Route::post('/groups/{id}/invites', [GroupController::class, 'createInvite'])->name('api.groups.invites.store');
     });
 
     // Protected Admin Groups API routes (system admin only)

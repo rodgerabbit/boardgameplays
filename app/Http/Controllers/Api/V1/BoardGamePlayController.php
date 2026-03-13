@@ -295,8 +295,9 @@ class BoardGamePlayController extends BaseApiController
         $play = BoardGamePlay::findOrFail($id);
         $this->authorize('update', $play);
 
-        $play = DB::transaction(function () use ($request, $play) {
-            return $this->boardGamePlayService->updateBoardGamePlay($play, $request->validated());
+        $user = $request->user();
+        $play = DB::transaction(function () use ($request, $play, $user) {
+            return $this->boardGamePlayService->updateBoardGamePlay($play, $request->validated(), $user);
         });
 
         return $this->successResponse(

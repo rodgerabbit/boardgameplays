@@ -106,6 +106,98 @@ endpoints:
   -
     custom: []
     httpMethods:
+      - GET
+    uri: api/v1/users/me/groups
+    metadata:
+      custom: []
+      groupName: Groups
+      groupDescription: |-
+
+        APIs for managing groups.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'List groups the current user is a member of (for Groups page).'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/users/me/groups/activity
+    metadata:
+      custom: []
+      groupName: Groups
+      groupDescription: |-
+
+        APIs for managing groups.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Paginated activity across all groups the current user is a member of.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: '*'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
       - POST
     uri: api/v1/groups
     metadata:
@@ -122,7 +214,7 @@ endpoints:
       deprecated: false
     headers:
       Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
-      Content-Type: application/json
+      Content-Type: multipart/form-data
       Accept: application/json
     urlParameters: []
     cleanUrlParameters: []
@@ -195,6 +287,31 @@ endpoints:
         exampleWasSpecified: true
         nullable: true
         deprecated: false
+      photo:
+        custom: []
+        name: photo
+        description: 'Must be an image. Must not be greater than 5120 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      visibility:
+        custom: []
+        name: visibility
+        description: ''
+        required: false
+        example: private
+        type: string
+        enumValues:
+          - private
+          - viewable
+          - publicly_joinable
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
       friendly_name: 'My Gaming Group'
       description: 'A group for board game enthusiasts'
@@ -202,7 +319,9 @@ endpoints:
       website_link: 'https://example.com'
       discord_link: 'https://discord.gg/example'
       slack_link: 'https://example.slack.com'
-    fileParameters: []
+      visibility: private
+    fileParameters:
+      photo: null
     responses:
       -
         custom: []
@@ -379,7 +498,7 @@ endpoints:
       deprecated: false
     headers:
       Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
-      Content-Type: application/json
+      Content-Type: multipart/form-data
       Accept: application/json
     urlParameters:
       id:
@@ -464,6 +583,31 @@ endpoints:
         exampleWasSpecified: true
         nullable: true
         deprecated: false
+      photo:
+        custom: []
+        name: photo
+        description: 'Must be an image. Must not be greater than 5120 kilobytes.'
+        required: false
+        example: null
+        type: file
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      visibility:
+        custom: []
+        name: visibility
+        description: ''
+        required: false
+        example: publicly_joinable
+        type: string
+        enumValues:
+          - private
+          - viewable
+          - publicly_joinable
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
     cleanBodyParameters:
       friendly_name: 'My Gaming Group'
       description: 'A group for board game enthusiasts'
@@ -471,7 +615,9 @@ endpoints:
       website_link: 'https://example.com'
       discord_link: 'https://discord.gg/example'
       slack_link: 'https://example.slack.com'
-    fileParameters: []
+      visibility: publicly_joinable
+    fileParameters:
+      photo: null
     responses:
       -
         custom: []
@@ -613,6 +759,104 @@ endpoints:
           }
         headers: []
         description: ''
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/groups/{id}/join'
+    metadata:
+      custom: []
+      groupName: Groups
+      groupDescription: |-
+
+        APIs for managing groups.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Join a publicly joinable group. For viewable/private groups use invite link.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the group.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/v1/groups/{id}/invites'
+    metadata:
+      custom: []
+      groupName: Groups
+      groupDescription: |-
+
+        APIs for managing groups.
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Create an invitation for the group. Only group admins can create invites.'
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_TOKEN}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the group.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
     responseFields: []
     auth:
       - headers

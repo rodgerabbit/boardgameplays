@@ -6,13 +6,17 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Requests\Group\StoreGroupRequest;
 use App\Http\Requests\Group\UpdateGroupRequest;
+use App\Http\Resources\GroupActivityResource;
 use App\Http\Resources\GroupResource;
 use App\Models\Group;
+use App\Models\GroupInvite;
+use App\Models\GroupMember;
 use App\Services\GroupAuditLogService;
 use App\Services\GroupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @group Groups
@@ -77,8 +81,14 @@ class GroupController extends BaseApiController
     public function index(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Group::class);
-        
+        $user = $request->user();
+
         $query = Group::query();
+
+        if ($request->boolean('browse')) {
+            $query->whereIn('visibility', [Group::VISIBILITY_VIEWABLE, Group::VISIBILITY_PUBLICLY_JOINABLE])
+                ->whereDoesntHave('groupMembers', fn ($q) => $q->where('user_id', $user->id));
+        }
 
         $includes = explode(',', $request->get('include', ''));
         if (in_array('members', $includes)) {
@@ -92,6 +102,44 @@ class GroupController extends BaseApiController
         $groups = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return GroupResource::collection($groups)->response();
+    }
+
+    /**
+     * List groups the current user is a member of (for Groups page).
+     */
+    public function myGroups(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $query = Group::query()
+            ->whereHas('groupMembers', fn ($q) => $q->where('user_id', $user->id))
+            ->with(['groupMembers.user'])
+            ->withLastActiveAt();
+
+        $includes = explode(',', $request->get('include', ''));
+        if (in_array('member_count', $includes) || true) {
+            $query->withCount('groupMembers');
+        }
+
+        $groups = $query->orderBy('created_at', 'desc')->get();
+
+        foreach ($groups as $group) {
+            $membership = $group->groupMembers->firstWhere('user_id', $user->id);
+            $group->current_user_is_admin = $membership?->role === GroupMember::ROLE_GROUP_ADMIN;
+        }
+
+        return $this->successResponse(GroupResource::collection($groups));
+    }
+
+    /**
+     * Paginated activity across all groups the current user is a member of.
+     */
+    public function myGroupsActivity(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $perPage = min((int) $request->get('per_page', 15), 50);
+        $paginator = $this->auditLogService->getActivityForUserGroups($user, $perPage);
+
+        return GroupActivityResource::collection($paginator)->response();
     }
 
     /**
@@ -143,14 +191,25 @@ class GroupController extends BaseApiController
         $this->authorize('create', Group::class);
         $user = $request->user();
 
-        // Rate limit is checked by ThrottleGroupCreation middleware
-        // No need to check again here
+        $validated = $request->validated();
+        $photo = $request->file('photo');
+        unset($validated['photo']);
+        if (! isset($validated['visibility'])) {
+            $validated['visibility'] = Group::VISIBILITY_PRIVATE;
+        }
 
-        $group = DB::transaction(function () use ($request, $user): Group {
-            $group = $this->groupService->createGroup($request->validated(), $user);
+        $group = DB::transaction(function () use ($validated, $user): Group {
+            $group = $this->groupService->createGroup($validated, $user);
             $this->auditLogService->logGroupCreated($group, $user);
             return $group;
         });
+
+        if ($photo !== null) {
+            $directory = 'groups/' . $group->id;
+            $path = $photo->store($directory, 'public');
+            $group->update(['photo_path' => $path]);
+            $group->refresh();
+        }
 
         return $this->successResponse(
             new GroupResource($group),
@@ -272,16 +331,21 @@ class GroupController extends BaseApiController
         // Rate limit is checked by ThrottleGroupUpdate middleware
         // No need to check again here
 
-        $oldData = $group->only(['friendly_name', 'description', 'group_location', 'website_link', 'discord_link', 'slack_link']);
+        $oldData = $group->only(['friendly_name', 'description', 'group_location', 'website_link', 'discord_link', 'slack_link', 'visibility']);
 
-        $group = DB::transaction(function () use ($request, $group, $user, $oldData): Group {
-            $newData = $request->validated();
-            $updatedGroup = $this->groupService->updateGroup($group, $newData);
+        $validated = $request->validated();
+        $photo = $request->file('photo');
+        if (isset($validated['photo'])) {
+            unset($validated['photo']);
+        }
+
+        $group = DB::transaction(function () use ($validated, $group, $user, $oldData): Group {
+            $updatedGroup = $this->groupService->updateGroup($group, $validated);
 
             // Calculate changes for audit log
             $changes = [];
-            foreach ($newData as $key => $value) {
-                if (isset($oldData[$key]) && $oldData[$key] !== $value) {
+            foreach ($validated as $key => $value) {
+                if (array_key_exists($key, $oldData) && $oldData[$key] != $value) {
                     $changes[$key] = [
                         'before' => $oldData[$key],
                         'after' => $value,
@@ -289,12 +353,22 @@ class GroupController extends BaseApiController
                 }
             }
 
-            if (!empty($changes)) {
+            if (! empty($changes)) {
                 $this->auditLogService->logGroupUpdated($updatedGroup, $user, $changes);
             }
 
             return $updatedGroup;
         });
+
+        if ($photo !== null) {
+            $directory = 'groups/' . $group->id;
+            if ($group->photo_path) {
+                Storage::disk('public')->delete($group->photo_path);
+            }
+            $path = $photo->store($directory, 'public');
+            $group->update(['photo_path' => $path]);
+            $group->refresh();
+        }
 
         return $this->successResponse(
             new GroupResource($group),
@@ -340,5 +414,53 @@ class GroupController extends BaseApiController
             null,
             'Group deleted successfully.'
         );
+    }
+
+    /**
+     * Join a publicly joinable group. For viewable/private groups use invite link.
+     */
+    public function join(Request $request, string $id): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $user = $request->user();
+
+        if ($group->visibility !== Group::VISIBILITY_PUBLICLY_JOINABLE) {
+            return $this->errorResponse('This group can only be joined via invitation.', 403);
+        }
+
+        if ($group->groupMembers()->where('user_id', $user->id)->exists()) {
+            return $this->successResponse(new GroupResource($group->load('groupMembers.user')), 'Already a member.');
+        }
+
+        $this->groupService->addMemberToGroup($group, $user);
+
+        return $this->successResponse(
+            new GroupResource($group->fresh(['groupMembers.user'])),
+            'You have joined the group.',
+            201
+        );
+    }
+
+    /**
+     * Create an invitation for the group. Only group admins can create invites.
+     */
+    public function createInvite(Request $request, string $id): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('update', $group);
+        $user = $request->user();
+
+        $expiresAt = $request->input('expires_at') ? \Carbon\Carbon::parse($request->input('expires_at')) : null;
+        $maxUses = $request->input('max_uses') ? (int) $request->input('max_uses') : null;
+
+        $invite = $this->groupService->createInvite($group, $user, $expiresAt, $maxUses);
+        $inviteUrl = url('/groups/join/' . $invite->token);
+
+        return $this->successResponse([
+            'invite_url' => $inviteUrl,
+            'token' => $invite->token,
+            'expires_at' => $invite->expires_at?->toIso8601String(),
+            'max_uses' => $invite->max_uses,
+        ], 'Invitation created.', 201);
     }
 }

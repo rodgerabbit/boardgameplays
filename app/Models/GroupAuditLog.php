@@ -23,6 +23,8 @@ class GroupAuditLog extends Model
     public const ACTION_MEMBER_LEFT = 'member_left';
     public const ACTION_MEMBER_PROMOTED = 'member_promoted';
     public const ACTION_MEMBER_DEMOTED = 'member_demoted';
+    public const ACTION_PLAY_LOGGED = 'play_logged';
+    public const ACTION_EVENT_CREATED = 'event_created';
 
     /**
      * The table associated with the model.

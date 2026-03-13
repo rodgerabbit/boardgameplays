@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GroupsController;
 use App\Http\Controllers\PlaceholderController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
@@ -25,7 +26,12 @@ Route::middleware('guest')->group(function (): void {
 // Authenticated routes
 Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/groups', [PlaceholderController::class, 'groups'])->name('groups.index');
+    Route::get('/groups', [GroupsController::class, 'index'])->name('groups.index');
+    Route::get('/groups/create', [GroupsController::class, 'create'])->name('groups.create');
+    Route::post('/groups', [GroupsController::class, 'store'])->name('groups.store');
+    Route::post('/groups/members', [GroupsController::class, 'storeMembers'])->name('groups.members.store');
+    Route::get('/groups/browse', [GroupsController::class, 'browse'])->name('groups.browse');
+    Route::get('/groups/join/{token}', [GroupsController::class, 'joinByToken'])->name('groups.join');
     Route::get('/collection', [PlaceholderController::class, 'collection'])->name('collection.index');
     Route::get('/play-log', [PlaceholderController::class, 'playLog'])->name('play-log.index');
     Route::get('/statistics', [PlaceholderController::class, 'statistics'])->name('statistics.index');

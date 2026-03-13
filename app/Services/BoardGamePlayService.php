@@ -24,7 +24,8 @@ class BoardGamePlayService extends BaseService
      * Create a new instance of the service.
      */
     public function __construct(
-        private readonly BoardGamePlayDeduplicationService $deduplicationService
+        private readonly BoardGamePlayDeduplicationService $deduplicationService,
+        private readonly GroupAuditLogService $groupAuditLogService
     ) {
     }
 
@@ -109,6 +110,14 @@ class BoardGamePlayService extends BaseService
             $play->refresh();
             $this->deduplicationService->syncDeduplicationForPlay($play);
 
+            // Log group activity when play is associated with a group
+            if ($play->group_id !== null) {
+                $group = $play->group ?? Group::find($play->group_id);
+                if ($group !== null) {
+                    $this->groupAuditLogService->logPlayLogged($group, $user, $play);
+                }
+            }
+
             return $play->fresh(['boardGame', 'group', 'creator', 'players', 'expansions']);
         });
     }
@@ -118,11 +127,12 @@ class BoardGamePlayService extends BaseService
      *
      * @param BoardGamePlay $play The play to update
      * @param array<string, mixed> $playData The updated play data
+     * @param User $user The user performing the update
      * @return BoardGamePlay The updated play
      */
-    public function updateBoardGamePlay(BoardGamePlay $play, array $playData): BoardGamePlay
+    public function updateBoardGamePlay(BoardGamePlay $play, array $playData, User $user): BoardGamePlay
     {
-        return DB::transaction(function () use ($play, $playData): BoardGamePlay {
+        return DB::transaction(function () use ($play, $playData, $user): BoardGamePlay {
             // Validate board game if changed
             if (isset($playData['board_game_id'])) {
                 $boardGame = BoardGame::findOrFail($playData['board_game_id']);
@@ -178,6 +188,14 @@ class BoardGamePlayService extends BaseService
             // Sync deduplication after play is updated (may affect other plays)
             $play->refresh();
             $this->deduplicationService->syncDeduplicationForPlay($play);
+
+            // Log group activity when updated play is associated with a group
+            if ($play->group_id !== null) {
+                $group = $play->group ?? Group::find($play->group_id);
+                if ($group !== null) {
+                    $this->groupAuditLogService->logPlayLogged($group, $user, $play);
+                }
+            }
 
             return $play->fresh(['boardGame', 'group', 'creator', 'players', 'expansions']);
         });

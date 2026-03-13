@@ -40,5 +40,17 @@ return [
         'group_admin' => 'group_admin',
         'group_member' => 'group_member',
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | BGG Invite Placeholder Email
+    |--------------------------------------------------------------------------
+    |
+    | When adding a group member by BGG username only (no existing app user),
+    | a minimal User is created. This config is the domain part of the
+    | placeholder email (local part is generated from BGG username).
+    |
+    */
+    'bgg_invite_placeholder_email_domain' => env('GROUP_BGG_INVITE_EMAIL_DOMAIN', 'boardgameplays.invite'),
 ];
 

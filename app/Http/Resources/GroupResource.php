@@ -29,10 +29,20 @@ class GroupResource extends JsonResource
             'website_link' => $this->website_link,
             'discord_link' => $this->discord_link,
             'slack_link' => $this->slack_link,
+            'photo_url' => $this->photo_url,
+            'visibility' => $this->visibility ?? \App\Models\Group::VISIBILITY_PRIVATE,
             'created_by_user_id' => $this->created_by_user_id,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
+
+        if (isset($this->last_active_at)) {
+            $data['last_active_at'] = $this->last_active_at?->toIso8601String();
+        }
+
+        if (isset($this->current_user_is_admin)) {
+            $data['current_user_is_admin'] = (bool) $this->current_user_is_admin;
+        }
 
         // Include member count if requested
         if ($request->has('include') && str_contains($request->get('include', ''), 'member_count')) {
