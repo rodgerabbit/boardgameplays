@@ -155,6 +155,22 @@ class User extends Authenticatable
     }
 
     /**
+     * Whether this user is a BGG placeholder (minimal user created when adding a group member by BGG username only).
+     * Such users are identified by the placeholder email domain; their BGG username remains "unclaimed"
+     * so a real user can claim it in settings.
+     */
+    public function isBggPlaceholderUser(): bool
+    {
+        $email = $this->email;
+        if ($email === null || $email === '') {
+            return false;
+        }
+        $domain = config('groups.bgg_invite_placeholder_email_domain', 'boardgameplays.invite');
+
+        return str_ends_with(strtolower($email), '@' . strtolower($domain));
+    }
+
+    /**
      * Check if the user is a system admin.
      */
     public function isAdmin(): bool

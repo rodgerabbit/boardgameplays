@@ -199,7 +199,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: March 13, 2026</li>
+        <li>Last updated: March 14, 2026</li>
     </ul>
 </div>
 
@@ -3975,7 +3975,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "discord_link=https://discord.gg/example"\
     --form "slack_link=https://example.slack.com"\
     --form "visibility=private"\
-    --form "photo=@/tmp/php350f3e1faohkaAxZiRO" </code></pre></div>
+    --form "photo=@/tmp/phpeb76vagfcmg5dhLPSCq" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -4224,7 +4224,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>/tmp/php350f3e1faohkaAxZiRO</code></p>
+<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>/tmp/phpeb76vagfcmg5dhLPSCq</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>visibility</code></b>&nbsp;&nbsp;
@@ -4465,8 +4465,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "website_link=https://example.com"\
     --form "discord_link=https://discord.gg/example"\
     --form "slack_link=https://example.slack.com"\
-    --form "visibility=publicly_joinable"\
-    --form "photo=@/tmp/phpkllhpurqkikh8AcDgzL" </code></pre></div>
+    --form "visibility=viewable"\
+    --form "photo=@/tmp/php39s997fk1cup5f6Cqgo" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -4487,7 +4487,7 @@ body.append('group_location', 'New York, NY');
 body.append('website_link', 'https://example.com');
 body.append('discord_link', 'https://discord.gg/example');
 body.append('slack_link', 'https://example.slack.com');
-body.append('visibility', 'publicly_joinable');
+body.append('visibility', 'viewable');
 body.append('photo', document.querySelector('input[name="photo"]').files[0]);
 
 fetch(url, {
@@ -4747,7 +4747,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>/tmp/phpkllhpurqkikh8AcDgzL</code></p>
+<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>/tmp/php39s997fk1cup5f6Cqgo</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>visibility</code></b>&nbsp;&nbsp;
@@ -4756,10 +4756,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="visibility"                data-endpoint="PUTapi-v1-groups--id-"
-               value="publicly_joinable"
+               value="viewable"
                data-component="body">
     <br>
-<p>Example: <code>publicly_joinable</code></p>
+<p>Example: <code>viewable</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>private</code></li> <li><code>viewable</code></li> <li><code>publicly_joinable</code></li></ul>
         </div>
@@ -5390,7 +5390,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --data "{
     \"default_group_id\": 1,
     \"theme_preference\": \"dark\",
-    \"is_profile_public\": false,
+    \"is_profile_public\": true,
     \"play_notification_delay_hours\": 2,
     \"board_game_geek_username\": \"myusername\"
 }"
@@ -5411,7 +5411,7 @@ const headers = {
 let body = {
     "default_group_id": 1,
     "theme_preference": "dark",
-    "is_profile_public": false,
+    "is_profile_public": true,
     "play_notification_delay_hours": 2,
     "board_game_geek_username": "myusername"
 };
@@ -5600,7 +5600,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>play_notification_delay_hours</code></b>&nbsp;&nbsp;

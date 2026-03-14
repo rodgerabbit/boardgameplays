@@ -343,11 +343,52 @@ class BoardGameGeekPlaySyncService extends BaseService
 
         $playerPayloads = $playPayload['players'] ?? [];
         foreach ($playerPayloads as $playerPayload) {
-            $playerData = array_merge($playerPayload, ['board_game_play_id' => $play->id]);
+            $playerData = $this->resolvePlayerUserForImport($playerPayload, $play->id);
             BoardGamePlayPlayer::create($playerData);
         }
 
         return $play->fresh(['boardGame', 'group', 'creator', 'players', 'expansions']);
+    }
+
+    /**
+     * Resolve or validate player user_id at import time so we never insert a non-existent user_id.
+     * Payloads are cached between fetch and import; the user may have been deleted in the meantime.
+     *
+     * @param array<string, mixed> $playerPayload Single player from play payload
+     * @param int $boardGamePlayId The play id for the created record
+     * @return array<string, mixed> Player data safe for BoardGamePlayPlayer::create()
+     */
+    private function resolvePlayerUserForImport(array $playerPayload, int $boardGamePlayId): array
+    {
+        $base = array_merge($playerPayload, ['board_game_play_id' => $boardGamePlayId]);
+        $bggUsername = isset($playerPayload['board_game_geek_username']) && $playerPayload['board_game_geek_username'] !== ''
+            ? (string) $playerPayload['board_game_geek_username']
+            : null;
+        $payloadUserId = isset($playerPayload['user_id']) ? (int) $playerPayload['user_id'] : null;
+
+        if ($bggUsername !== null) {
+            $user = User::where('board_game_geek_username', $bggUsername)->first();
+            if ($user !== null) {
+                $base['user_id'] = $user->id;
+                $base['board_game_geek_username'] = null;
+                $base['guest_name'] = null;
+            } else {
+                $base['user_id'] = null;
+                $base['board_game_geek_username'] = $bggUsername;
+                $base['guest_name'] = null;
+            }
+            return $base;
+        }
+
+        if ($payloadUserId !== null) {
+            if (! User::whereKey($payloadUserId)->exists()) {
+                $base['user_id'] = null;
+                $base['board_game_geek_username'] = null;
+                $base['guest_name'] = 'Unknown';
+            }
+        }
+
+        return $base;
     }
 
     /**
@@ -379,15 +420,9 @@ class BoardGameGeekPlaySyncService extends BaseService
 
         if ($username !== '') {
             $user = User::where('board_game_geek_username', $username)->first();
-            if ($user !== null) {
-                $playerData['user_id'] = $user->id;
-                $playerData['board_game_geek_username'] = null;
-                $playerData['guest_name'] = null;
-            } else {
-                $playerData['user_id'] = null;
-                $playerData['board_game_geek_username'] = $username;
-                $playerData['guest_name'] = null;
-            }
+            $playerData['board_game_geek_username'] = $username;
+            $playerData['guest_name'] = null;
+            $playerData['user_id'] = $user !== null ? $user->id : null;
         } else {
             $playerData['user_id'] = null;
             $playerData['board_game_geek_username'] = null;

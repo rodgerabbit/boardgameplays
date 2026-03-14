@@ -11,6 +11,7 @@ use App\Jobs\SyncBoardGamePlaysFromBoardGameGeekJob;
 use App\Jobs\SyncUserCollectionFromBoardGameGeekJob;
 use App\Models\BggCollectionSync;
 use App\Models\BggPlaysSync;
+use App\Models\GroupMember;
 use App\Models\User;
 use App\Services\UserSettingsService;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -160,15 +162,21 @@ class SettingsController extends Controller
         $previousUsername = $user->board_game_geek_username;
         $newUsername = $validated['board_game_geek_username'] ?? null;
 
-        $user->board_game_geek_username = $newUsername;
-        $user->sync_plays_to_board_game_geek = $validated['sync_plays_to_board_game_geek'] ?? $user->sync_plays_to_board_game_geek;
-        $user->use_generic_user_for_bgg_plays = $validated['use_generic_user_for_bgg_plays'] ?? $user->use_generic_user_for_bgg_plays;
+        DB::transaction(function () use ($user, $newUsername, $validated): void {
+            if ($newUsername !== null && trim($newUsername) !== '') {
+                $this->mergeBggPlaceholderUsersIntoUser($user, trim($newUsername));
+            }
 
-        if (array_key_exists('board_game_geek_password', $validated) && is_string($validated['board_game_geek_password']) && $validated['board_game_geek_password'] !== '') {
-            $user->board_game_geek_password_encrypted = Crypt::encryptString($validated['board_game_geek_password']);
-        }
+            $user->board_game_geek_username = $newUsername;
+            $user->sync_plays_to_board_game_geek = $validated['sync_plays_to_board_game_geek'] ?? $user->sync_plays_to_board_game_geek;
+            $user->use_generic_user_for_bgg_plays = $validated['use_generic_user_for_bgg_plays'] ?? $user->use_generic_user_for_bgg_plays;
 
-        $user->save();
+            if (array_key_exists('board_game_geek_password', $validated) && is_string($validated['board_game_geek_password']) && $validated['board_game_geek_password'] !== '') {
+                $user->board_game_geek_password_encrypted = Crypt::encryptString($validated['board_game_geek_password']);
+            }
+
+            $user->save();
+        });
 
         // Dispatch sync jobs when the user now has a BGG username and either didn't have one before or it changed (use persisted value to avoid request/validation quirks)
         $currentUsername = $user->board_game_geek_username;
@@ -189,6 +197,33 @@ class SettingsController extends Controller
         return redirect()->route('settings.index')
             ->with('success', 'BoardGameGeek settings saved.')
             ->with('activeTab', 'boardgamegeek');
+    }
+
+    /**
+     * When a user claims a BGG username that is held only by placeholder users (group-added),
+     * transfer those placeholders' group memberships to the claiming user and delete the placeholders.
+     */
+    private function mergeBggPlaceholderUsersIntoUser(User $claimingUser, string $bggUsername): void
+    {
+        $placeholders = User::where('board_game_geek_username', $bggUsername)
+            ->where('id', '!=', $claimingUser->id)
+            ->get()
+            ->filter(fn (User $u) => $u->isBggPlaceholderUser());
+
+        foreach ($placeholders as $placeholder) {
+            $memberships = GroupMember::where('user_id', $placeholder->id)->get();
+            foreach ($memberships as $membership) {
+                $alreadyMember = GroupMember::where('group_id', $membership->group_id)
+                    ->where('user_id', $claimingUser->id)
+                    ->exists();
+                if ($alreadyMember) {
+                    $membership->delete();
+                } else {
+                    $membership->update(['user_id' => $claimingUser->id]);
+                }
+            }
+            $placeholder->delete();
+        }
     }
 
     /**

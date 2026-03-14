@@ -192,4 +192,38 @@ class UserTest extends TestCase
         $this->assertNotNull($user->defaultGroup);
         $this->assertEquals($group->id, $user->defaultGroup->id);
     }
+
+    /**
+     * Test that isBggPlaceholderUser returns true for users with placeholder email domain.
+     */
+    public function test_is_bgg_placeholder_user_returns_true_for_placeholder_email_domain(): void
+    {
+        $domain = config('groups.bgg_invite_placeholder_email_domain', 'boardgameplays.invite');
+        $user = User::factory()->create([
+            'email' => 'bgg_' . md5('somebgg') . '@' . $domain,
+        ]);
+
+        $this->assertTrue($user->isBggPlaceholderUser());
+    }
+
+    /**
+     * Test that isBggPlaceholderUser returns false for normal users.
+     */
+    public function test_is_bgg_placeholder_user_returns_false_for_normal_email(): void
+    {
+        $user = User::factory()->create(['email' => 'real@example.com']);
+
+        $this->assertFalse($user->isBggPlaceholderUser());
+    }
+
+    /**
+     * Test that isBggPlaceholderUser returns false when email is null or empty.
+     */
+    public function test_is_bgg_placeholder_user_returns_false_when_email_empty(): void
+    {
+        $user = User::factory()->create();
+        $user->email = null;
+
+        $this->assertFalse($user->isBggPlaceholderUser());
+    }
 }

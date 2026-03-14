@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
  * Form request for updating BoardGameGeek settings on the Settings page.
+ * A BGG username used only by a group-added placeholder user remains claimable by any user.
  */
 class UpdateBoardGameGeekSettingsRequest extends FormRequest
 {
@@ -40,7 +42,7 @@ class UpdateBoardGameGeekSettingsRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:' . self::BOARD_GAME_GEEK_USERNAME_MAX_LENGTH,
-                Rule::unique('users', 'board_game_geek_username')->ignore($userId),
+                $this->boardGameGeekUsernameClaimableRule($userId),
             ],
             'sync_plays_to_board_game_geek' => ['sometimes', 'boolean'],
             'use_generic_user_for_bgg_plays' => ['sometimes', 'boolean'],
@@ -56,6 +58,33 @@ class UpdateBoardGameGeekSettingsRequest extends FormRequest
                 'min:1',
             ],
         ];
+    }
+
+    /**
+     * Validation rule: BGG username may only be claimed by one non-placeholder user.
+     * If the only existing user with this username is a BGG placeholder (group-added), it remains claimable.
+     *
+     * @param int|null $currentUserId Authenticated user ID to ignore
+     * @return \Closure
+     */
+    private function boardGameGeekUsernameClaimableRule(?int $currentUserId): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) use ($currentUserId): void {
+            if ($value === null || (is_string($value) && trim($value) === '')) {
+                return;
+            }
+            $value = trim((string) $value);
+            $existing = User::where('board_game_geek_username', $value)
+                ->when($currentUserId !== null, fn ($query) => $query->where('id', '!=', $currentUserId))
+                ->get();
+            foreach ($existing as $user) {
+                if (! $user->isBggPlaceholderUser()) {
+                    $fail('This BoardGameGeek account is already linked to another user.');
+
+                    return;
+                }
+            }
+        };
     }
 
     /**

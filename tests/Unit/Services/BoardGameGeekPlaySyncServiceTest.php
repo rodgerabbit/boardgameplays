@@ -141,6 +141,83 @@ class BoardGameGeekPlaySyncServiceTest extends TestCase
         $this->assertCount(1, $play->players);
     }
 
+    public function test_create_play_from_payload_handles_stale_user_id_gracefully(): void
+    {
+        $user = User::factory()->create(['default_group_id' => null]);
+        $boardGame = BoardGame::factory()->create(['bgg_id' => '224517', 'is_expansion' => false]);
+        $nonexistentUserId = 999999;
+        $playPayload = [
+            'bgg_play_id' => '98765',
+            'bgg_game_id' => '224517',
+            'played_at' => '2025-01-15',
+            'location' => 'Home',
+            'comment' => null,
+            'game_length_minutes' => 60,
+            'is_incomplete' => false,
+            'group_id' => null,
+            'created_by_user_id' => $user->id,
+            'source' => 'boardgamegeek',
+            'players' => [
+                [
+                    'user_id' => $nonexistentUserId,
+                    'board_game_geek_username' => null,
+                    'guest_name' => null,
+                    'is_winner' => false,
+                    'is_new_player' => false,
+                    'score' => 50.0,
+                    'position' => 2,
+                ],
+            ],
+        ];
+
+        $play = $this->syncService->createPlayFromPayload($playPayload, $user, $boardGame->id);
+
+        $this->assertInstanceOf(BoardGamePlay::class, $play);
+        $this->assertCount(1, $play->players);
+        $player = $play->players->first();
+        $this->assertNotNull($player);
+        $this->assertNull($player->user_id);
+        $this->assertSame('Unknown', $player->guest_name);
+    }
+
+    public function test_create_play_from_payload_resolves_user_from_bgg_username_at_import_time(): void
+    {
+        $user = User::factory()->create(['default_group_id' => null]);
+        $linkedUser = User::factory()->create(['board_game_geek_username' => 'bggfriend', 'default_group_id' => null]);
+        $boardGame = BoardGame::factory()->create(['bgg_id' => '224517', 'is_expansion' => false]);
+        $playPayload = [
+            'bgg_play_id' => '98765',
+            'bgg_game_id' => '224517',
+            'played_at' => '2025-01-15',
+            'location' => 'Home',
+            'comment' => null,
+            'game_length_minutes' => 60,
+            'is_incomplete' => false,
+            'group_id' => null,
+            'created_by_user_id' => $user->id,
+            'source' => 'boardgamegeek',
+            'players' => [
+                [
+                    'user_id' => 999999,
+                    'board_game_geek_username' => 'bggfriend',
+                    'guest_name' => null,
+                    'is_winner' => true,
+                    'is_new_player' => false,
+                    'score' => 100.0,
+                    'position' => 1,
+                ],
+            ],
+        ];
+
+        $play = $this->syncService->createPlayFromPayload($playPayload, $user, $boardGame->id);
+
+        $this->assertCount(1, $play->players);
+        $player = $play->players->first();
+        $this->assertNotNull($player);
+        $this->assertSame($linkedUser->id, $player->user_id);
+        $this->assertNull($player->board_game_geek_username);
+    }
+
     /**
      * Create minimal valid BGG play XML for testing.
      */

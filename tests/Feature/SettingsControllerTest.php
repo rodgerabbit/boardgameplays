@@ -8,6 +8,8 @@ use App\Jobs\SyncBoardGamePlaysFromBoardGameGeekJob;
 use App\Jobs\SyncUserCollectionFromBoardGameGeekJob;
 use App\Models\BggCollectionSync;
 use App\Models\BggPlaysSync;
+use App\Models\Group;
+use App\Models\GroupMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -273,6 +275,67 @@ class SettingsControllerTest extends TestCase
         $response->assertSessionHasErrors('board_game_geek_username');
         $user->refresh();
         $this->assertNull($user->board_game_geek_username);
+    }
+
+    public function test_update_boardgamegeek_allows_claiming_username_held_only_by_placeholder_user(): void
+    {
+        $domain = config('groups.bgg_invite_placeholder_email_domain', 'boardgameplays.invite');
+        $placeholder = User::factory()->create([
+            'name' => 'placeheld',
+            'email' => 'bgg_' . md5(strtolower('placeheld')) . '@' . $domain,
+            'board_game_geek_username' => 'placeheld',
+        ]);
+        $this->assertTrue($placeholder->isBggPlaceholderUser());
+
+        $user = User::factory()->create(['board_game_geek_username' => null]);
+
+        Queue::fake();
+        $response = $this->actingAs($user)->put('/settings/boardgamegeek', [
+            'board_game_geek_username' => 'placeheld',
+            'sync_plays_to_board_game_geek' => false,
+            'use_generic_user_for_bgg_plays' => true,
+        ]);
+
+        $response->assertRedirect('/settings');
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertSame('placeheld', $user->board_game_geek_username);
+        $this->assertDatabaseMissing('users', ['id' => $placeholder->id]);
+        Queue::assertPushed(SyncUserCollectionFromBoardGameGeekJob::class);
+        Queue::assertPushed(SyncBoardGamePlaysFromBoardGameGeekJob::class);
+    }
+
+    public function test_update_boardgamegeek_claiming_placeholder_username_transfers_group_membership(): void
+    {
+        $domain = config('groups.bgg_invite_placeholder_email_domain', 'boardgameplays.invite');
+        $placeholder = User::factory()->create([
+            'name' => 'bggmember',
+            'email' => 'bgg_' . md5(strtolower('bggmember')) . '@' . $domain,
+            'board_game_geek_username' => 'bggmember',
+        ]);
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $placeholder->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $user = User::factory()->create(['board_game_geek_username' => null]);
+
+        $this->actingAs($user)->put('/settings/boardgamegeek', [
+            'board_game_geek_username' => 'bggmember',
+            'sync_plays_to_board_game_geek' => false,
+            'use_generic_user_for_bgg_plays' => true,
+        ]);
+
+        $user->refresh();
+        $this->assertSame('bggmember', $user->board_game_geek_username);
+        $this->assertDatabaseMissing('users', ['id' => $placeholder->id]);
+        $this->assertTrue(
+            GroupMember::where('group_id', $group->id)->where('user_id', $user->id)->exists(),
+            'Claiming user should have inherited the placeholder\'s group membership.'
+        );
     }
 
     public function test_update_boardgamegeek_updates_toggles_without_changing_username(): void
