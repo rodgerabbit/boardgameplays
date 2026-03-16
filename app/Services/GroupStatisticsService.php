@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\BoardGame;
 use App\Models\BoardGamePlay;
 use App\Models\Group;
 use Illuminate\Support\Facades\DB;
@@ -130,22 +131,53 @@ class GroupStatisticsService
     }
 
     /**
-     * Get game category distribution for donut. MVP: single "Uncategorized" bucket.
+     * Get game category distribution for donut from board game categories (BGG boardgamecategory).
+     * Each play is counted once per category of its game (games with multiple categories contribute to each).
+     * Games with no categories are counted as "Uncategorized".
      *
      * @return array<int, array{name: string, count: int}>
      */
     public function getCategoryDistribution(Group $group): array
     {
-        $total = BoardGamePlay::query()
+        $plays = BoardGamePlay::query()
             ->forGroup($group)
             ->notExcluded()
-            ->count();
+            ->get(['id', 'board_game_id']);
 
-        if ($total === 0) {
+        if ($plays->isEmpty()) {
             return [];
         }
 
-        return [['name' => 'Uncategorized', 'count' => $total]];
+        $boardGameIds = $plays->pluck('board_game_id')->unique()->values()->all();
+        $boardGames = BoardGame::query()
+            ->whereIn('id', $boardGameIds)
+            ->get(['id', 'categories'])
+            ->keyBy('id');
+
+        $categoryCounts = [];
+        foreach ($plays as $play) {
+            $game = $boardGames->get($play->board_game_id);
+            $categories = $game?->categories ?? [];
+            if (! is_array($categories) || empty($categories)) {
+                $categoryCounts['Uncategorized'] = ($categoryCounts['Uncategorized'] ?? 0) + 1;
+                continue;
+            }
+            foreach ($categories as $cat) {
+                $name = is_array($cat) ? (isset($cat['name']) ? trim((string) $cat['name']) : '') : '';
+                if ($name === '') {
+                    $name = 'Uncategorized';
+                }
+                $categoryCounts[$name] = ($categoryCounts[$name] ?? 0) + 1;
+            }
+        }
+
+        $result = [];
+        foreach ($categoryCounts as $name => $count) {
+            $result[] = ['name' => $name, 'count' => $count];
+        }
+        usort($result, fn ($a, $b) => $b['count'] <=> $a['count']);
+
+        return $result;
     }
 
     /**

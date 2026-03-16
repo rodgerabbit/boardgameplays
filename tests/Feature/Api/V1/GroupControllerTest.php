@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api\V1;
 
+use App\Models\BoardGame;
+use App\Models\BoardGamePlay;
 use App\Models\Group;
 use App\Models\GroupInvite;
 use App\Models\GroupMember;
@@ -329,6 +331,56 @@ class GroupControllerTest extends ApiV1TestCase
                     'category_distribution',
                 ],
             ]);
+    }
+
+    /**
+     * Test that overview category_distribution reflects board game categories from plays.
+     */
+    public function test_overview_category_distribution_reflects_board_game_categories(): void
+    {
+        $user = User::factory()->create();
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $gameWithCategories = BoardGame::factory()->create([
+            'categories' => [
+                ['bgg_id' => '1', 'name' => 'Economic'],
+                ['bgg_id' => '2', 'name' => 'Strategy'],
+            ],
+        ]);
+        $gameSingleCategory = BoardGame::factory()->create([
+            'categories' => [['bgg_id' => '1', 'name' => 'Economic']],
+        ]);
+
+        BoardGamePlay::factory()->count(2)->create([
+            'group_id' => $group->id,
+            'board_game_id' => $gameWithCategories->id,
+            'created_by_user_id' => $user->id,
+        ]);
+        BoardGamePlay::factory()->create([
+            'group_id' => $group->id,
+            'board_game_id' => $gameSingleCategory->id,
+            'created_by_user_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/groups/{$group->id}/overview");
+
+        $response->assertStatus(200);
+        $categoryDistribution = $response->json('data.category_distribution');
+        $this->assertIsArray($categoryDistribution);
+        $names = array_column($categoryDistribution, 'name');
+        $this->assertContains('Economic', $names);
+        $this->assertContains('Strategy', $names);
+        $byName = array_column($categoryDistribution, 'count', 'name');
+        $this->assertSame(3, $byName['Economic'] ?? 0); // 2 plays × Economic + 1 play × Economic
+        $this->assertSame(2, $byName['Strategy'] ?? 0); // 2 plays × Strategy
+        $this->assertGreaterThanOrEqual($byName['Strategy'], $byName['Economic']);
     }
 
     /**

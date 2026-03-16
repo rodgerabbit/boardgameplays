@@ -187,8 +187,9 @@
                         <section class="grid gap-6 sm:grid-cols-2">
                             <div>
                                 <h3 class="mb-3 text-sm font-medium text-text-dark">Distribution of game categories</h3>
-                                <div class="h-48">
-                                    <canvas ref="categoryDonutCanvas" width="200" height="192"></canvas>
+                                <div class="h-48 flex items-center justify-center">
+                                    <canvas v-show="overviewData?.category_distribution?.length" ref="categoryDonutCanvas" width="200" height="192"></canvas>
+                                    <p v-if="overviewData && (!overviewData.category_distribution || !overviewData.category_distribution.length)" class="text-sm text-text-muted-dark">No plays or no category data yet.</p>
                                 </div>
                             </div>
                             <div>
@@ -889,11 +890,17 @@ function drawOverviewCharts() {
 
     if (categoryDonutCanvas.value && data.category_distribution?.length) {
         if (categoryDonutChart) categoryDonutChart.destroy();
+        const categoryPalette = [
+            '#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6',
+            '#ec4899', '#14b8a6', '#f97316', '#84cc16', '#06b6d4',
+            '#a855f7', '#eab308', '#64748b',
+        ];
+        const categoryColors = data.category_distribution.map((_, i) => categoryPalette[i % categoryPalette.length]);
         categoryDonutChart = new Chart(categoryDonutCanvas.value, {
             type: 'doughnut',
             data: {
                 labels: data.category_distribution.map((d) => d.name),
-                datasets: [{ data: data.category_distribution.map((d) => d.count), backgroundColor: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6'].slice(0, data.category_distribution.length) }],
+                datasets: [{ data: data.category_distribution.map((d) => d.count), backgroundColor: categoryColors }],
             },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
         });
