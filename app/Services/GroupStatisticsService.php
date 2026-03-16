@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\DB;
  */
 class GroupStatisticsService
 {
+    private const MAX_DONUT_SLICES = 5;
+
+    private const OTHER_LABEL = 'Other';
+
+    private const UNKNOWN_LOCATION_LABEL = 'Unknown';
+
     /**
      * Get monthly play counts per year for the last 3 years.
      *
@@ -64,6 +70,7 @@ class GroupStatisticsService
     /**
      * Get location distribution for donut: display name -> play count.
      * Uses group_settings.location_aliases when present; otherwise raw location.
+     * Limited to MAX_DONUT_SLICES top locations; the rest (including "Unknown") are grouped as "Other".
      *
      * @return array<int, array{name: string, count: int}>
      */
@@ -90,18 +97,27 @@ class GroupStatisticsService
             $loc = trim($play->location);
             $name = $map[$loc] ?? $loc;
             if ($name === '') {
-                $name = 'Unknown';
+                $name = self::UNKNOWN_LOCATION_LABEL;
             }
             $counts[$name] = ($counts[$name] ?? 0) + 1;
         }
 
-        $result = [];
-        foreach ($counts as $name => $count) {
-            $result[] = ['name' => $name, 'count' => $count];
-        }
-        usort($result, fn ($a, $b) => $b['count'] <=> $a['count']);
+        $unknownCount = $counts[self::UNKNOWN_LOCATION_LABEL] ?? 0;
+        unset($counts[self::UNKNOWN_LOCATION_LABEL]);
 
-        return $result;
+        $sorted = [];
+        foreach ($counts as $name => $count) {
+            $sorted[] = ['name' => $name, 'count' => $count];
+        }
+        usort($sorted, fn ($a, $b) => $b['count'] <=> $a['count']);
+
+        $top = array_slice($sorted, 0, self::MAX_DONUT_SLICES);
+        $restCount = array_sum(array_column(array_slice($sorted, self::MAX_DONUT_SLICES), 'count')) + $unknownCount;
+        if ($restCount > 0) {
+            $top[] = ['name' => self::OTHER_LABEL, 'count' => $restCount];
+        }
+
+        return $top;
     }
 
     /**
@@ -134,6 +150,7 @@ class GroupStatisticsService
      * Get game category distribution for donut from board game categories (BGG boardgamecategory).
      * Each play is counted once per category of its game (games with multiple categories contribute to each).
      * Games with no categories are counted as "Uncategorized".
+     * Limited to MAX_DONUT_SLICES top categories; the rest are grouped as "Other".
      *
      * @return array<int, array{name: string, count: int}>
      */
@@ -171,13 +188,20 @@ class GroupStatisticsService
             }
         }
 
-        $result = [];
+        $sorted = [];
         foreach ($categoryCounts as $name => $count) {
-            $result[] = ['name' => $name, 'count' => $count];
+            $sorted[] = ['name' => $name, 'count' => $count];
         }
-        usort($result, fn ($a, $b) => $b['count'] <=> $a['count']);
+        usort($sorted, fn ($a, $b) => $b['count'] <=> $a['count']);
 
-        return $result;
+        $top = array_slice($sorted, 0, self::MAX_DONUT_SLICES);
+        $rest = array_slice($sorted, self::MAX_DONUT_SLICES);
+        $restCount = array_sum(array_column($rest, 'count'));
+        if ($restCount > 0) {
+            $top[] = ['name' => self::OTHER_LABEL, 'count' => $restCount];
+        }
+
+        return $top;
     }
 
     /**

@@ -384,6 +384,82 @@ class GroupControllerTest extends ApiV1TestCase
     }
 
     /**
+     * Test that overview category_distribution is limited and remaining categories are grouped as Other.
+     */
+    public function test_overview_category_distribution_limited_with_other(): void
+    {
+        $user = User::factory()->create();
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $categoryNames = ['CatA', 'CatB', 'CatC', 'CatD', 'CatE', 'CatF', 'CatG'];
+        foreach ($categoryNames as $name) {
+            $game = BoardGame::factory()->create(['categories' => [['bgg_id' => '1', 'name' => $name]]]);
+            BoardGamePlay::factory()->create([
+                'group_id' => $group->id,
+                'board_game_id' => $game->id,
+                'created_by_user_id' => $user->id,
+            ]);
+        }
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/groups/{$group->id}/overview");
+
+        $response->assertStatus(200);
+        $categoryDistribution = $response->json('data.category_distribution');
+        $this->assertLessThanOrEqual(6, count($categoryDistribution)); // max 5 + Other
+        $names = array_column($categoryDistribution, 'name');
+        $this->assertContains('Other', $names);
+        $this->assertNotContains('CatF', $names);
+        $this->assertNotContains('CatG', $names);
+        $byName = array_column($categoryDistribution, 'count', 'name');
+        $this->assertSame(2, $byName['Other'] ?? 0); // CatF + CatG
+    }
+
+    /**
+     * Test that overview location_distribution is limited and Unknown is grouped into Other.
+     */
+    public function test_overview_location_distribution_unknown_in_other_and_limited(): void
+    {
+        $user = User::factory()->create();
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $boardGame = BoardGame::factory()->create();
+        $locations = ['Home', 'Store', 'Cafe', 'Office', 'Park', 'Library', '']; // empty => Unknown
+        foreach ($locations as $loc) {
+            BoardGamePlay::factory()->create([
+                'group_id' => $group->id,
+                'board_game_id' => $boardGame->id,
+                'created_by_user_id' => $user->id,
+                'location' => $loc,
+            ]);
+        }
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/groups/{$group->id}/overview");
+
+        $response->assertStatus(200);
+        $locationDistribution = $response->json('data.location_distribution');
+        $names = array_column($locationDistribution, 'name');
+        $this->assertNotContains('Unknown', $names, 'Unknown should be grouped into Other');
+        $this->assertContains('Other', $names);
+        $this->assertLessThanOrEqual(6, count($locationDistribution)); // max 5 + Other
+        $byName = array_column($locationDistribution, 'count', 'name');
+        $this->assertSame(2, $byName['Other'] ?? 0); // Library (6th) + Unknown (1 play)
+    }
+
+    /**
      * Test that member statistics endpoint returns data for a group member.
      */
     public function test_member_statistics_returns_data_for_member(): void
