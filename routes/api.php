@@ -65,13 +65,21 @@ Route::prefix('v1')->group(function (): void {
             ->middleware(ThrottleGroupCreation::class)
             ->name('api.groups.store');
         Route::get('/groups/{id}', [GroupController::class, 'show'])->name('api.groups.show');
+        Route::get('/groups/{id}/overview', [GroupController::class, 'overview'])->name('api.groups.overview');
+        Route::get('/groups/{id}/members/statistics', [GroupController::class, 'memberStatistics'])->name('api.groups.members.statistics');
+        Route::get('/groups/{id}/games', [GroupController::class, 'games'])->name('api.groups.games.index');
         Route::match(['put', 'patch'], '/groups/{id}', [GroupController::class, 'update'])
             ->middleware(ThrottleGroupUpdate::class)
             ->name('api.groups.update');
         Route::delete('/groups/{id}', [GroupController::class, 'destroy'])->name('api.groups.destroy');
         Route::get('/groups/{id}/audit-logs', [GroupAuditLogController::class, 'index'])->name('api.groups.audit-logs.index');
+        Route::patch('/groups/{id}/members/{userId}', [GroupController::class, 'updateMember'])->name('api.groups.members.update');
+        Route::delete('/groups/{id}/members/{userId}', [GroupController::class, 'destroyMember'])->name('api.groups.members.destroy');
         Route::post('/groups/{id}/join', [GroupController::class, 'join'])->name('api.groups.join');
+        Route::get('/groups/{id}/invites', [GroupController::class, 'indexInvites'])->name('api.groups.invites.index');
         Route::post('/groups/{id}/invites', [GroupController::class, 'createInvite'])->name('api.groups.invites.store');
+        Route::post('/groups/{id}/invites/regenerate', [GroupController::class, 'regenerateInvite'])->name('api.groups.invites.regenerate');
+        Route::post('/groups/{id}/invites/revoke', [GroupController::class, 'revokeInvite'])->name('api.groups.invites.revoke');
     });
 
     // Protected Admin Groups API routes (system admin only)

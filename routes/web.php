@@ -28,6 +28,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/groups', [GroupsController::class, 'index'])->name('groups.index');
     Route::get('/groups/create', [GroupsController::class, 'create'])->name('groups.create');
+    Route::get('/groups/{id}', [GroupsController::class, 'show'])->name('groups.show');
     Route::post('/groups', [GroupsController::class, 'store'])->name('groups.store');
     Route::post('/groups/members', [GroupsController::class, 'storeMembers'])->name('groups.members.store');
     Route::get('/groups/browse', [GroupsController::class, 'browse'])->name('groups.browse');
@@ -36,6 +37,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/play-log', [PlaceholderController::class, 'playLog'])->name('play-log.index');
     Route::get('/statistics', [PlaceholderController::class, 'statistics'])->name('statistics.index');
     Route::get('/boardgames', [PlaceholderController::class, 'boardgames'])->name('boardgames.index');
+    Route::get('/boardgames/{id}', [PlaceholderController::class, 'boardGameShow'])->name('boardgames.show');
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::get('/settings/boardgamegeek/status', [SettingsController::class, 'boardGameGeekSyncStatus'])->name('settings.boardgamegeek.status');
     Route::post('/settings/profile', [SettingsController::class, 'updateProfile'])->name('settings.profile.update');

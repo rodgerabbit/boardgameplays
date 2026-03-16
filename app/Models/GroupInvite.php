@@ -31,6 +31,7 @@ class GroupInvite extends Model
         'expires_at',
         'max_uses',
         'times_used',
+        'revoked_at',
     ];
 
     /**
@@ -42,6 +43,7 @@ class GroupInvite extends Model
     {
         return [
             'expires_at' => 'datetime',
+            'revoked_at' => 'datetime',
         ];
     }
 
@@ -62,17 +64,18 @@ class GroupInvite extends Model
     }
 
     /**
-     * Scope a query to only include valid (not expired, under max_uses) invites.
+     * Scope a query to only include valid (not revoked, not expired, under max_uses) invites.
      */
     public function scopeValid($query)
     {
-        return $query->where(function ($q): void {
-            $q->whereNull('expires_at')
-                ->orWhere('expires_at', '>', now());
-        })->where(function ($q): void {
-            $q->whereNull('max_uses')
-                ->orWhereRaw('times_used < max_uses');
-        });
+        return $query->whereNull('revoked_at')
+            ->where(function ($q): void {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })->where(function ($q): void {
+                $q->whereNull('max_uses')
+                    ->orWhereRaw('times_used < max_uses');
+            });
     }
 
     /**
@@ -80,6 +83,10 @@ class GroupInvite extends Model
      */
     public function isValid(): bool
     {
+        if ($this->revoked_at !== null) {
+            return false;
+        }
+
         if ($this->expires_at !== null && $this->expires_at->isPast()) {
             return false;
         }

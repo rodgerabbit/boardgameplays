@@ -36,4 +36,12 @@ class PlaceholderController extends Controller
     {
         return Inertia::render('Placeholder', ['title' => 'Boardgames']);
     }
+
+    /**
+     * Placeholder for a single board game detail page. To be further defined later.
+     */
+    public function boardGameShow(string $id): Response
+    {
+        return Inertia::render('Placeholder', ['title' => 'Board Game', 'boardGameId' => $id]);
+    }
 }

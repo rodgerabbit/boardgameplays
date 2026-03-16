@@ -20,11 +20,15 @@ class GroupPolicy
 
     /**
      * Determine whether the user can view the model.
-     * Any authenticated user can view a group.
+     * Only group members can view a group's detail page.
      */
     public function view(User $user, Group $group): bool
     {
-        return true;
+        if (! $user->id) {
+            return false;
+        }
+
+        return $user->groupMemberships()->where('group_id', $group->id)->exists();
     }
 
     /**

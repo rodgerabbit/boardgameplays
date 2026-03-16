@@ -31,6 +31,7 @@ class GroupResource extends JsonResource
             'slack_link' => $this->slack_link,
             'photo_url' => $this->photo_url,
             'visibility' => $this->visibility ?? \App\Models\Group::VISIBILITY_PRIVATE,
+            'group_settings' => $this->group_settings ?? [],
             'created_by_user_id' => $this->created_by_user_id,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

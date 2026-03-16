@@ -38,6 +38,7 @@ class Group extends Model
         'slack_link',
         'photo_path',
         'visibility',
+        'group_settings',
         'created_by_user_id',
     ];
 
@@ -59,6 +60,7 @@ class Group extends Model
     {
         return [
             'last_active_at' => 'datetime',
+            'group_settings' => 'array',
         ];
     }
 

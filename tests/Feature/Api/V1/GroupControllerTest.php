@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Tests\Feature\Api\V1;
 
 use App\Models\Group;
+use App\Models\GroupInvite;
 use App\Models\GroupMember;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -159,16 +159,20 @@ class GroupControllerTest extends TestCase
     }
 
     /**
-     * Test that a group can be retrieved by ID.
+     * Test that a group can be retrieved by ID when user is a member.
      */
-    public function test_show_returns_group_details(): void
+    public function test_show_returns_group_details_for_member(): void
     {
         $user = User::factory()->create();
-        $token = $user->createToken('test-token')->plainTextToken;
-
         $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
 
-        $response = $this->withHeader('Authorization', "Bearer {$token}")
+        $response = $this->actingAs($user, 'sanctum')
             ->getJson("/api/v1/groups/{$group->id}");
 
         $response->assertStatus(200)
@@ -178,6 +182,20 @@ class GroupControllerTest extends TestCase
                     'friendly_name' => $group->friendly_name,
                 ],
             ]);
+    }
+
+    /**
+     * Test that show returns 403 when user is not a group member.
+     */
+    public function test_show_returns_403_for_non_member(): void
+    {
+        $user = User::factory()->create();
+        $group = Group::factory()->create();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/groups/{$group->id}");
+
+        $response->assertStatus(403);
     }
 
     /**
@@ -283,5 +301,139 @@ class GroupControllerTest extends TestCase
     {
         $response = $this->getJson('/api/v1/groups');
         $response->assertStatus(401);
+    }
+
+    /**
+     * Test that overview endpoint returns data for a group member.
+     */
+    public function test_overview_returns_data_for_member(): void
+    {
+        $user = User::factory()->create();
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/groups/{$group->id}/overview");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    'monthly_activity',
+                    'location_distribution',
+                    'top_games_by_time',
+                    'category_distribution',
+                ],
+            ]);
+    }
+
+    /**
+     * Test that member statistics endpoint returns data for a group member.
+     */
+    public function test_member_statistics_returns_data_for_member(): void
+    {
+        $user = User::factory()->create();
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/groups/{$group->id}/members/statistics");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['data' => ['members']]);
+    }
+
+    /**
+     * Test that games endpoint returns data for a group member.
+     */
+    public function test_games_returns_paginated_data_for_member(): void
+    {
+        $user = User::factory()->create();
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson("/api/v1/groups/{$group->id}/games");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    'data',
+                    'total',
+                    'per_page',
+                    'current_page',
+                    'last_page',
+                ],
+            ]);
+    }
+
+    /**
+     * Test that invite regenerate creates new invite and returns new URL.
+     */
+    public function test_invite_regenerate_creates_new_invite_for_admin(): void
+    {
+        $admin = User::factory()->create();
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $admin->id,
+            'role' => GroupMember::ROLE_GROUP_ADMIN,
+            'joined_at' => now(),
+        ]);
+        $existingInvite = GroupInvite::create([
+            'group_id' => $group->id,
+            'token' => 'old-token-123',
+            'created_by_user_id' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/v1/groups/{$group->id}/invites/regenerate");
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['data' => ['invite_url', 'token']]);
+        $this->assertNotEquals('old-token-123', $response->json('data.token'));
+        $existingInvite->refresh();
+        $this->assertNotNull($existingInvite->revoked_at);
+    }
+
+    /**
+     * Test that invite revoke sets revoked_at on current invite.
+     */
+    public function test_invite_revoke_disables_invite_for_admin(): void
+    {
+        $admin = User::factory()->create();
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $admin->id,
+            'role' => GroupMember::ROLE_GROUP_ADMIN,
+            'joined_at' => now(),
+        ]);
+        $invite = GroupInvite::create([
+            'group_id' => $group->id,
+            'token' => 'active-token',
+            'created_by_user_id' => $admin->id,
+        ]);
+
+        $response = $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/v1/groups/{$group->id}/invites/revoke");
+
+        $response->assertStatus(200);
+        $invite->refresh();
+        $this->assertNotNull($invite->revoked_at);
     }
 }

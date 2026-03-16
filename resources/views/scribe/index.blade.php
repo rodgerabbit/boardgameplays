@@ -26,7 +26,7 @@
             </style>
 
     <script>
-        var tryItOutBaseUrl = "http://localhost";
+        var tryItOutBaseUrl = "http://localhost:8080";
         var useCsrf = Boolean();
         var csrfUrl = "/sanctum/csrf-cookie";
     </script>
@@ -163,17 +163,41 @@
                                                                                 <li class="tocify-item level-2" data-unique="groups-GETapi-v1-groups--id-">
                                 <a href="#groups-GETapi-v1-groups--id-">Get group details</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="groups-GETapi-v1-groups--id--overview">
+                                <a href="#groups-GETapi-v1-groups--id--overview">Get overview statistics for the group (monthly activity, locations, top games, categories).</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="groups-GETapi-v1-groups--id--members-statistics">
+                                <a href="#groups-GETapi-v1-groups--id--members-statistics">Get per-member statistics for the group (including H-index).</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="groups-GETapi-v1-groups--id--games">
+                                <a href="#groups-GETapi-v1-groups--id--games">Get paginated list of games played by the group, sorted by play count.</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="groups-PUTapi-v1-groups--id-">
                                 <a href="#groups-PUTapi-v1-groups--id-">Update a group</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="groups-DELETEapi-v1-groups--id-">
                                 <a href="#groups-DELETEapi-v1-groups--id-">Delete a group</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="groups-PATCHapi-v1-groups--id--members--userId-">
+                                <a href="#groups-PATCHapi-v1-groups--id--members--userId-">Update a group member's role. Admin only. Cannot demote the last admin.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="groups-DELETEapi-v1-groups--id--members--userId-">
+                                <a href="#groups-DELETEapi-v1-groups--id--members--userId-">Remove a member from the group. Admin only. Cannot remove the last admin.</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="groups-POSTapi-v1-groups--id--join">
                                 <a href="#groups-POSTapi-v1-groups--id--join">Join a publicly joinable group. For viewable/private groups use invite link.</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="groups-GETapi-v1-groups--id--invites">
+                                <a href="#groups-GETapi-v1-groups--id--invites">Get the current valid invite for the group, if any. Any group member can view.</a>
+                            </li>
                                                                                 <li class="tocify-item level-2" data-unique="groups-POSTapi-v1-groups--id--invites">
                                 <a href="#groups-POSTapi-v1-groups--id--invites">Create an invitation for the group. Only group admins can create invites.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="groups-POSTapi-v1-groups--id--invites-regenerate">
+                                <a href="#groups-POSTapi-v1-groups--id--invites-regenerate">Regenerate the group invite link (invalidates previous link). Admin only.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="groups-POSTapi-v1-groups--id--invites-revoke">
+                                <a href="#groups-POSTapi-v1-groups--id--invites-revoke">Revoke the current invite link (disable invitations). Admin only.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -199,7 +223,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: March 14, 2026</li>
+        <li>Last updated: March 16, 2026</li>
     </ul>
 </div>
 
@@ -209,7 +233,7 @@
         <h1 id="introduction">Introduction</h1>
 <p>Boardgame Plays &amp; Statistics Platform API - A comprehensive API for managing board game information, plays, and player statistics.</p>
 <aside>
-    <strong>Base URL</strong>: <code>http://localhost</code>
+    <strong>Base URL</strong>: <code>http://localhost:8080</code>
 </aside>
 <pre><code>This documentation aims to provide all the information you need to work with our API.
 
@@ -239,7 +263,7 @@ You can switch the language used with the tabs at the top right (or from the nav
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/admin/groups/1/restore" \
+    "http://localhost:8080/api/v1/admin/groups/1/restore" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -247,7 +271,7 @@ You can switch the language used with the tabs at the top right (or from the nav
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/admin/groups/1/restore"
+    "http://localhost:8080/api/v1/admin/groups/1/restore"
 );
 
 const headers = {
@@ -418,7 +442,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/admin/groups/deleted?per_page=20" \
+    --get "http://localhost:8080/api/v1/admin/groups/deleted?per_page=20" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -426,7 +450,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/admin/groups/deleted"
+    "http://localhost:8080/api/v1/admin/groups/deleted"
 );
 
 const params = {
@@ -613,7 +637,7 @@ This API uses Laravel Sanctum for token-based authentication.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/auth/login" \
+    "http://localhost:8080/api/v1/auth/login" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -626,7 +650,7 @@ This API uses Laravel Sanctum for token-based authentication.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/auth/login"
+    "http://localhost:8080/api/v1/auth/login"
 );
 
 const headers = {
@@ -819,7 +843,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/auth/register" \
+    "http://localhost:8080/api/v1/auth/register" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
@@ -833,7 +857,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/auth/register"
+    "http://localhost:8080/api/v1/auth/register"
 );
 
 const headers = {
@@ -1033,7 +1057,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/auth/logout" \
+    "http://localhost:8080/api/v1/auth/logout" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -1041,7 +1065,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/auth/logout"
+    "http://localhost:8080/api/v1/auth/logout"
 );
 
 const headers = {
@@ -1180,7 +1204,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/auth/me" \
+    --get "http://localhost:8080/api/v1/auth/me" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -1188,7 +1212,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/auth/me"
+    "http://localhost:8080/api/v1/auth/me"
 );
 
 const headers = {
@@ -1340,7 +1364,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/board-game-plays?per_page=20&amp;include=board_game%2Cplayers&amp;group_id=1&amp;board_game_id=1&amp;source=website" \
+    --get "http://localhost:8080/api/v1/board-game-plays?per_page=20&amp;include=board_game%2Cplayers&amp;group_id=1&amp;board_game_id=1&amp;source=website" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -1348,7 +1372,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/board-game-plays"
+    "http://localhost:8080/api/v1/board-game-plays"
 );
 
 const params = {
@@ -1575,7 +1599,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/board-game-plays" \
+    "http://localhost:8080/api/v1/board-game-plays" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -1607,7 +1631,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/board-game-plays"
+    "http://localhost:8080/api/v1/board-game-plays"
 );
 
 const headers = {
@@ -1947,7 +1971,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>false</code></p>
+<p>Example: <code>true</code></p>
                     </div>
                                                                 <div style="margin-left: 14px; clear: unset;">
                         <b style="line-height: 2;"><code>position</code></b>&nbsp;&nbsp;
@@ -2025,7 +2049,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/board-game-plays/1?include=board_game%2Cplayers" \
+    --get "http://localhost:8080/api/v1/board-game-plays/1?include=board_game%2Cplayers" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2033,7 +2057,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/board-game-plays/1"
+    "http://localhost:8080/api/v1/board-game-plays/1"
 );
 
 const params = {
@@ -2220,7 +2244,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost/api/v1/board-game-plays/1" \
+    "http://localhost:8080/api/v1/board-game-plays/1" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
@@ -2252,7 +2276,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/board-game-plays/1"
+    "http://localhost:8080/api/v1/board-game-plays/1"
 );
 
 const headers = {
@@ -2688,7 +2712,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost/api/v1/board-game-plays/1" \
+    "http://localhost:8080/api/v1/board-game-plays/1" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2696,7 +2720,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/board-game-plays/1"
+    "http://localhost:8080/api/v1/board-game-plays/1"
 );
 
 const headers = {
@@ -2860,7 +2884,7 @@ This API provides read-only access to board game data. No write operations are a
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/board-games?per_page=20" \
+    --get "http://localhost:8080/api/v1/board-games?per_page=20" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -2868,7 +2892,7 @@ This API provides read-only access to board game data. No write operations are a
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/board-games"
+    "http://localhost:8080/api/v1/board-games"
 );
 
 const params = {
@@ -3049,7 +3073,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/board-games/1" \
+    --get "http://localhost:8080/api/v1/board-games/1" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -3057,7 +3081,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/board-games/1"
+    "http://localhost:8080/api/v1/board-games/1"
 );
 
 const headers = {
@@ -3228,7 +3252,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/groups/1/audit-logs?per_page=20&amp;actions=created%2Cupdated" \
+    --get "http://localhost:8080/api/v1/groups/1/audit-logs?per_page=20&amp;actions=created%2Cupdated" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -3236,7 +3260,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/groups/1/audit-logs"
+    "http://localhost:8080/api/v1/groups/1/audit-logs"
 );
 
 const params = {
@@ -3483,7 +3507,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/groups?per_page=20&amp;include=member_count%2Cmembers" \
+    --get "http://localhost:8080/api/v1/groups?per_page=20&amp;include=member_count%2Cmembers" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -3491,7 +3515,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/groups"
+    "http://localhost:8080/api/v1/groups"
 );
 
 const params = {
@@ -3680,7 +3704,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/users/me/groups" \
+    --get "http://localhost:8080/api/v1/users/me/groups" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -3688,7 +3712,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/users/me/groups"
+    "http://localhost:8080/api/v1/users/me/groups"
 );
 
 const headers = {
@@ -3716,6 +3740,7 @@ fetch(url, {
             <pre><code class="language-http">cache-control: no-cache, private
 content-type: application/json
 access-control-allow-origin: *
+set-cookie: XSRF-TOKEN=eyJpdiI6InZVWUgwLzZnTzcwcjFCcVViTjVBRUE9PSIsInZhbHVlIjoiUHpMQmRHQXVINzkzWno1OTdKSDZUVUtEazc4ZGxiKzdyTkZoTDgweU5iM1ErS1lIZ2FkV0lxTG5teUlzQjVOS3g1RzRGZmh4V3dVdWJtdXhsK1FwdUNJRlB0d1RIM2dibWJyRS84bmovOFZTQ0hFRk9Vem1IWUZoRmtFNWhyblEiLCJtYWMiOiIzN2E3YWI4YWUzY2Y0N2Y4MTM4MWFkMjFmYjJjOTZlZWE2MzFjMTBjY2NmZDlkODFiNWI4ZjIyNWFiOGE0MTk4IiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:27 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6ImNzUEFKOGFFUGtFMDBXSjFpRmgxQVE9PSIsInZhbHVlIjoiY0c2WXFXOXEyZ1dOQm9TZzBPZkpsVnFaTC9XSlNYSDhoekp4RjVEWExqTi94alBJYklHZUUxRUNFSXFrTlNGNUxLKzRYYWlENEpjSWhXa2gzbHhRUzZIZUt5S2I3OXlPWVIwN0xZc0IyVVVTQ016TFFmUUk5Y3VZdUp1L1VpUGYiLCJtYWMiOiJhYmI0M2U1MDc4ZDI3NTcwZjYxYTBiZTAwODliZGMwMmI2MDc4ZWU5Yzg2MmRlM2IwMjRiZmRlMmE5ZjFhMzE1IiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:27 GMT; Max-Age=7200; path=/; httponly; samesite=lax
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
@@ -3822,7 +3847,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/users/me/groups/activity" \
+    --get "http://localhost:8080/api/v1/users/me/groups/activity" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -3830,7 +3855,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/users/me/groups/activity"
+    "http://localhost:8080/api/v1/users/me/groups/activity"
 );
 
 const headers = {
@@ -3858,6 +3883,7 @@ fetch(url, {
             <pre><code class="language-http">cache-control: no-cache, private
 content-type: application/json
 access-control-allow-origin: *
+set-cookie: XSRF-TOKEN=eyJpdiI6ImZUejhFci9GdW0zOSs0QmlzTDRPZXc9PSIsInZhbHVlIjoiYXUvV3VQOWtHeHNBKzNQb2V2by93WmZXenRCbVJCT0RlRmNzMGZuYWEvbUswbUJuczRNQVZNcTN1MHg2eGlWNWh1QnZJdjhSbjBVOHZwZjN1TUlKSVBVcjdDeHB0NGtwVm42Umg0c0YzeHk0eWozOExGQjRZMHVEMnVNRG1NbFciLCJtYWMiOiI2MWMwNzI5ZDllMTQ5MWM1NGFhNjE5NDYzODdjNzQ4ZjY5NDE3M2FhYjA4N2U0NjFiYmI4ZTg1MGViMjRkMzE5IiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:27 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IjNMZXFZNjc4TUxST01VVm16alpTcEE9PSIsInZhbHVlIjoiejhKWjZvT3lIZGcyWlNscVBkdmRzblNkTmt5VmdmYy9IUGFNUG9qRmpEdEpOZFdraGk0b3p3UWxvQkJ3NFRyMEFITTI2M2dzVWpMUmxFSWpCZ2lQNmkvd2JzVzg4dHpjRFVjeGVlU1dUODNOMmRLK2U2MFRSSTcxbkxFRFNXa08iLCJtYWMiOiIxMDAzZmU5YjdkYmNmYWIzZjhkMTg4MjQ1NDIwMjFjYzJhN2MxN2I3ZWQ3ZDJhNDY4MjBhZGEzNTZkNzAyYjIwIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:27 GMT; Max-Age=7200; path=/; httponly; samesite=lax
  </code></pre></details>         <pre>
 
 <code class="language-json" style="max-height: 300px;">{
@@ -3964,7 +3990,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/groups" \
+    "http://localhost:8080/api/v1/groups" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
@@ -3975,12 +4001,12 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "discord_link=https://discord.gg/example"\
     --form "slack_link=https://example.slack.com"\
     --form "visibility=private"\
-    --form "photo=@/tmp/phpeb76vagfcmg5dhLPSCq" </code></pre></div>
+    --form "photo=@/tmp/php42ajp43c8vbufqShlev" </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/groups"
+    "http://localhost:8080/api/v1/groups"
 );
 
 const headers = {
@@ -4224,7 +4250,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>/tmp/phpeb76vagfcmg5dhLPSCq</code></p>
+<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>/tmp/php42ajp43c8vbufqShlev</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>visibility</code></b>&nbsp;&nbsp;
@@ -4256,7 +4282,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/groups/1?include=members" \
+    --get "http://localhost:8080/api/v1/groups/1?include=members" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -4264,7 +4290,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/groups/1"
+    "http://localhost:8080/api/v1/groups/1"
 );
 
 const params = {
@@ -4441,6 +4467,474 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                 </form>
 
+                    <h2 id="groups-GETapi-v1-groups--id--overview">Get overview statistics for the group (monthly activity, locations, top games, categories).</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-groups--id--overview">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost:8080/api/v1/groups/architecto/overview" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8080/api/v1/groups/architecto/overview"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-groups--id--overview">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+set-cookie: XSRF-TOKEN=eyJpdiI6ImF4NVJTTG9TcWwreEhURTFnblpHL0E9PSIsInZhbHVlIjoiU3ZkOUxaZHBQR3Z4djcvcDhLQ2hIL2pLQzZUYVlaKyt3VVRFZWtOOUJKNDlpcndTUDI3MEF6TG1lbDlXb0kyOFpEUHo0YWhsUjVEUVk3V2lBdnN5eU9RTEMzWnpzaCtBZUhHYkllZHFydFhoTzUxRG5XN2RBcmgrTTNTWFgzOW4iLCJtYWMiOiJhZjFmZDA1MGZkMTE3N2ZjNWVkNzc0ZmIyNTMxN2MxNGUwNGRiYTAzMjc1ZGI4Nzk5NzRhMTZhMjM2OGE2OGRhIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IldUTldWMXZBV01zSDRoVTlILzdJZVE9PSIsInZhbHVlIjoiSmN5ejc5MldJdnlVOTBrNmRtd3B2VU5QWFBPY09uTkMzL3ZkbWY5aFRON2hKN3JZaUg0UW0rcktHWEdUVkJtRElCZ2xOZFpsb29aUUxZYnJ6WXdZS3YyWWM1NVcwNWJNVHg2OUt3SUFyVHZlc2l4ZlFsMkEvdEVHcitacjFQaFgiLCJtYWMiOiJmYzhhNzIzYWU2NzA0MGQxYjMxY2NiYjVkN2I3NzBmYWY5NTkzN2UxNzg0NzVjMzNjYjM2OTBjMGQ5NzA3MmZiIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Unauthenticated.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-groups--id--overview" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-groups--id--overview"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-groups--id--overview"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-groups--id--overview" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-groups--id--overview">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-groups--id--overview" data-method="GET"
+      data-path="api/v1/groups/{id}/overview"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-groups--id--overview', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-groups--id--overview"
+                    onclick="tryItOut('GETapi-v1-groups--id--overview');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-groups--id--overview"
+                    onclick="cancelTryOut('GETapi-v1-groups--id--overview');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-groups--id--overview"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/groups/{id}/overview</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-groups--id--overview"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-groups--id--overview"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-groups--id--overview"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="GETapi-v1-groups--id--overview"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the group. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="groups-GETapi-v1-groups--id--members-statistics">Get per-member statistics for the group (including H-index).</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-groups--id--members-statistics">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost:8080/api/v1/groups/architecto/members/statistics" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8080/api/v1/groups/architecto/members/statistics"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-groups--id--members-statistics">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+set-cookie: XSRF-TOKEN=eyJpdiI6InNqRDI2cCt4eGN2d05INDJja0gycFE9PSIsInZhbHVlIjoiV0VzeWxBYUJGWDBacWg2YkpRQVEwYWhTR0tMWWVqNlF5SXBRa1NpQmdRWVhjUUtSU1hXQ1FHUnlvWTcwZFpKS1FmL283ODREbDBWeisvbFRGbTA0Z2d2eTFzTVFlL3RqYjNDVFpKaWxVeGVzZHdtcDNMSjlLam44VmFxd2tNLzciLCJtYWMiOiIxODZkOWM2YjY5OTlkY2Y1YTcyNjYzYTZhYjMwYWJmNzgwNzNkOWI2NDVkZmU4NjdkMTYwNDRmN2RmZDU2MzgwIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IkxSOU12dGJEbG9SbDJQUWVkaFFYSXc9PSIsInZhbHVlIjoiMHViU2hUQUtFSU03WmZmeS8rZkUxREhsclhFUWIrRE96YSt6Y0hLQ2lENktVQ2sxTHlKTDhBZXRIMzVEbWRRaUJOUWVzOGhDajhtc3cyOUFtWmpxdFZUYTZIQ1FzdHRER0ZvY3p3SEJIVXdQTDA0QndRcFB2K1RGbGt2Vzl6ZGYiLCJtYWMiOiI5MzM0MjkxNGE0OWFjMGUzMTIxYjYxMTk1NTBhMGI0MjUxODJiYjg1OTRjN2I5ODcwYTQ1OWI3NzA4MmQwMzJhIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Unauthenticated.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-groups--id--members-statistics" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-groups--id--members-statistics"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-groups--id--members-statistics"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-groups--id--members-statistics" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-groups--id--members-statistics">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-groups--id--members-statistics" data-method="GET"
+      data-path="api/v1/groups/{id}/members/statistics"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-groups--id--members-statistics', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-groups--id--members-statistics"
+                    onclick="tryItOut('GETapi-v1-groups--id--members-statistics');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-groups--id--members-statistics"
+                    onclick="cancelTryOut('GETapi-v1-groups--id--members-statistics');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-groups--id--members-statistics"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/groups/{id}/members/statistics</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-groups--id--members-statistics"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-groups--id--members-statistics"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-groups--id--members-statistics"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="GETapi-v1-groups--id--members-statistics"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the group. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="groups-GETapi-v1-groups--id--games">Get paginated list of games played by the group, sorted by play count.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-groups--id--games">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost:8080/api/v1/groups/architecto/games" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8080/api/v1/groups/architecto/games"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-groups--id--games">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+set-cookie: XSRF-TOKEN=eyJpdiI6Ii91eHhvQVRwQTlnSTFkdlYzWExyemc9PSIsInZhbHVlIjoiNzZyTDJtQWJrMFJrZ2FZOE9XdHlEbTNFME9JaHIxSGJadnlUUTJpYVdmY3VYUHdPclNkR3FyeXZzSlJuUHFlOStzbm9WdVY4cTRvaTN1czZJV0ZHZXVyNG9GTWlWT0JtTTVlUU1obzJoNEJBcVhtMi9kSFlPQ3hWcURORC9odjEiLCJtYWMiOiJmYjIyMzlhMjA0MWRkOWY0NjZiN2ViMDViMGFjYjA4NzFlZWU3MTAyZTM5ZDcxYmU2ODJmMTdkYjNlMzdiZWI4IiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6ImpIWlFvTlc0eSt6YjBFRk5PVS9XZWc9PSIsInZhbHVlIjoiVFBRZmFIcEoxbkUrVW5XMnF0SkQxZDdLSEdtV0lPVVFMZlBWbHN2SnNYc2trLzFnVFErenVYcjJJajVvM1poMU1lQko1Mi9hYncwNzhKazg1MGZSTnY0d3hzMzh0VGc3Q3RzZFhORlZkd3NUUy9aYWJUbi9ndGhxZFd5QXFUdysiLCJtYWMiOiIyYzUwZWUxODc0MDRhMmYwZTdjNGE1N2ZiNjMzNTNmZWVkMDQxY2FhNjlkZDg5NzA2M2I2Y2FmNzFiYWY0ZDEwIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Unauthenticated.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-groups--id--games" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-groups--id--games"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-groups--id--games"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-groups--id--games" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-groups--id--games">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-groups--id--games" data-method="GET"
+      data-path="api/v1/groups/{id}/games"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-groups--id--games', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-groups--id--games"
+                    onclick="tryItOut('GETapi-v1-groups--id--games');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-groups--id--games"
+                    onclick="cancelTryOut('GETapi-v1-groups--id--games');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-groups--id--games"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/groups/{id}/games</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-groups--id--games"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-groups--id--games"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-groups--id--games"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="GETapi-v1-groups--id--games"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the group. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
                     <h2 id="groups-PUTapi-v1-groups--id-">Update a group</h2>
 
 <p>
@@ -4455,7 +4949,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost/api/v1/groups/1" \
+    "http://localhost:8080/api/v1/groups/1" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
@@ -4466,12 +4960,16 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --form "discord_link=https://discord.gg/example"\
     --form "slack_link=https://example.slack.com"\
     --form "visibility=viewable"\
-    --form "photo=@/tmp/php39s997fk1cup5f6Cqgo" </code></pre></div>
+    --form "group_settings[location_aliases][][display_name]=n"\
+    --form "group_settings[location_aliases][][raw_locations][]=i"\
+    --form "group_settings[game_groups][][name]=k"\
+    --form "group_settings[game_groups][][board_game_ids][]=16"\
+    --form "photo=@/tmp/phpai9tmqjpkflt9difxbU" </code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/groups/1"
+    "http://localhost:8080/api/v1/groups/1"
 );
 
 const headers = {
@@ -4488,6 +4986,10 @@ body.append('website_link', 'https://example.com');
 body.append('discord_link', 'https://discord.gg/example');
 body.append('slack_link', 'https://example.slack.com');
 body.append('visibility', 'viewable');
+body.append('group_settings[location_aliases][][display_name]', 'n');
+body.append('group_settings[location_aliases][][raw_locations][]', 'i');
+body.append('group_settings[game_groups][][name]', 'k');
+body.append('group_settings[game_groups][][board_game_ids][]', '16');
 body.append('photo', document.querySelector('input[name="photo"]').files[0]);
 
 fetch(url, {
@@ -4747,7 +5249,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>/tmp/php39s997fk1cup5f6Cqgo</code></p>
+<p>Must be an image. Must not be greater than 5120 kilobytes. Example: <code>/tmp/phpai9tmqjpkflt9difxbU</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>visibility</code></b>&nbsp;&nbsp;
@@ -4762,6 +5264,94 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Example: <code>viewable</code></p>
 Must be one of:
 <ul style="list-style-type: square;"><li><code>private</code></li> <li><code>viewable</code></li> <li><code>publicly_joinable</code></li></ul>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+        <details>
+            <summary style="padding-bottom: 10px;">
+                <b style="line-height: 2;"><code>group_settings</code></b>&nbsp;&nbsp;
+<small>object</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+<br>
+
+            </summary>
+                                                <div style=" margin-left: 14px; clear: unset;">
+        <details>
+            <summary style="padding-bottom: 10px;">
+                <b style="line-height: 2;"><code>location_aliases</code></b>&nbsp;&nbsp;
+<small>object[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+<br>
+
+            </summary>
+                                                <div style="margin-left: 28px; clear: unset;">
+                        <b style="line-height: 2;"><code>display_name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="group_settings.location_aliases.0.display_name"                data-endpoint="PUTapi-v1-groups--id-"
+               value="n"
+               data-component="body">
+    <br>
+<p>This field is required when <code>group_settings.location_aliases.*</code> is present. Must not be greater than 255 characters. Example: <code>n</code></p>
+                    </div>
+                                                                <div style="margin-left: 28px; clear: unset;">
+                        <b style="line-height: 2;"><code>raw_locations</code></b>&nbsp;&nbsp;
+<small>string[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="group_settings.location_aliases.0.raw_locations[0]"                data-endpoint="PUTapi-v1-groups--id-"
+               data-component="body">
+        <input type="text" style="display: none"
+               name="group_settings.location_aliases.0.raw_locations[1]"                data-endpoint="PUTapi-v1-groups--id-"
+               data-component="body">
+    <br>
+<p>Must not be greater than 255 characters.</p>
+                    </div>
+                                    </details>
+        </div>
+                                                                    <div style=" margin-left: 14px; clear: unset;">
+        <details>
+            <summary style="padding-bottom: 10px;">
+                <b style="line-height: 2;"><code>game_groups</code></b>&nbsp;&nbsp;
+<small>object[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+<br>
+
+            </summary>
+                                                <div style="margin-left: 28px; clear: unset;">
+                        <b style="line-height: 2;"><code>name</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="group_settings.game_groups.0.name"                data-endpoint="PUTapi-v1-groups--id-"
+               value="k"
+               data-component="body">
+    <br>
+<p>This field is required when <code>group_settings.game_groups.*</code> is present. Must not be greater than 255 characters. Example: <code>k</code></p>
+                    </div>
+                                                                <div style="margin-left: 28px; clear: unset;">
+                        <b style="line-height: 2;"><code>board_game_ids</code></b>&nbsp;&nbsp;
+<small>integer[]</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="group_settings.game_groups.0.board_game_ids[0]"                data-endpoint="PUTapi-v1-groups--id-"
+               data-component="body">
+        <input type="number" style="display: none"
+               name="group_settings.game_groups.0.board_game_ids[1]"                data-endpoint="PUTapi-v1-groups--id-"
+               data-component="body">
+    <br>
+<p>The <code>id</code> of an existing record in the board_games table.</p>
+                    </div>
+                                    </details>
+        </div>
+                                        </details>
         </div>
         </form>
 
@@ -4779,7 +5369,7 @@ Must be one of:
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request DELETE \
-    "http://localhost/api/v1/groups/1" \
+    "http://localhost:8080/api/v1/groups/1" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -4787,7 +5377,7 @@ Must be one of:
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/groups/1"
+    "http://localhost:8080/api/v1/groups/1"
 );
 
 const headers = {
@@ -4933,6 +5523,331 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
+                    <h2 id="groups-PATCHapi-v1-groups--id--members--userId-">Update a group member&#039;s role. Admin only. Cannot demote the last admin.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-PATCHapi-v1-groups--id--members--userId-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request PATCH \
+    "http://localhost:8080/api/v1/groups/architecto/members/architecto" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"role\": \"group_admin\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8080/api/v1/groups/architecto/members/architecto"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "role": "group_admin"
+};
+
+fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-PATCHapi-v1-groups--id--members--userId-">
+</span>
+<span id="execution-results-PATCHapi-v1-groups--id--members--userId-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-PATCHapi-v1-groups--id--members--userId-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-PATCHapi-v1-groups--id--members--userId-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-PATCHapi-v1-groups--id--members--userId-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-PATCHapi-v1-groups--id--members--userId-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-PATCHapi-v1-groups--id--members--userId-" data-method="PATCH"
+      data-path="api/v1/groups/{id}/members/{userId}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('PATCHapi-v1-groups--id--members--userId-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-PATCHapi-v1-groups--id--members--userId-"
+                    onclick="tryItOut('PATCHapi-v1-groups--id--members--userId-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-PATCHapi-v1-groups--id--members--userId-"
+                    onclick="cancelTryOut('PATCHapi-v1-groups--id--members--userId-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-PATCHapi-v1-groups--id--members--userId-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-purple">PATCH</small>
+            <b><code>api/v1/groups/{id}/members/{userId}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="PATCHapi-v1-groups--id--members--userId-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="PATCHapi-v1-groups--id--members--userId-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="PATCHapi-v1-groups--id--members--userId-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="PATCHapi-v1-groups--id--members--userId-"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the group. Example: <code>architecto</code></p>
+            </div>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>userId</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="userId"                data-endpoint="PATCHapi-v1-groups--id--members--userId-"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>Example: <code>architecto</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>role</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="role"                data-endpoint="PATCHapi-v1-groups--id--members--userId-"
+               value="group_admin"
+               data-component="body">
+    <br>
+<p>Example: <code>group_admin</code></p>
+Must be one of:
+<ul style="list-style-type: square;"><li><code>group_admin</code></li> <li><code>group_member</code></li></ul>
+        </div>
+        </form>
+
+                    <h2 id="groups-DELETEapi-v1-groups--id--members--userId-">Remove a member from the group. Admin only. Cannot remove the last admin.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-DELETEapi-v1-groups--id--members--userId-">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request DELETE \
+    "http://localhost:8080/api/v1/groups/architecto/members/architecto" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8080/api/v1/groups/architecto/members/architecto"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "DELETE",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-DELETEapi-v1-groups--id--members--userId-">
+</span>
+<span id="execution-results-DELETEapi-v1-groups--id--members--userId-" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-DELETEapi-v1-groups--id--members--userId-"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-DELETEapi-v1-groups--id--members--userId-"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-DELETEapi-v1-groups--id--members--userId-" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-DELETEapi-v1-groups--id--members--userId-">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-DELETEapi-v1-groups--id--members--userId-" data-method="DELETE"
+      data-path="api/v1/groups/{id}/members/{userId}"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('DELETEapi-v1-groups--id--members--userId-', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-DELETEapi-v1-groups--id--members--userId-"
+                    onclick="tryItOut('DELETEapi-v1-groups--id--members--userId-');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-DELETEapi-v1-groups--id--members--userId-"
+                    onclick="cancelTryOut('DELETEapi-v1-groups--id--members--userId-');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-DELETEapi-v1-groups--id--members--userId-"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-red">DELETE</small>
+            <b><code>api/v1/groups/{id}/members/{userId}</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="DELETEapi-v1-groups--id--members--userId-"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="DELETEapi-v1-groups--id--members--userId-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="DELETEapi-v1-groups--id--members--userId-"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="DELETEapi-v1-groups--id--members--userId-"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the group. Example: <code>architecto</code></p>
+            </div>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>userId</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="userId"                data-endpoint="DELETEapi-v1-groups--id--members--userId-"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
                     <h2 id="groups-POSTapi-v1-groups--id--join">Join a publicly joinable group. For viewable/private groups use invite link.</h2>
 
 <p>
@@ -4947,7 +5862,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/groups/architecto/join" \
+    "http://localhost:8080/api/v1/groups/architecto/join" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -4955,7 +5870,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/groups/architecto/join"
+    "http://localhost:8080/api/v1/groups/architecto/join"
 );
 
 const headers = {
@@ -5072,6 +5987,162 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
+                    <h2 id="groups-GETapi-v1-groups--id--invites">Get the current valid invite for the group, if any. Any group member can view.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-GETapi-v1-groups--id--invites">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "http://localhost:8080/api/v1/groups/architecto/invites" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8080/api/v1/groups/architecto/invites"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-v1-groups--id--invites">
+            <blockquote>
+            <p>Example response (401):</p>
+        </blockquote>
+                <details class="annotation">
+            <summary style="cursor: pointer;">
+                <small onclick="textContent = parentElement.parentElement.open ? 'Show headers' : 'Hide headers'">Show headers</small>
+            </summary>
+            <pre><code class="language-http">cache-control: no-cache, private
+content-type: application/json
+access-control-allow-origin: *
+set-cookie: XSRF-TOKEN=eyJpdiI6IitHaVl3VFR0dlVhcmlSMFZSelNLMWc9PSIsInZhbHVlIjoiZHdUcFJCZzlTWllqUUg2TlNobmFvQkQrV0VqalJWUlpNMnp0THJKVGMvSXNOZnhBQTJaTk9sWnlYck1ZdFdGbVdmMG9WUGl0U3hhQk0zYnBGMVlIU0ZZZEtleDVBTmNBNjBmdkFHNGNqZkVMS3BRRm92Q0I5NnBqakRGMFV5M2kiLCJtYWMiOiJlODNjYWIyMWFlMzVjMGVlNjQ5NDIxNDFiYjIyZThjYTQwZjU0Nzk4ZDQ4NTVmNDNlZDIyMWY0NDZjOTg2MTNjIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IkRuMWY3Tm1ESS94T3I5NmI3MjdLK3c9PSIsInZhbHVlIjoiTWp2SXRHMUZWeTlxUWlLTzI5Y25pQ2NrQmNheU9OaW4wR24wYWs3di9xZDIzTzNPVUtUMUs0bFY3eSt3SDJUMEJmOElBQ3RxYUx0TnB4Q0pSRDhnZVdTelpDdmhWcGovai92TGorTUlyZmRHeHRqNXM3UmhxSnRPaHNZcGVNMmEiLCJtYWMiOiJlYjQ0NDY3NDlhYTczNzNmNmE2OGIyNjA4N2Y4Yjk5MmIwNjEyYzBlMGUzMmJkMTk3NWU3YTk1OWVkZjZiOWIxIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; httponly; samesite=lax
+ </code></pre></details>         <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Unauthenticated.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-v1-groups--id--invites" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-v1-groups--id--invites"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-v1-groups--id--invites"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-v1-groups--id--invites" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-v1-groups--id--invites">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-v1-groups--id--invites" data-method="GET"
+      data-path="api/v1/groups/{id}/invites"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-v1-groups--id--invites', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-v1-groups--id--invites"
+                    onclick="tryItOut('GETapi-v1-groups--id--invites');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-v1-groups--id--invites"
+                    onclick="cancelTryOut('GETapi-v1-groups--id--invites');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-v1-groups--id--invites"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/v1/groups/{id}/invites</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-v1-groups--id--invites"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-v1-groups--id--invites"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-v1-groups--id--invites"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="GETapi-v1-groups--id--invites"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the group. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
                     <h2 id="groups-POSTapi-v1-groups--id--invites">Create an invitation for the group. Only group admins can create invites.</h2>
 
 <p>
@@ -5086,7 +6157,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request POST \
-    "http://localhost/api/v1/groups/architecto/invites" \
+    "http://localhost:8080/api/v1/groups/architecto/invites" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -5094,7 +6165,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/groups/architecto/invites"
+    "http://localhost:8080/api/v1/groups/architecto/invites"
 );
 
 const headers = {
@@ -5211,6 +6282,284 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                     </form>
 
+                    <h2 id="groups-POSTapi-v1-groups--id--invites-regenerate">Regenerate the group invite link (invalidates previous link). Admin only.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-groups--id--invites-regenerate">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost:8080/api/v1/groups/architecto/invites/regenerate" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8080/api/v1/groups/architecto/invites/regenerate"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "POST",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-groups--id--invites-regenerate">
+</span>
+<span id="execution-results-POSTapi-v1-groups--id--invites-regenerate" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-groups--id--invites-regenerate"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-groups--id--invites-regenerate"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-groups--id--invites-regenerate" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-groups--id--invites-regenerate">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-groups--id--invites-regenerate" data-method="POST"
+      data-path="api/v1/groups/{id}/invites/regenerate"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-groups--id--invites-regenerate', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-groups--id--invites-regenerate"
+                    onclick="tryItOut('POSTapi-v1-groups--id--invites-regenerate');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-groups--id--invites-regenerate"
+                    onclick="cancelTryOut('POSTapi-v1-groups--id--invites-regenerate');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-groups--id--invites-regenerate"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/groups/{id}/invites/regenerate</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-groups--id--invites-regenerate"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-groups--id--invites-regenerate"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-groups--id--invites-regenerate"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="POSTapi-v1-groups--id--invites-regenerate"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the group. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
+                    <h2 id="groups-POSTapi-v1-groups--id--invites-revoke">Revoke the current invite link (disable invitations). Admin only.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-v1-groups--id--invites-revoke">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "http://localhost:8080/api/v1/groups/architecto/invites/revoke" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "http://localhost:8080/api/v1/groups/architecto/invites/revoke"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+
+fetch(url, {
+    method: "POST",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-v1-groups--id--invites-revoke">
+</span>
+<span id="execution-results-POSTapi-v1-groups--id--invites-revoke" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-v1-groups--id--invites-revoke"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-v1-groups--id--invites-revoke"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-v1-groups--id--invites-revoke" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-v1-groups--id--invites-revoke">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-v1-groups--id--invites-revoke" data-method="POST"
+      data-path="api/v1/groups/{id}/invites/revoke"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-v1-groups--id--invites-revoke', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-v1-groups--id--invites-revoke"
+                    onclick="tryItOut('POSTapi-v1-groups--id--invites-revoke');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-v1-groups--id--invites-revoke"
+                    onclick="cancelTryOut('POSTapi-v1-groups--id--invites-revoke');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-v1-groups--id--invites-revoke"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/v1/groups/{id}/invites/revoke</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-v1-groups--id--invites-revoke"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-v1-groups--id--invites-revoke"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-v1-groups--id--invites-revoke"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="id"                data-endpoint="POSTapi-v1-groups--id--invites-revoke"
+               value="architecto"
+               data-component="url">
+    <br>
+<p>The ID of the group. Example: <code>architecto</code></p>
+            </div>
+                    </form>
+
                 <h1 id="user-settings">User Settings</h1>
 
     <p>APIs for managing user settings.</p>
@@ -5230,7 +6579,7 @@ theme preference, play notification delay, and BoardGameGeek username.</p>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "http://localhost/api/v1/user/settings" \
+    --get "http://localhost:8080/api/v1/user/settings" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
@@ -5238,7 +6587,7 @@ theme preference, play notification delay, and BoardGameGeek username.</p>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/user/settings"
+    "http://localhost:8080/api/v1/user/settings"
 );
 
 const headers = {
@@ -5383,14 +6732,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request PUT \
-    "http://localhost/api/v1/user/settings" \
+    "http://localhost:8080/api/v1/user/settings" \
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
     \"default_group_id\": 1,
     \"theme_preference\": \"dark\",
-    \"is_profile_public\": true,
+    \"is_profile_public\": false,
     \"play_notification_delay_hours\": 2,
     \"board_game_geek_username\": \"myusername\"
 }"
@@ -5399,7 +6748,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "http://localhost/api/v1/user/settings"
+    "http://localhost:8080/api/v1/user/settings"
 );
 
 const headers = {
@@ -5411,7 +6760,7 @@ const headers = {
 let body = {
     "default_group_id": 1,
     "theme_preference": "dark",
-    "is_profile_public": true,
+    "is_profile_public": false,
     "play_notification_delay_hours": 2,
     "board_game_geek_username": "myusername"
 };
@@ -5600,7 +6949,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
             <code>false</code>
         </label>
     <br>
-<p>Example: <code>true</code></p>
+<p>Example: <code>false</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>play_notification_delay_hours</code></b>&nbsp;&nbsp;

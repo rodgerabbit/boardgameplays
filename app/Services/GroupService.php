@@ -211,6 +211,33 @@ class GroupService extends BaseService
     }
 
     /**
+     * Revoke all valid (non-revoked) invites for a group by setting revoked_at.
+     *
+     * @param Group $group The group
+     * @return int Number of invites revoked
+     */
+    public function revokeInvitesForGroup(Group $group): int
+    {
+        return GroupInvite::where('group_id', $group->id)
+            ->whereNull('revoked_at')
+            ->update(['revoked_at' => now()]);
+    }
+
+    /**
+     * Create a new invite for the group and revoke all existing valid invites (regenerate).
+     *
+     * @param Group $group The group
+     * @param User $createdBy The user regenerating the invite
+     * @return GroupInvite The new invite
+     */
+    public function regenerateInvite(Group $group, User $createdBy): GroupInvite
+    {
+        $this->revokeInvitesForGroup($group);
+
+        return $this->createInvite($group, $createdBy);
+    }
+
+    /**
      * Remove a member from a group.
      *
      * @param Group $group The group to remove the member from

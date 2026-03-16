@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\BoardGamePlay;
 use App\Models\Group;
 use App\Models\GroupInvite;
 use App\Models\GroupMember;
@@ -55,6 +56,43 @@ class GroupsController extends Controller
         return Inertia::render('Groups/Index', [
             'groups' => $groups,
             'activityPaginator' => $activityPaginator,
+        ]);
+    }
+
+    /**
+     * Display the group detail page. Only group members can view.
+     */
+    public function show(Request $request, string $id): Response|RedirectResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('view', $group);
+
+        $user = Auth::user();
+        $membership = GroupMember::where('group_id', $group->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        $currentUserRole = $membership?->role === GroupMember::ROLE_GROUP_ADMIN
+            ? 'group_admin'
+            : 'group_member';
+
+        $group->loadCount('groupMembers');
+        $group->load('groupMembers.user');
+
+        $playsQuery = BoardGamePlay::where('group_id', $group->id)->notExcluded();
+        $totalPlays = $playsQuery->count();
+        $totalHoursPlayed = round((float) (clone $playsQuery)->sum('game_length_minutes') / 60, 1);
+        $uniqueGamesPlayed = (clone $playsQuery)->selectRaw('count(distinct board_game_id) as cnt')->value('cnt') ?? 0;
+
+        return Inertia::render('Groups/Show', [
+            'group' => $group,
+            'currentUserRole' => $currentUserRole,
+            'groupSummary' => [
+                'total_plays' => $totalPlays,
+                'total_hours_played' => $totalHoursPlayed,
+                'group_members_count' => $group->group_members_count,
+                'unique_games_played' => (int) $uniqueGamesPlayed,
+            ],
         ]);
     }
 

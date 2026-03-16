@@ -12,6 +12,8 @@ use App\Models\Group;
 use App\Models\GroupInvite;
 use App\Models\GroupMember;
 use App\Services\GroupAuditLogService;
+use App\Services\GroupMemberStatisticsService;
+use App\Services\GroupStatisticsService;
 use App\Services\GroupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,6 +33,8 @@ class GroupController extends BaseApiController
     public function __construct(
         private readonly GroupService $groupService,
         private readonly GroupAuditLogService $auditLogService,
+        private readonly GroupStatisticsService $groupStatisticsService,
+        private readonly GroupMemberStatisticsService $groupMemberStatisticsService,
     ) {
     }
 
@@ -271,6 +275,61 @@ class GroupController extends BaseApiController
     }
 
     /**
+     * Get overview statistics for the group (monthly activity, locations, top games, categories).
+     */
+    public function overview(Request $request, string $id): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('view', $group);
+
+        $monthlyActivity = $this->groupStatisticsService->getMonthlyActivityByYear($group);
+        $locationDistribution = $this->groupStatisticsService->getLocationDistribution($group);
+        $topGamesByTime = $this->groupStatisticsService->getTopGamesByTime($group, 10);
+        $categoryDistribution = $this->groupStatisticsService->getCategoryDistribution($group);
+
+        return $this->successResponse([
+            'monthly_activity' => $monthlyActivity,
+            'location_distribution' => $locationDistribution,
+            'top_games_by_time' => $topGamesByTime,
+            'category_distribution' => $categoryDistribution,
+        ]);
+    }
+
+    /**
+     * Get per-member statistics for the group (including H-index).
+     */
+    public function memberStatistics(Request $request, string $id): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('view', $group);
+
+        $statistics = $this->groupMemberStatisticsService->getMemberStatistics($group);
+
+        return $this->successResponse(['members' => $statistics]);
+    }
+
+    /**
+     * Get paginated list of games played by the group, sorted by play count.
+     */
+    public function games(Request $request, string $id): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('view', $group);
+
+        $perPage = min((int) $request->get('per_page', 15), 50);
+        $page = max(1, (int) $request->get('page', 1));
+        $search = $request->get('search');
+        $searchString = is_string($search) ? trim($search) : null;
+        if ($searchString === '') {
+            $searchString = null;
+        }
+
+        $result = $this->groupStatisticsService->getGamesPlayedByGroup($group, $perPage, $page, $searchString);
+
+        return $this->successResponse($result);
+    }
+
+    /**
      * Update a group
      *
      * Update group properties. Rate limited to 1 per 10 seconds. Only group admins can update.
@@ -331,7 +390,7 @@ class GroupController extends BaseApiController
         // Rate limit is checked by ThrottleGroupUpdate middleware
         // No need to check again here
 
-        $oldData = $group->only(['friendly_name', 'description', 'group_location', 'website_link', 'discord_link', 'slack_link', 'visibility']);
+        $oldData = $group->only(['friendly_name', 'description', 'group_location', 'website_link', 'discord_link', 'slack_link', 'visibility', 'group_settings']);
 
         $validated = $request->validated();
         $photo = $request->file('photo');
@@ -462,5 +521,114 @@ class GroupController extends BaseApiController
             'expires_at' => $invite->expires_at?->toIso8601String(),
             'max_uses' => $invite->max_uses,
         ], 'Invitation created.', 201);
+    }
+
+    /**
+     * Update a group member's role. Admin only. Cannot demote the last admin.
+     */
+    public function updateMember(Request $request, string $id, string $userId): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('update', $group);
+
+        $request->validate(['role' => ['required', 'string', 'in:group_admin,group_member']]);
+
+        $targetUser = \App\Models\User::findOrFail($userId);
+        $membership = GroupMember::where('group_id', $group->id)->where('user_id', $targetUser->id)->firstOrFail();
+
+        $adminCount = $group->groupMembers()->where('role', GroupMember::ROLE_GROUP_ADMIN)->count();
+        if ($membership->role === GroupMember::ROLE_GROUP_ADMIN && $adminCount <= 1 && $request->input('role') !== GroupMember::ROLE_GROUP_ADMIN) {
+            return $this->errorResponse('Cannot demote the last admin. Promote another member first.', 422);
+        }
+
+        if ($request->input('role') === GroupMember::ROLE_GROUP_ADMIN) {
+            $this->groupService->promoteMemberToAdmin($group, $targetUser);
+        } else {
+            $this->groupService->demoteAdminToMember($group, $targetUser);
+        }
+
+        $group->load('groupMembers.user');
+
+        return $this->successResponse(new GroupResource($group), 'Member updated.');
+    }
+
+    /**
+     * Remove a member from the group. Admin only. Cannot remove the last admin.
+     */
+    public function destroyMember(Request $request, string $id, string $userId): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('update', $group);
+
+        $targetUser = \App\Models\User::findOrFail($userId);
+        $membership = GroupMember::where('group_id', $group->id)->where('user_id', $targetUser->id)->firstOrFail();
+
+        $adminCount = $group->groupMembers()->where('role', GroupMember::ROLE_GROUP_ADMIN)->count();
+        if ($membership->role === GroupMember::ROLE_GROUP_ADMIN && $adminCount <= 1) {
+            return $this->errorResponse('Cannot remove the last admin. Promote another member first.', 422);
+        }
+
+        $this->groupService->removeMemberFromGroup($group, $targetUser);
+        $group->load('groupMembers.user');
+
+        return $this->successResponse(new GroupResource($group), 'Member removed.');
+    }
+
+    /**
+     * Get the current valid invite for the group, if any. Any group member can view.
+     */
+    public function indexInvites(Request $request, string $id): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('view', $group);
+
+        $invite = $group->groupInvites()->valid()->first();
+        if ($invite === null) {
+            return $this->successResponse(['invite_url' => null, 'has_valid_invite' => false]);
+        }
+
+        $inviteUrl = url('/groups/join/' . $invite->token);
+
+        return $this->successResponse([
+            'invite_url' => $inviteUrl,
+            'has_valid_invite' => true,
+            'expires_at' => $invite->expires_at?->toIso8601String(),
+            'max_uses' => $invite->max_uses,
+            'times_used' => $invite->times_used,
+        ]);
+    }
+
+    /**
+     * Regenerate the group invite link (invalidates previous link). Admin only.
+     */
+    public function regenerateInvite(Request $request, string $id): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('update', $group);
+        $user = $request->user();
+
+        $invite = $this->groupService->regenerateInvite($group, $user);
+        $inviteUrl = url('/groups/join/' . $invite->token);
+
+        return $this->successResponse([
+            'invite_url' => $inviteUrl,
+            'token' => $invite->token,
+        ], 'Invitation link regenerated.');
+    }
+
+    /**
+     * Revoke the current invite link (disable invitations). Admin only.
+     */
+    public function revokeInvite(Request $request, string $id): JsonResponse
+    {
+        $group = Group::findOrFail($id);
+        $this->authorize('update', $group);
+
+        $revoked = $this->groupService->revokeInvitesForGroup($group);
+
+        return $this->successResponse(
+            ['revoked_count' => $revoked],
+            $revoked > 0 ? 'Invitation link disabled.' : 'No active invitation link to disable.'
+        );
     }
 }
