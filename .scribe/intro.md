@@ -3,7 +3,7 @@
 Boardgame Plays & Statistics Platform API - A comprehensive API for managing board game information, plays, and player statistics.
 
 <aside>
-    <strong>Base URL</strong>: <code>http://localhost</code>
+    <strong>Base URL</strong>: <code>http://localhost:8080</code>
 </aside>
 
     This documentation aims to provide all the information you need to work with our API.
