@@ -81,6 +81,9 @@ class BoardGameGeekApiClientTest extends TestCase
         $this->assertEquals(4, $games[0]->maxPlayers);
         $this->assertEquals(60, $games[0]->playingTimeMinutes);
         $this->assertEquals(2018, $games[0]->yearPublished);
+
+        $this->assertCount(3, $games[0]->categories);
+        $this->assertEquals([['bgg_id' => '1', 'name' => 'Economic'], ['bgg_id' => '2', 'name' => 'Strategy'], ['bgg_id' => '3', 'name' => 'Territory Building']], $games[0]->categories);
     }
 
     /**
@@ -304,6 +307,9 @@ class BoardGameGeekApiClientTest extends TestCase
         <thumbnail>https://cf.geekdo-images.com/thumb1.jpg</thumbnail>
         <link type="boardgamepublisher" id="12345" value="Roxley Games"/>
         <link type="boardgamedesigner" id="67890" value="Gavan Brown"/>
+        <link type="boardgamecategory" id="1" value="Economic"/>
+        <link type="boardgamecategory" id="2" value="Strategy"/>
+        <link type="boardgamecategory" id="3" value="Territory Building"/>
         <statistics>
             <ratings>
                 <average value="8.57025"/>

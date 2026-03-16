@@ -577,6 +577,7 @@ class BoardGameGeekApiClient extends BaseService
             $complexityRating = $this->extractComplexity($item);
 
             $isExpansion = $this->isExpansion($item);
+            $categories = $this->extractLinkValues($item, 'boardgamecategory');
 
             return new BoardGameGeekGameDto(
                 bggId: $bggId,
@@ -593,6 +594,7 @@ class BoardGameGeekApiClient extends BaseService
                 bggRating: $bggRating,
                 complexityRating: $complexityRating,
                 isExpansion: $isExpansion,
+                categories: $categories,
             );
         } catch (\Exception $e) {
             Log::warning('Failed to parse individual game item from BoardGameGeek XML', [
@@ -716,6 +718,32 @@ class BoardGameGeekApiClient extends BaseService
         }
 
         return null;
+    }
+
+    /**
+     * Extract all links of a given type as array of bgg_id and name (e.g. boardgamecategory).
+     *
+     * @param SimpleXMLElement $item
+     * @param string $linkType
+     * @return list<array{bgg_id: string, name: string}>
+     */
+    private function extractLinkValues(SimpleXMLElement $item, string $linkType): array
+    {
+        $result = [];
+        if (! isset($item->link)) {
+            return $result;
+        }
+        foreach ($item->link as $link) {
+            $type = (string) $link['type'];
+            if ($type === $linkType) {
+                $result[] = [
+                    'bgg_id' => (string) $link['id'],
+                    'name' => (string) $link['value'],
+                ];
+            }
+        }
+
+        return $result;
     }
 
     /**

@@ -61,6 +61,8 @@ class BoardGameGeekSyncServiceTest extends TestCase
         $this->assertNotNull($boardGame->bgg_synced_at);
         $this->assertEquals('success', $boardGame->bgg_sync_status);
         $this->assertNull($boardGame->bgg_sync_error_message);
+        $this->assertCount(2, $boardGame->categories);
+        $this->assertEquals([['bgg_id' => '1', 'name' => 'Economic'], ['bgg_id' => '2', 'name' => 'Strategy']], $boardGame->categories);
     }
 
     /**
@@ -137,6 +139,8 @@ class BoardGameGeekSyncServiceTest extends TestCase
         <thumbnail>https://cf.geekdo-images.com/thumb1.jpg</thumbnail>
         <link type="boardgamepublisher" id="12345" value="Roxley Games"/>
         <link type="boardgamedesigner" id="67890" value="Gavan Brown"/>
+        <link type="boardgamecategory" id="1" value="Economic"/>
+        <link type="boardgamecategory" id="2" value="Strategy"/>
         <statistics>
             <ratings>
                 <average value="8.57025"/>

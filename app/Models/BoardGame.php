@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * This model represents a board game with its metadata such as name, description,
  * player count, playing time, publisher, designer, optional BoardGameGeek ID,
  * BoardGameGeek rating (0-10 scale), complexity rating (0-5 scale), thumbnail URL,
- * and expansion status.
+ * expansion status, and game categories (from BGG boardgamecategory links).
  */
 class BoardGame extends Model
 {
@@ -39,6 +39,7 @@ class BoardGame extends Model
         'bgg_rating',
         'complexity_rating',
         'is_expansion',
+        'categories',
         'bgg_synced_at',
         'bgg_sync_status',
         'bgg_sync_error_message',
@@ -59,6 +60,7 @@ class BoardGame extends Model
             'bgg_rating' => 'decimal:3',
             'complexity_rating' => 'decimal:3',
             'is_expansion' => 'boolean',
+            'categories' => 'array',
             'bgg_synced_at' => 'datetime',
         ];
     }

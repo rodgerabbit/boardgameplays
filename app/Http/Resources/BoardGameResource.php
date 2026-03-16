@@ -38,6 +38,7 @@ class BoardGameResource extends JsonResource
             'bgg_rating' => $this->bgg_rating !== null ? (float) $this->bgg_rating : null,
             'complexity_rating' => $this->complexity_rating !== null ? (float) $this->complexity_rating : null,
             'is_expansion' => $this->is_expansion,
+            'categories' => $this->categories ?? [],
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];

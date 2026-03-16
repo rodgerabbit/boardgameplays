@@ -9,7 +9,9 @@ namespace App\DTOs;
  *
  * This DTO represents a board game retrieved from the BoardGameGeek XML API.
  * It contains all the relevant information about a board game including
- * name, description, player counts, ratings, and other metadata.
+ * name, description, player counts, ratings, categories, and other metadata.
+ *
+ * @phpstan-type CategoryArray array{bgg_id: string, name: string}
  */
 class BoardGameGeekGameDto extends BaseDTO
 {
@@ -30,6 +32,7 @@ class BoardGameGeekGameDto extends BaseDTO
      * @param float|null $bggRating The BoardGameGeek rating (0-10 scale)
      * @param float|null $complexityRating The complexity rating (0-5 scale)
      * @param bool $isExpansion Whether this is an expansion
+     * @param list<array{bgg_id: string, name: string}> $categories Game categories from BGG (boardgamecategory links)
      */
     public function __construct(
         public readonly string $bggId,
@@ -46,6 +49,7 @@ class BoardGameGeekGameDto extends BaseDTO
         public readonly ?float $bggRating = null,
         public readonly ?float $complexityRating = null,
         public readonly bool $isExpansion = false,
+        public readonly array $categories = [],
     ) {
     }
 
@@ -71,6 +75,7 @@ class BoardGameGeekGameDto extends BaseDTO
             'bgg_rating' => $this->bggRating,
             'complexity_rating' => $this->complexityRating,
             'is_expansion' => $this->isExpansion,
+            'categories' => $this->categories,
         ];
     }
 }
