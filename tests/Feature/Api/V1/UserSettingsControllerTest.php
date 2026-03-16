@@ -8,7 +8,7 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
+use Tests\Feature\Api\V1\ApiV1TestCase;
 
 /**
  * Feature tests for UserSettingsController API endpoints.
@@ -17,7 +17,7 @@ use Tests\TestCase;
  * including retrieving and updating default group, theme preference, and
  * play notification delay settings.
  */
-class UserSettingsControllerTest extends TestCase
+class UserSettingsControllerTest extends ApiV1TestCase
 {
     use RefreshDatabase;
 

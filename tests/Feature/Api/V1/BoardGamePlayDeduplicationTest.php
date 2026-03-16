@@ -12,7 +12,7 @@ use App\Models\GroupMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use Tests\TestCase;
+use Tests\Feature\Api\V1\ApiV1TestCase;
 
 /**
  * Feature tests for board game play deduplication.
@@ -20,7 +20,7 @@ use Tests\TestCase;
  * These tests verify that duplicate plays are properly excluded from
  * API responses and statistics.
  */
-class BoardGamePlayDeduplicationTest extends TestCase
+class BoardGamePlayDeduplicationTest extends ApiV1TestCase
 {
     use RefreshDatabase;
 

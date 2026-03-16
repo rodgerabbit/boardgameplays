@@ -10,7 +10,7 @@ use App\Models\GroupMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
-use Tests\TestCase;
+use Tests\Feature\Api\V1\ApiV1TestCase;
 
 /**
  * Feature tests for GroupController API endpoints.
@@ -18,7 +18,7 @@ use Tests\TestCase;
  * These tests verify that the group CRUD API endpoints work correctly,
  * including creation, updates, deletion, rate limiting, and authorization.
  */
-class GroupControllerTest extends TestCase
+class GroupControllerTest extends ApiV1TestCase
 {
     use RefreshDatabase;
 

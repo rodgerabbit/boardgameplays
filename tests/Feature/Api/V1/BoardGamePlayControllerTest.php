@@ -9,14 +9,14 @@ use App\Models\BoardGamePlay;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
-use Tests\TestCase;
+use Tests\Feature\Api\V1\ApiV1TestCase;
 
 /**
  * Feature tests for BoardGamePlayController.
  *
  * These tests verify the API endpoints for board game plays.
  */
-class BoardGamePlayControllerTest extends TestCase
+class BoardGamePlayControllerTest extends ApiV1TestCase
 {
     use RefreshDatabase;
 

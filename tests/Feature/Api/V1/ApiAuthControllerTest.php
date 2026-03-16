@@ -7,7 +7,7 @@ namespace Tests\Feature\Api\V1;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Tests\TestCase;
+use Tests\Feature\Api\V1\ApiV1TestCase;
 
 /**
  * Feature tests for ApiAuthController (API authentication).
@@ -15,7 +15,7 @@ use Tests\TestCase;
  * These tests verify that the API-based authentication endpoints work correctly,
  * including login, registration, logout, and user retrieval using token-based authentication.
  */
-class ApiAuthControllerTest extends TestCase
+class ApiAuthControllerTest extends ApiV1TestCase
 {
     use RefreshDatabase;
 
