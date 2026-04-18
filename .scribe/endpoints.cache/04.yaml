@@ -142,7 +142,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           access-control-allow-origin: '*'
-          set-cookie: 'XSRF-TOKEN=eyJpdiI6InZVWUgwLzZnTzcwcjFCcVViTjVBRUE9PSIsInZhbHVlIjoiUHpMQmRHQXVINzkzWno1OTdKSDZUVUtEazc4ZGxiKzdyTkZoTDgweU5iM1ErS1lIZ2FkV0lxTG5teUlzQjVOS3g1RzRGZmh4V3dVdWJtdXhsK1FwdUNJRlB0d1RIM2dibWJyRS84bmovOFZTQ0hFRk9Vem1IWUZoRmtFNWhyblEiLCJtYWMiOiIzN2E3YWI4YWUzY2Y0N2Y4MTM4MWFkMjFmYjJjOTZlZWE2MzFjMTBjY2NmZDlkODFiNWI4ZjIyNWFiOGE0MTk4IiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:27 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6ImNzUEFKOGFFUGtFMDBXSjFpRmgxQVE9PSIsInZhbHVlIjoiY0c2WXFXOXEyZ1dOQm9TZzBPZkpsVnFaTC9XSlNYSDhoekp4RjVEWExqTi94alBJYklHZUUxRUNFSXFrTlNGNUxLKzRYYWlENEpjSWhXa2gzbHhRUzZIZUt5S2I3OXlPWVIwN0xZc0IyVVVTQ016TFFmUUk5Y3VZdUp1L1VpUGYiLCJtYWMiOiJhYmI0M2U1MDc4ZDI3NTcwZjYxYTBiZTAwODliZGMwMmI2MDc4ZWU5Yzg2MmRlM2IwMjRiZmRlMmE5ZjFhMzE1IiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:27 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6InBmb2ZGWnZDb3FGbUwxamtVb1lmYUE9PSIsInZhbHVlIjoiV2E3SjNwYm5NR1VuQURBak9LY2lrM29RQmQ0RTFYT2hldjA2NUF5Y3VEYlZnYk80LzNBaXBqU2k3aHVDWUJHZ28yclRtR3k4bW82WUliQkE1MlJ6OWlsa3Z6cy9xclFMNU1lZ3g2OFl5LzJ1WGJTTGFMQjVIZ0x4WCt1M3lFZk0iLCJtYWMiOiJjN2E4Yjc1NmI2NjgzM2UwMjY1ZGU2ODA5NzNhZTBlZTE0ZWI5MmMyMmJjZWQ0NTE1YWMzMDgwOGFjY2JmNTlmIiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IktETDRoNG94MVdEOTNiNG93Z2pDSXc9PSIsInZhbHVlIjoiOG5ldmZIZGpaWEwxZzlnRFFVU3FKWFJjbWZQclNIWjY0TW5BYktHcGJNSDRpUmdrUlVlNFhmMW5VbGJzdngybFZzMXlmNWt6OGU0WEtVdXNCeVNFTlRvUzlHcmMrZkE0VTh5Z3g4Zm5qOHordThBM05rNWJMQmxweWNhQ3ZzNVciLCJtYWMiOiI3ZGNmMTY0MTQ0YzUxMTAwYzFjNjE4ZmMxNGU4YTVhNzU5YWZjNTM5OTkyOGZkMjVhMGQ1YzQyZmMyZGJkMDBiIiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
         description: null
     responseFields: []
     auth:
@@ -189,7 +189,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           access-control-allow-origin: '*'
-          set-cookie: 'XSRF-TOKEN=eyJpdiI6ImZUejhFci9GdW0zOSs0QmlzTDRPZXc9PSIsInZhbHVlIjoiYXUvV3VQOWtHeHNBKzNQb2V2by93WmZXenRCbVJCT0RlRmNzMGZuYWEvbUswbUJuczRNQVZNcTN1MHg2eGlWNWh1QnZJdjhSbjBVOHZwZjN1TUlKSVBVcjdDeHB0NGtwVm42Umg0c0YzeHk0eWozOExGQjRZMHVEMnVNRG1NbFciLCJtYWMiOiI2MWMwNzI5ZDllMTQ5MWM1NGFhNjE5NDYzODdjNzQ4ZjY5NDE3M2FhYjA4N2U0NjFiYmI4ZTg1MGViMjRkMzE5IiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:27 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IjNMZXFZNjc4TUxST01VVm16alpTcEE9PSIsInZhbHVlIjoiejhKWjZvT3lIZGcyWlNscVBkdmRzblNkTmt5VmdmYy9IUGFNUG9qRmpEdEpOZFdraGk0b3p3UWxvQkJ3NFRyMEFITTI2M2dzVWpMUmxFSWpCZ2lQNmkvd2JzVzg4dHpjRFVjeGVlU1dUODNOMmRLK2U2MFRSSTcxbkxFRFNXa08iLCJtYWMiOiIxMDAzZmU5YjdkYmNmYWIzZjhkMTg4MjQ1NDIwMjFjYzJhN2MxN2I3ZWQ3ZDJhNDY4MjBhZGEzNTZkNzAyYjIwIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:27 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6Ijk3cWVHQnlkQ2MzSkxqcmRTalVVbFE9PSIsInZhbHVlIjoic1BqZGJiMTFJOWdPeFZKdncyV0ZkNTBJMzgxUE9lNkhoc1pPRWM0U0J4S05DdE9HcER2ODlSMVNsZUlTcXAyUFJOZ09TYW9DdklrTmphUm1WdlpBVzlUZkNWZjI2ZDA1UGFYNXl4US9hS0FRMDJ1c2orNlFvSVU5ZDZPTDdJOXUiLCJtYWMiOiJjYzJjNWI0MDBhMTIwYTBhYmEyNzg5NDViN2E1N2E5M2E4YmIxYzdhNTg5MGUyZjcxYmEzYzk1MDA3ZTQ1YWM2IiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6InFYQmllQkhrUHpjZjRid3lPemRmMFE9PSIsInZhbHVlIjoiUFFRODQ5YVF4SEVIQ1JSdHNoUzI1TUFoYzVOanJ6YmhTLzN5aTI2a1F0OHRpaGVzeC9QQTUxRlVZeTNmTS8rQjFZME1PZFE5WFhDbVBWT3MzbnltNm5lVXpNbTJObkhlNHZ4OE1PMnFCWFJXSjRPclduZmM0Y1dpcE83NlBSV3UiLCJtYWMiOiIxOTU2NmY1NzRhYmI5NWI5MDdlMzE2NjgyNzU1OTVmNWIyMmQzYTZlN2M5MGJmYzMyNTc0ZjJiZjhkZDVkYjE1IiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
         description: null
     responseFields: []
     auth:
@@ -307,7 +307,7 @@ endpoints:
         name: visibility
         description: ''
         required: false
-        example: private
+        example: viewable
         type: string
         enumValues:
           - private
@@ -323,7 +323,7 @@ endpoints:
       website_link: 'https://example.com'
       discord_link: 'https://discord.gg/example'
       slack_link: 'https://example.slack.com'
-      visibility: private
+      visibility: viewable
     fileParameters:
       photo: null
     responses:
@@ -531,7 +531,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           access-control-allow-origin: '*'
-          set-cookie: 'XSRF-TOKEN=eyJpdiI6ImF4NVJTTG9TcWwreEhURTFnblpHL0E9PSIsInZhbHVlIjoiU3ZkOUxaZHBQR3Z4djcvcDhLQ2hIL2pLQzZUYVlaKyt3VVRFZWtOOUJKNDlpcndTUDI3MEF6TG1lbDlXb0kyOFpEUHo0YWhsUjVEUVk3V2lBdnN5eU9RTEMzWnpzaCtBZUhHYkllZHFydFhoTzUxRG5XN2RBcmgrTTNTWFgzOW4iLCJtYWMiOiJhZjFmZDA1MGZkMTE3N2ZjNWVkNzc0ZmIyNTMxN2MxNGUwNGRiYTAzMjc1ZGI4Nzk5NzRhMTZhMjM2OGE2OGRhIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IldUTldWMXZBV01zSDRoVTlILzdJZVE9PSIsInZhbHVlIjoiSmN5ejc5MldJdnlVOTBrNmRtd3B2VU5QWFBPY09uTkMzL3ZkbWY5aFRON2hKN3JZaUg0UW0rcktHWEdUVkJtRElCZ2xOZFpsb29aUUxZYnJ6WXdZS3YyWWM1NVcwNWJNVHg2OUt3SUFyVHZlc2l4ZlFsMkEvdEVHcitacjFQaFgiLCJtYWMiOiJmYzhhNzIzYWU2NzA0MGQxYjMxY2NiYjVkN2I3NzBmYWY5NTkzN2UxNzg0NzVjMzNjYjM2OTBjMGQ5NzA3MmZiIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6Im5SZmk5aGQ3dzlsYUhOSm1STXRMbkE9PSIsInZhbHVlIjoiU3pKMmhyaG9IVzM0OWFpc3ZwckVpN0VMc3ZUM1lwMXlEWGY3d2xyQlV4VTBYWHFzRG96SDJJSzBjdktNQ0toMHVNSDJSTC9jTTY5bFlXRjhTSTlUazk3MmVxZlcwMVVYQi9tRVVmaWVKK3pLMFRYYUZXWk5Mb21wRkpCUTJ3UmMiLCJtYWMiOiI5MzgxNTIxM2I4ODdjMDgzMmM0MWY0ZDM1NmU1ODZlMjUzNTFmZTkxZWNhZTdkZjU1ZGUwYmIxODE0NGUyZGI0IiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6ImwrZ2VPcUYyeDkvMGZBbUl1QUptalE9PSIsInZhbHVlIjoiRkNrRmsxcnZYdVJjemFjZzlzNWhxWldhck9kMEljbEphN2ZHWEthT21UZUl1cWdsMlpja0RzOHpvdEZsQksxeGVraXRQdFhuK0VFdWNkWGZMMnl0TFJEVnFGajRSMnBaNXgyMnZpQ25ZRXlCdzh2TnR6YThxd2JtY2h2TmEvMzciLCJtYWMiOiIxZjkyNDI5NDk0OTAxZGM2YjIzZmMwYmU1MGU3MTZiZGFhODAxMzNiYzg0YTNmNTIyNmI1MzE0YmQzZjkxOGU4IiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
         description: null
     responseFields: []
     auth:
@@ -590,7 +590,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           access-control-allow-origin: '*'
-          set-cookie: 'XSRF-TOKEN=eyJpdiI6InNqRDI2cCt4eGN2d05INDJja0gycFE9PSIsInZhbHVlIjoiV0VzeWxBYUJGWDBacWg2YkpRQVEwYWhTR0tMWWVqNlF5SXBRa1NpQmdRWVhjUUtSU1hXQ1FHUnlvWTcwZFpKS1FmL283ODREbDBWeisvbFRGbTA0Z2d2eTFzTVFlL3RqYjNDVFpKaWxVeGVzZHdtcDNMSjlLam44VmFxd2tNLzciLCJtYWMiOiIxODZkOWM2YjY5OTlkY2Y1YTcyNjYzYTZhYjMwYWJmNzgwNzNkOWI2NDVkZmU4NjdkMTYwNDRmN2RmZDU2MzgwIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IkxSOU12dGJEbG9SbDJQUWVkaFFYSXc9PSIsInZhbHVlIjoiMHViU2hUQUtFSU03WmZmeS8rZkUxREhsclhFUWIrRE96YSt6Y0hLQ2lENktVQ2sxTHlKTDhBZXRIMzVEbWRRaUJOUWVzOGhDajhtc3cyOUFtWmpxdFZUYTZIQ1FzdHRER0ZvY3p3SEJIVXdQTDA0QndRcFB2K1RGbGt2Vzl6ZGYiLCJtYWMiOiI5MzM0MjkxNGE0OWFjMGUzMTIxYjYxMTk1NTBhMGI0MjUxODJiYjg1OTRjN2I5ODcwYTQ1OWI3NzA4MmQwMzJhIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6InpMM29PVnUrQS95ekdZaEEreS9uakE9PSIsInZhbHVlIjoiU2FES1NPRElqczU4S0hPVDdkS3FIZU9KeXBsMFZ6YXRBQ29JaFU2ZDdEaGZreU9VOTFtMFpTWmRsOWZlVFpSMXU5eFlnbGNERUQ1cmdobW1kSDdLTDh1cmtmRmczZktxS0JvcU5UZkc2cDFQNHMwbHN2VjJjS00wWmk1RjNNWWUiLCJtYWMiOiI1OGMxNjAzYjM2MmI1ODQ1MTE0MzE0MDk3NGNlNTVjMDFhOTRkMGI3ZGEzYWZkY2YzYTIwN2ZhMzJlYWRkNzRjIiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IndXYWZScDI2bDk3d1AwdUs2VDNzL3c9PSIsInZhbHVlIjoiZGpKUzJzR0JobTBOSzloVmpSKzE5M082QWdIMGFHR2JRVFJWMXhHRnlidHJrZlNlcHZVMnlNK1hrMFVaaFk2QWtVa1llWk1Sc1hTc1NQbnBrTzVJWk1id0dhYlJuYi8xeHh6bC9ZeVZLbmYzenQ0eWp3OUdEdjFONDZwcHdsbi8iLCJtYWMiOiJiYmE5YzhiN2Y2ODAwNDAwNjRhMjRlNGQ2Zjk5Nzg0Yjc0NzUxYTU3ZDRlNmFhOTViMmI0MTZlYzcxMjBmNDVhIiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
         description: null
     responseFields: []
     auth:
@@ -649,7 +649,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           access-control-allow-origin: '*'
-          set-cookie: 'XSRF-TOKEN=eyJpdiI6Ii91eHhvQVRwQTlnSTFkdlYzWExyemc9PSIsInZhbHVlIjoiNzZyTDJtQWJrMFJrZ2FZOE9XdHlEbTNFME9JaHIxSGJadnlUUTJpYVdmY3VYUHdPclNkR3FyeXZzSlJuUHFlOStzbm9WdVY4cTRvaTN1czZJV0ZHZXVyNG9GTWlWT0JtTTVlUU1obzJoNEJBcVhtMi9kSFlPQ3hWcURORC9odjEiLCJtYWMiOiJmYjIyMzlhMjA0MWRkOWY0NjZiN2ViMDViMGFjYjA4NzFlZWU3MTAyZTM5ZDcxYmU2ODJmMTdkYjNlMzdiZWI4IiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6ImpIWlFvTlc0eSt6YjBFRk5PVS9XZWc9PSIsInZhbHVlIjoiVFBRZmFIcEoxbkUrVW5XMnF0SkQxZDdLSEdtV0lPVVFMZlBWbHN2SnNYc2trLzFnVFErenVYcjJJajVvM1poMU1lQko1Mi9hYncwNzhKazg1MGZSTnY0d3hzMzh0VGc3Q3RzZFhORlZkd3NUUy9aYWJUbi9ndGhxZFd5QXFUdysiLCJtYWMiOiIyYzUwZWUxODc0MDRhMmYwZTdjNGE1N2ZiNjMzNTNmZWVkMDQxY2FhNjlkZDg5NzA2M2I2Y2FmNzFiYWY0ZDEwIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6InNtNVRKMFdSNmsrbjlLZ2h0S3hPTFE9PSIsInZhbHVlIjoiYnlZeU1nbG9UZ2NwVnVOQmF5NUM0WTZWc3ViNkVpVGlVOFdhK3lmV2lPcmI1eXJlVVRGZVBJc1RzOVMzM1BJeHZCN2JkZXR3dzJHQU9hb2dGdUZ5MmNSdm11NHlWdE53Q0Mwc2hmYlErRjJFMzBaSXdQMzJRaEx3clRPakZaNlAiLCJtYWMiOiI4MzBmZmM5Yjg1YjlhZGYzZDc5NDYxNTQxM2Y3YTIwODcwM2NjYTgzZTQ3MjlkNjM0YzZhNzllNWY1M2UyMzEwIiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IlZOQXFZWVRFMlNld3l6Z2ZsRERLYWc9PSIsInZhbHVlIjoiczFaZEhYQnRBMG95OXVHQ3dFNDJhaUNHTlIvY3pqNVVWVmtYMWd1clcrWmFSd25vbCtLUVpUMm85REpsY0MwNiszTm5ONW5TZ0IrZjR5NGc1aWh5Q0kvY2hpaXJGRWZqdDVnQkgxelFXRnVHbVRZZTE1N1VoUm9tbWx5VEdTNVciLCJtYWMiOiIyMTM5ZGEwMjQzOWEwZTBlMDA3ZWZiYjI0NWEzNjk5Mzk5ZTlhZTg0OTRlOTZhODRkM2MxYjI5YTlmMTFhZWIxIiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
         description: null
     responseFields: []
     auth:
@@ -780,7 +780,7 @@ endpoints:
         name: visibility
         description: ''
         required: false
-        example: viewable
+        example: private
         type: string
         enumValues:
           - private
@@ -875,7 +875,7 @@ endpoints:
       website_link: 'https://example.com'
       discord_link: 'https://discord.gg/example'
       slack_link: 'https://example.slack.com'
-      visibility: viewable
+      visibility: private
       group_settings:
         location_aliases:
           -
@@ -1272,7 +1272,7 @@ endpoints:
           cache-control: 'no-cache, private'
           content-type: application/json
           access-control-allow-origin: '*'
-          set-cookie: 'XSRF-TOKEN=eyJpdiI6IitHaVl3VFR0dlVhcmlSMFZSelNLMWc9PSIsInZhbHVlIjoiZHdUcFJCZzlTWllqUUg2TlNobmFvQkQrV0VqalJWUlpNMnp0THJKVGMvSXNOZnhBQTJaTk9sWnlYck1ZdFdGbVdmMG9WUGl0U3hhQk0zYnBGMVlIU0ZZZEtleDVBTmNBNjBmdkFHNGNqZkVMS3BRRm92Q0I5NnBqakRGMFV5M2kiLCJtYWMiOiJlODNjYWIyMWFlMzVjMGVlNjQ5NDIxNDFiYjIyZThjYTQwZjU0Nzk4ZDQ4NTVmNDNlZDIyMWY0NDZjOTg2MTNjIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6IkRuMWY3Tm1ESS94T3I5NmI3MjdLK3c9PSIsInZhbHVlIjoiTWp2SXRHMUZWeTlxUWlLTzI5Y25pQ2NrQmNheU9OaW4wR24wYWs3di9xZDIzTzNPVUtUMUs0bFY3eSt3SDJUMEJmOElBQ3RxYUx0TnB4Q0pSRDhnZVdTelpDdmhWcGovai92TGorTUlyZmRHeHRqNXM3UmhxSnRPaHNZcGVNMmEiLCJtYWMiOiJlYjQ0NDY3NDlhYTczNzNmNmE2OGIyNjA4N2Y4Yjk5MmIwNjEyYzBlMGUzMmJkMTk3NWU3YTk1OWVkZjZiOWIxIiwidGFnIjoiIn0%3D; expires=Mon, 16 Mar 2026 22:32:28 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6IjlwYTZmMkRqWSs0SUdBYS80eVVGN0E9PSIsInZhbHVlIjoiU1FEaXlHalR5Mnk4VmtBc0swOUNsUEc3VCtxY1RHbFV4K3pqOWVTTlBZUDdCd2VIcWNmMWF1RUZhR2tFN0ZuSlVBUU12NXNUSGNocFY2alE5QVIvZUppbVpVUXMyNERTSlFZeThhcDNVODNlc0VHd1EzRlNKd2lKOTR5cDQ1bWEiLCJtYWMiOiI1M2Q3NjczN2M4ODcyMjNlOWRkMzk4NDdmOGFlZDI0ZTkzYzAwOTc1ZGU5NWM5MTgxNzU2MjgwYWVjNDNlZTk2IiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; samesite=lax; boardgameplays-session=eyJpdiI6Ik5oTnpkQjA1NEJCSzk0SmNTaUdVc2c9PSIsInZhbHVlIjoiSlc3OVYxbFp0TlZQL2xGNkJ0YlR4VXREYnVPMGExcmxIZ1VDR1RKcXJ6cGVQVU5xYTNxUFdZSVN2UEwzRVN4Tjd0OVFNRkV6SW5JN2xrMTAycEN0eStYRk45UnUzd05MSmFtUENBVUsvWTRUYWYzcXVrVUZVWE5Nb3J6dWp5RG8iLCJtYWMiOiIwM2UyOGQ3MmNiYzc1NmFkM2YzNGQxZTljMjI1YTE3NGUwZGM1N2YzNDFjNmQxNjI3NWQ3ODRiOWYxMzE4M2E2IiwidGFnIjoiIn0%3D; expires=Sat, 18 Apr 2026 13:20:41 GMT; Max-Age=7200; path=/; httponly; samesite=lax'
         description: null
     responseFields: []
     auth:
