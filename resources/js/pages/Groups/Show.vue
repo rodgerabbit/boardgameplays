@@ -229,20 +229,101 @@
                         <table class="w-full border-collapse text-sm">
                             <thead>
                                 <tr class="border-b border-surface-darker text-left">
-                                    <th class="py-2 pr-4 font-medium text-text-dark">Member</th>
-                                    <th class="py-2 px-2 font-medium text-text-dark">Games played</th>
-                                    <th class="py-2 px-2 font-medium text-text-dark">Won</th>
-                                    <th class="py-2 px-2 font-medium text-text-dark">Win %</th>
-                                    <th class="py-2 px-2 font-medium text-text-dark">Unique games</th>
-                                    <th class="py-2 px-2 font-medium text-text-dark">Time played</th>
-                                    <th class="py-2 px-2 font-medium text-text-dark">Last active</th>
-                                    <th class="py-2 px-2 font-medium text-text-dark">H-index (games)</th>
-                                    <th class="py-2 pl-2 font-medium text-text-dark">H-index (players)</th>
+                                    <th scope="col" class="py-2 pr-4 font-medium text-text-dark" :aria-sort="membersSortAriaSort('member_name')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex max-w-full items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('member_name')"
+                                        >
+                                            <span>Member</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('member_name') }}</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="py-2 px-2 font-medium text-text-dark" :aria-sort="membersSortAriaSort('total_games_played')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('total_games_played')"
+                                        >
+                                            <span>Games played</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('total_games_played') }}</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="py-2 px-2 font-medium text-text-dark" :aria-sort="membersSortAriaSort('total_games_won')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('total_games_won')"
+                                        >
+                                            <span>Won</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('total_games_won') }}</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="py-2 px-2 font-medium text-text-dark" :aria-sort="membersSortAriaSort('win_percentage')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('win_percentage')"
+                                        >
+                                            <span>Win %</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('win_percentage') }}</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="py-2 px-2 font-medium text-text-dark" :aria-sort="membersSortAriaSort('unique_games_played')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('unique_games_played')"
+                                        >
+                                            <span>Unique games</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('unique_games_played') }}</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="py-2 px-2 font-medium text-text-dark" :aria-sort="membersSortAriaSort('total_minutes_played')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('total_minutes_played')"
+                                        >
+                                            <span>Time played</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('total_minutes_played') }}</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="py-2 px-2 font-medium text-text-dark" :aria-sort="membersSortAriaSort('last_active_at')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('last_active_at')"
+                                        >
+                                            <span>Last active</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('last_active_at') }}</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="py-2 px-2 font-medium text-text-dark" :aria-sort="membersSortAriaSort('h_index_games')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('h_index_games')"
+                                        >
+                                            <span>H-index (games)</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('h_index_games') }}</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="py-2 pl-2 font-medium text-text-dark" :aria-sort="membersSortAriaSort('h_index_players')">
+                                        <button
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded font-medium text-text-dark hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface-dark"
+                                            @click="toggleMembersSortColumn('h_index_players')"
+                                        >
+                                            <span>H-index (players)</span>
+                                            <span class="tabular-nums text-text-muted-dark" aria-hidden="true">{{ membersSortIndicator('h_index_players') }}</span>
+                                        </button>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr
-                                    v-for="m in membersStats"
+                                    v-for="m in sortedMembersStats"
                                     :key="m.group_member_id"
                                     class="border-b border-surface-darker"
                                 >
@@ -530,7 +611,7 @@
 
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, computed } from 'vue';
 import axios from 'axios';
 import { Chart, registerables } from 'chart.js';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -581,6 +662,114 @@ const overviewError = ref(null);
 const membersStatsLoading = ref(false);
 const membersStats = ref(null);
 const membersError = ref(null);
+const membersSortColumn = ref(null);
+const membersSortDirection = ref('asc');
+
+const sortedMembersStats = computed(() => {
+    const rows = membersStats.value;
+    if (!rows?.length) {
+        return rows || [];
+    }
+    if (!membersSortColumn.value) {
+        return rows;
+    }
+    const column = membersSortColumn.value;
+    const ascending = membersSortDirection.value === 'asc';
+    return [...rows].sort((a, b) => {
+        let comparison = compareGroupMemberStatisticsRows(a, b, column, ascending);
+        if (comparison === 0 && a.group_member_id != null && b.group_member_id != null) {
+            comparison = Number(a.group_member_id) - Number(b.group_member_id);
+        }
+        return comparison;
+    });
+});
+
+function toggleMembersSortColumn(column) {
+    if (membersSortColumn.value === column) {
+        membersSortDirection.value = membersSortDirection.value === 'asc' ? 'desc' : 'asc';
+        return;
+    }
+    membersSortColumn.value = column;
+    membersSortDirection.value = 'asc';
+}
+
+function membersSortIndicator(column) {
+    if (membersSortColumn.value !== column) {
+        return '';
+    }
+    return membersSortDirection.value === 'asc' ? '↑' : '↓';
+}
+
+function membersSortAriaSort(column) {
+    if (membersSortColumn.value !== column) {
+        return 'none';
+    }
+    return membersSortDirection.value === 'asc' ? 'ascending' : 'descending';
+}
+
+function groupMemberStatisticsDisplayName(member) {
+    return String(member.display_name || member.user_name || '').toLocaleLowerCase();
+}
+
+function compareGroupMemberStatisticsRows(firstRow, secondRow, column, ascending) {
+    let comparison = 0;
+    switch (column) {
+        case 'member_name':
+            comparison = groupMemberStatisticsDisplayName(firstRow).localeCompare(
+                groupMemberStatisticsDisplayName(secondRow),
+            );
+            break;
+        case 'total_games_played':
+            comparison = (Number(firstRow.total_games_played) || 0) - (Number(secondRow.total_games_played) || 0);
+            break;
+        case 'total_games_won':
+            comparison = (Number(firstRow.total_games_won) || 0) - (Number(secondRow.total_games_won) || 0);
+            break;
+        case 'win_percentage':
+            comparison = (Number(firstRow.win_percentage) || 0) - (Number(secondRow.win_percentage) || 0);
+            break;
+        case 'unique_games_played':
+            comparison = (Number(firstRow.unique_games_played) || 0) - (Number(secondRow.unique_games_played) || 0);
+            break;
+        case 'total_minutes_played':
+            comparison = (Number(firstRow.total_minutes_played) || 0) - (Number(secondRow.total_minutes_played) || 0);
+            break;
+        case 'last_active_at':
+            comparison = compareLastActiveAtForMemberStatistics(firstRow.last_active_at, secondRow.last_active_at, ascending);
+            break;
+        case 'h_index_games':
+            comparison = (Number(firstRow.h_index_games) || 0) - (Number(secondRow.h_index_games) || 0);
+            break;
+        case 'h_index_players':
+            comparison = (Number(firstRow.h_index_players) || 0) - (Number(secondRow.h_index_players) || 0);
+            break;
+        default:
+            comparison = 0;
+    }
+    if (column !== 'last_active_at') {
+        return ascending ? comparison : -comparison;
+    }
+    return comparison;
+}
+
+/** Null or missing last-active values sort after any real date in both directions. */
+function compareLastActiveAtForMemberStatistics(firstIso, secondIso, ascending) {
+    const firstTime = typeof firstIso === 'string' && firstIso ? new Date(firstIso).getTime() : null;
+    const secondTime = typeof secondIso === 'string' && secondIso ? new Date(secondIso).getTime() : null;
+    const firstValid = firstTime !== null && !Number.isNaN(firstTime);
+    const secondValid = secondTime !== null && !Number.isNaN(secondTime);
+    if (!firstValid && !secondValid) {
+        return 0;
+    }
+    if (!firstValid) {
+        return 1;
+    }
+    if (!secondValid) {
+        return -1;
+    }
+    const chronological = firstTime - secondTime;
+    return ascending ? chronological : -chronological;
+}
 const gamesLoading = ref(false);
 const gamesData = ref(null);
 const gamesError = ref(null);
