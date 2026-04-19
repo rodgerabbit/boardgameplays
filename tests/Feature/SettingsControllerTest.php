@@ -11,6 +11,7 @@ use App\Models\BggPlaysSync;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -29,7 +30,7 @@ class SettingsControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->withoutMiddleware(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class);
+        $this->withoutMiddleware(ValidateCsrfToken::class);
     }
 
     public function test_settings_page_redirects_guests_to_login(): void
@@ -59,6 +60,9 @@ class SettingsControllerTest extends TestCase
             ->where('user.biography', 'Board game enthusiast.')
             ->has('user.theme_preference')
             ->has('user.is_profile_public')
+            ->has('user.default_group_id')
+            ->has('user.effective_default_group_id')
+            ->has('memberGroups')
             ->has('boardGameGeek')
             ->has('user.board_game_geek_username')
             ->has('theme_preference')  // shared globally by HandleInertiaRequests
@@ -241,6 +245,64 @@ class SettingsControllerTest extends TestCase
         $this->assertFalse($user->is_profile_public);
     }
 
+    public function test_update_preferences_can_set_default_group_for_logging_plays(): void
+    {
+        $user = User::factory()->create(['default_group_id' => null]);
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
+            'default_group_id' => $group->id,
+        ]);
+
+        $response->assertRedirect('/settings');
+        $response->assertSessionHas('success');
+        $user->refresh();
+        $this->assertSame($group->id, $user->default_group_id);
+    }
+
+    public function test_update_preferences_can_clear_default_group_to_automatic(): void
+    {
+        $group = Group::factory()->create();
+        $user = User::factory()->create(['default_group_id' => $group->id]);
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
+            'default_group_id' => null,
+        ]);
+
+        $response->assertRedirect('/settings');
+        $user->refresh();
+        $this->assertNull($user->default_group_id);
+    }
+
+    public function test_update_preferences_rejects_default_group_user_is_not_member_of(): void
+    {
+        $user = User::factory()->create(['default_group_id' => null]);
+        $otherGroup = Group::factory()->create();
+
+        $response = $this->actingAs($user)->put('/settings/preferences', [
+            'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
+            'default_group_id' => $otherGroup->id,
+        ]);
+
+        $response->assertSessionHasErrors('default_group_id');
+        $user->refresh();
+        $this->assertNull($user->default_group_id);
+    }
+
     public function test_update_boardgamegeek_saves_username_and_dispatches_sync_jobs(): void
     {
         Queue::fake();
@@ -282,7 +344,7 @@ class SettingsControllerTest extends TestCase
         $domain = config('groups.bgg_invite_placeholder_email_domain', 'boardgameplays.invite');
         $placeholder = User::factory()->create([
             'name' => 'placeheld',
-            'email' => 'bgg_' . md5(strtolower('placeheld')) . '@' . $domain,
+            'email' => 'bgg_'.md5(strtolower('placeheld')).'@'.$domain,
             'board_game_geek_username' => 'placeheld',
         ]);
         $this->assertTrue($placeholder->isBggPlaceholderUser());
@@ -310,7 +372,7 @@ class SettingsControllerTest extends TestCase
         $domain = config('groups.bgg_invite_placeholder_email_domain', 'boardgameplays.invite');
         $placeholder = User::factory()->create([
             'name' => 'bggmember',
-            'email' => 'bgg_' . md5(strtolower('bggmember')) . '@' . $domain,
+            'email' => 'bgg_'.md5(strtolower('bggmember')).'@'.$domain,
             'board_game_geek_username' => 'bggmember',
         ]);
         $group = Group::factory()->create();

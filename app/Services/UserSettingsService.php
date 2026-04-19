@@ -20,21 +20,21 @@ class UserSettingsService extends BaseService
     /**
      * Update user settings.
      *
-     * @param User $user The user to update settings for
-     * @param array<string, mixed> $settingsData The settings data to update
+     * @param  User  $user  The user to update settings for
+     * @param  array<string, mixed>  $settingsData  The settings data to update
      * @return User The updated user
      */
     public function updateUserSettings(User $user, array $settingsData): User
     {
         return DB::transaction(function () use ($user, $settingsData): User {
-            // Validate default_group_id if provided
-            if (isset($settingsData['default_group_id'])) {
+            // Validate default_group_id when the key is present (including explicit null to clear)
+            if (array_key_exists('default_group_id', $settingsData)) {
                 $groupId = $settingsData['default_group_id'];
-                
+
                 if ($groupId !== null) {
                     // Verify the group exists and user is a member
                     $isMember = $user->groups()->where('groups.id', $groupId)->exists();
-                    if (!$isMember) {
+                    if (! $isMember) {
                         throw new \InvalidArgumentException(
                             'The specified group does not exist or you are not a member of it.'
                         );
@@ -49,17 +49,17 @@ class UserSettingsService extends BaseService
                     User::THEME_DARK,
                     User::THEME_SYSTEM,
                 ];
-                
-                if (!in_array($settingsData['theme_preference'], $validThemes, true)) {
+
+                if (! in_array($settingsData['theme_preference'], $validThemes, true)) {
                     throw new \InvalidArgumentException(
-                        'Invalid theme preference. Must be one of: ' . implode(', ', $validThemes)
+                        'Invalid theme preference. Must be one of: '.implode(', ', $validThemes)
                     );
                 }
             }
 
             // Validate is_profile_public if provided
             if (array_key_exists('is_profile_public', $settingsData)) {
-                if (!is_bool($settingsData['is_profile_public'])) {
+                if (! is_bool($settingsData['is_profile_public'])) {
                     throw new \InvalidArgumentException('Profile visibility must be true or false.');
                 }
             }
@@ -67,16 +67,16 @@ class UserSettingsService extends BaseService
             // Validate play_notification_delay_hours if provided
             if (isset($settingsData['play_notification_delay_hours'])) {
                 $delay = (int) $settingsData['play_notification_delay_hours'];
-                
+
                 if ($delay < 0 || $delay > User::MAX_PLAY_NOTIFICATION_DELAY_HOURS) {
                     throw new \InvalidArgumentException(
-                        'Play notification delay must be between 0 and ' . User::MAX_PLAY_NOTIFICATION_DELAY_HOURS . ' hours.'
+                        'Play notification delay must be between 0 and '.User::MAX_PLAY_NOTIFICATION_DELAY_HOURS.' hours.'
                     );
                 }
             }
 
             $user->update($settingsData);
-            
+
             return $user->fresh();
         });
     }
@@ -87,7 +87,7 @@ class UserSettingsService extends BaseService
      * This method will set the user's default_group_id to their first group
      * if they have one and don't already have a default group set.
      *
-     * @param User $user The user to set default group for
+     * @param  User  $user  The user to set default group for
      * @return User The updated user
      */
     public function setDefaultGroupToFirst(User $user): User
@@ -101,7 +101,7 @@ class UserSettingsService extends BaseService
         }
 
         $firstGroup = $user->getFirstGroup();
-        
+
         if ($firstGroup) {
             $user->update(['default_group_id' => $firstGroup->id]);
         }
@@ -115,7 +115,7 @@ class UserSettingsService extends BaseService
      * Returns the user's default_group_id if set and valid, otherwise
      * returns the first group the user creates or joins.
      *
-     * @param User $user The user
+     * @param  User  $user  The user
      * @return int|null The effective default group ID, or null if no groups exist
      */
     public function getEffectiveDefaultGroupId(User $user): ?int

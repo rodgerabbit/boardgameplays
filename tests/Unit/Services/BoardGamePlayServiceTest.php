@@ -7,6 +7,7 @@ namespace Tests\Unit\Services;
 use App\Models\BoardGame;
 use App\Models\BoardGamePlay;
 use App\Models\Group;
+use App\Models\GroupMember;
 use App\Models\User;
 use App\Services\BoardGamePlayService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -79,7 +80,41 @@ class BoardGamePlayServiceTest extends TestCase
     {
         $user = User::factory()->create();
         $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
         $user->update(['default_group_id' => $group->id]);
+
+        $boardGame = BoardGame::factory()->create(['is_expansion' => false]);
+
+        $playData = [
+            'board_game_id' => $boardGame->id,
+            'played_at' => '2025-01-07',
+            'location' => 'Home',
+            'source' => 'website',
+            'players' => [
+                ['guest_name' => 'Player 1'],
+            ],
+        ];
+
+        $play = $this->service->createBoardGamePlay($playData, $user);
+
+        $this->assertEquals($group->id, $play->group_id);
+    }
+
+    public function test_create_board_game_play_uses_first_member_group_when_default_group_id_not_set(): void
+    {
+        $user = User::factory()->create(['default_group_id' => null]);
+        $group = Group::factory()->create();
+        GroupMember::create([
+            'group_id' => $group->id,
+            'user_id' => $user->id,
+            'role' => GroupMember::ROLE_GROUP_MEMBER,
+            'joined_at' => now(),
+        ]);
 
         $boardGame = BoardGame::factory()->create(['is_expansion' => false]);
 
@@ -114,4 +149,3 @@ class BoardGamePlayServiceTest extends TestCase
         $this->service->validatePlayerCount(0);
     }
 }
-

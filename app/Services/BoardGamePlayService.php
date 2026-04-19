@@ -26,14 +26,13 @@ class BoardGamePlayService extends BaseService
     public function __construct(
         private readonly BoardGamePlayDeduplicationService $deduplicationService,
         private readonly GroupAuditLogService $groupAuditLogService
-    ) {
-    }
+    ) {}
 
     /**
      * Create a new board game play with validation.
      *
-     * @param array<string, mixed> $playData The play data
-     * @param User $user The user creating the play
+     * @param  array<string, mixed>  $playData  The play data
+     * @param  User  $user  The user creating the play
      * @return BoardGamePlay The created play
      */
     public function createBoardGamePlay(array $playData, User $user): BoardGamePlay
@@ -57,7 +56,7 @@ class BoardGamePlayService extends BaseService
             }
 
             // Set default group if not provided
-            if (!isset($playData['group_id'])) {
+            if (! isset($playData['group_id'])) {
                 $defaultGroup = $this->getDefaultGroupForUser($user);
                 if ($defaultGroup !== null) {
                     $playData['group_id'] = $defaultGroup->id;
@@ -93,7 +92,7 @@ class BoardGamePlayService extends BaseService
             }
 
             // Attach expansions if provided
-            if (!empty($expansions)) {
+            if (! empty($expansions)) {
                 $play->expansions()->attach($expansions);
             }
 
@@ -125,9 +124,9 @@ class BoardGamePlayService extends BaseService
     /**
      * Update a board game play.
      *
-     * @param BoardGamePlay $play The play to update
-     * @param array<string, mixed> $playData The updated play data
-     * @param User $user The user performing the update
+     * @param  BoardGamePlay  $play  The play to update
+     * @param  array<string, mixed>  $playData  The updated play data
+     * @param  User  $user  The user performing the update
      * @return BoardGamePlay The updated play
      */
     public function updateBoardGamePlay(BoardGamePlay $play, array $playData, User $user): BoardGamePlay
@@ -207,7 +206,7 @@ class BoardGamePlayService extends BaseService
      * If the play is a leading play, promote another from the excluded group.
      * If the play is excluded, just delete it.
      *
-     * @param BoardGamePlay $play The play to delete
+     * @param  BoardGamePlay  $play  The play to delete
      * @return bool True if deleted successfully
      */
     public function deleteBoardGamePlay(BoardGamePlay $play): bool
@@ -241,8 +240,8 @@ class BoardGamePlayService extends BaseService
     /**
      * Add a player to a play.
      *
-     * @param BoardGamePlay $play The play
-     * @param array<string, mixed> $playerData The player data
+     * @param  BoardGamePlay  $play  The play
+     * @param  array<string, mixed>  $playerData  The player data
      * @return BoardGamePlayPlayer The created player
      */
     public function addPlayerToPlay(BoardGamePlay $play, array $playerData): BoardGamePlayPlayer
@@ -263,8 +262,8 @@ class BoardGamePlayService extends BaseService
     /**
      * Remove a player from a play.
      *
-     * @param BoardGamePlay $play The play
-     * @param int $playerId The player ID to remove
+     * @param  BoardGamePlay  $play  The play
+     * @param  int  $playerId  The player ID to remove
      * @return bool True if removed successfully
      */
     public function removePlayerFromPlay(BoardGamePlay $play, int $playerId): bool
@@ -277,12 +276,11 @@ class BoardGamePlayService extends BaseService
     /**
      * Auto-detect and mark new players.
      *
-     * @param BoardGamePlay $play The play
-     * @return void
+     * @param  BoardGamePlay  $play  The play
      */
     public function detectNewPlayers(BoardGamePlay $play): void
     {
-        $playerService = new BoardGamePlayPlayerService();
+        $playerService = new BoardGamePlayPlayerService;
 
         foreach ($play->players as $player) {
             $isFirstPlay = $playerService->isFirstPlayForPlayer(
@@ -300,8 +298,8 @@ class BoardGamePlayService extends BaseService
     /**
      * Validate that a board game is not an expansion.
      *
-     * @param BoardGame $boardGame The board game to validate
-     * @return void
+     * @param  BoardGame  $boardGame  The board game to validate
+     *
      * @throws \InvalidArgumentException If the board game is an expansion
      */
     public function validateBoardGameIsNotExpansion(BoardGame $boardGame): void
@@ -314,13 +312,13 @@ class BoardGamePlayService extends BaseService
     /**
      * Validate that a board game is an expansion.
      *
-     * @param BoardGame $boardGame The board game to validate
-     * @return void
+     * @param  BoardGame  $boardGame  The board game to validate
+     *
      * @throws \InvalidArgumentException If the board game is not an expansion
      */
     public function validateExpansionIsExpansion(BoardGame $boardGame): void
     {
-        if (!$boardGame->is_expansion) {
+        if (! $boardGame->is_expansion) {
             throw new \InvalidArgumentException('Board game must be an expansion.');
         }
     }
@@ -328,8 +326,8 @@ class BoardGamePlayService extends BaseService
     /**
      * Validate player count is within limits.
      *
-     * @param int $count The player count
-     * @return void
+     * @param  int  $count  The player count
+     *
      * @throws \InvalidArgumentException If player count is invalid
      */
     public function validatePlayerCount(int $count): void
@@ -344,31 +342,31 @@ class BoardGamePlayService extends BaseService
     }
 
     /**
-     * Get the default group for a user.
+     * Get the default group for a user when logging a play (no explicit group).
      *
-     * @param User $user The user
-     * @return Group|null The default group or null
+     * Uses the user's saved default when set and valid, otherwise the first group
+     * the user joined or created.
+     *
+     * @param  User  $user  The user
+     * @return Group|null The default group or null when the user has no groups
      */
     public function getDefaultGroupForUser(User $user): ?Group
     {
-        if ($user->default_group_id === null) {
-            return null;
-        }
+        $groupId = $user->getDefaultGroupIdOrFirst();
 
-        return Group::find($user->default_group_id);
+        return $groupId !== null ? Group::find($groupId) : null;
     }
 
     /**
      * Queue BGG sync job if requested.
      *
-     * @param BoardGamePlay $play The play to sync
-     * @param string|null $bggUsername Optional BGG username for provided credentials method
-     * @param string|null $bggPassword Optional BGG password for provided credentials method
-     * @return void
+     * @param  BoardGamePlay  $play  The play to sync
+     * @param  string|null  $bggUsername  Optional BGG username for provided credentials method
+     * @param  string|null  $bggPassword  Optional BGG password for provided credentials method
      */
     public function queueBggSyncIfRequested(BoardGamePlay $play, ?string $bggUsername = null, ?string $bggPassword = null): void
     {
-        if (!$play->sync_to_bgg) {
+        if (! $play->sync_to_bgg) {
             return;
         }
 
@@ -382,4 +380,3 @@ class BoardGamePlayService extends BaseService
             ->delay(now()->addSeconds(2));
     }
 }
-

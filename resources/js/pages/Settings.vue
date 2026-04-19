@@ -205,6 +205,43 @@
                                 {{ preferencesForm.errors.is_profile_public }}
                             </p>
                         </div>
+                        <div>
+                            <label for="default_group_id" class="block text-sm font-medium text-text-dark">
+                                Default group for logging plays
+                            </label>
+                            <select
+                                id="default_group_id"
+                                v-model="preferencesForm.default_group_id"
+                                class="mt-1 w-full rounded-lg border border-surface-darker bg-surface-darker px-3 py-2 text-text-dark focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                :disabled="!memberGroups.length"
+                            >
+                                <option value="">
+                                    First group I joined or created (automatic)
+                                </option>
+                                <option
+                                    v-for="group in memberGroups"
+                                    :key="group.id"
+                                    :value="group.id"
+                                >
+                                    {{ group.friendly_name }}
+                                </option>
+                            </select>
+                            <p v-if="!memberGroups.length" class="mt-1 text-xs text-text-muted-dark">
+                                Join or create a group to set a default. Until then, plays are not tied to a group unless you pick one when logging.
+                            </p>
+                            <p v-else-if="preferencesForm.default_group_id === ''" class="mt-1 text-xs text-text-muted-dark">
+                                <template v-if="effectiveDefaultGroupLabel">
+                                    Plays will default to <span class="font-medium text-text-dark">{{ effectiveDefaultGroupLabel }}</span>
+                                    (the earliest group you joined or created).
+                                </template>
+                            </p>
+                            <p v-else class="mt-1 text-xs text-text-muted-dark">
+                                New plays will be logged under this group when no group is chosen.
+                            </p>
+                            <p v-if="preferencesForm.errors.default_group_id" class="mt-1 text-sm text-primary">
+                                {{ preferencesForm.errors.default_group_id }}
+                            </p>
+                        </div>
                         <div class="flex items-center gap-3">
                             <button
                                 type="submit"
@@ -466,10 +503,16 @@ const props = defineProps({
             biography: null,
             theme_preference: THEME_SYSTEM,
             is_profile_public: false,
+            default_group_id: null,
+            effective_default_group_id: null,
             board_game_geek_username: null,
             sync_plays_to_board_game_geek: false,
             use_generic_user_for_bgg_plays: true,
         }),
+    },
+    memberGroups: {
+        type: Array,
+        default: () => [],
     },
     boardGameGeek: {
         type: Object,
@@ -501,7 +544,33 @@ const profileForm = useForm({
 const preferencesForm = useForm({
     theme_preference: props.user.theme_preference ?? THEME_SYSTEM,
     is_profile_public: Boolean(props.user.is_profile_public),
+    default_group_id: props.user.default_group_id != null ? props.user.default_group_id : '',
 });
+
+const effectiveDefaultGroupLabel = computed(() => {
+    const id = props.user.effective_default_group_id;
+    if (id == null) {
+        return null;
+    }
+    const group = props.memberGroups.find((g) => g.id === id);
+    return group?.friendly_name ?? `Group #${id}`;
+});
+
+watch(
+    () => ({
+        theme_preference: props.user.theme_preference,
+        is_profile_public: props.user.is_profile_public,
+        default_group_id: props.user.default_group_id,
+    }),
+    (values) => {
+        preferencesForm.defaults({
+            theme_preference: values.theme_preference ?? THEME_SYSTEM,
+            is_profile_public: Boolean(values.is_profile_public),
+            default_group_id: values.default_group_id != null ? values.default_group_id : '',
+        });
+        preferencesForm.reset();
+    },
+);
 
 const bggForm = useForm({
     board_game_geek_username: props.user.board_game_geek_username ?? '',
@@ -595,9 +664,19 @@ function submitProfile() {
 }
 
 function submitPreferences() {
-    preferencesForm.put(route('settings.preferences.update'), {
-        preserveScroll: true,
-    });
+    preferencesForm
+        .transform((data) => {
+            const raw = data.default_group_id;
+            const parsed =
+                raw === '' || raw === null || raw === undefined ? null : Number(raw);
+            return {
+                ...data,
+                default_group_id: Number.isFinite(parsed) ? parsed : null,
+            };
+        })
+        .put(route('settings.preferences.update'), {
+            preserveScroll: true,
+        });
 }
 
 function submitBggSettings() {

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Jobs\SyncBoardGameFromBoardGameGeekJob;
 use App\Models\BoardGame;
 use App\Models\BoardGamePlay;
 use App\Models\BoardGamePlayPlayer;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
@@ -31,10 +31,10 @@ class BoardGameGeekPlaySyncService extends BaseService
      * scheduling follow-up jobs with a delay rather than sleeping inside
      * the worker process.
      *
-     * @param string $username The BGG username
-     * @param string|null $minDate Minimum date (Y-m-d format)
-     * @param string|null $maxDate Maximum date (Y-m-d format)
-     * @param int $page Page number to fetch (1-based)
+     * @param  string  $username  The BGG username
+     * @param  string|null  $minDate  Minimum date (Y-m-d format)
+     * @param  string|null  $maxDate  Maximum date (Y-m-d format)
+     * @param  int  $page  Page number to fetch (1-based)
      * @return array{plays: array<int, SimpleXMLElement>, has_more_pages: bool}
      *
      * @throws \RuntimeException If API request fails
@@ -46,7 +46,7 @@ class BoardGameGeekPlaySyncService extends BaseService
         int $page
     ): array {
         try {
-            $url = self::PLAYS_API_URL . '?' . http_build_query([
+            $url = self::PLAYS_API_URL.'?'.http_build_query([
                 'username' => $username,
                 'maxdate' => $maxDate,
                 'mindate' => $minDate,
@@ -77,7 +77,7 @@ class BoardGameGeekPlaySyncService extends BaseService
                     throw new \RuntimeException($errorMessage);
                 }
 
-                throw new \RuntimeException('HTTP request returned status code ' . $response->status());
+                throw new \RuntimeException('HTTP request returned status code '.$response->status());
             }
 
             $xml = new SimpleXMLElement($response->body());
@@ -104,7 +104,7 @@ class BoardGameGeekPlaySyncService extends BaseService
             ]);
 
             throw new \RuntimeException(
-                'Failed to fetch plays from BoardGameGeek: ' . $e->getMessage(),
+                'Failed to fetch plays from BoardGameGeek: '.$e->getMessage(),
                 0,
                 $e
             );
@@ -118,9 +118,9 @@ class BoardGameGeekPlaySyncService extends BaseService
      * single long-running process is acceptable (e.g. CLI tooling
      * or tests). Queue jobs should prefer fetchPlaysPageFromBoardGameGeek().
      *
-     * @param string $username The BGG username
-     * @param string|null $minDate Minimum date (Y-m-d format)
-     * @param string|null $maxDate Maximum date (Y-m-d format)
+     * @param  string  $username  The BGG username
+     * @param  string|null  $minDate  Minimum date (Y-m-d format)
+     * @param  string|null  $maxDate  Maximum date (Y-m-d format)
      * @return array<int, SimpleXMLElement> Array of XML play elements
      *
      * @throws \RuntimeException If API request fails
@@ -152,8 +152,8 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Process BGG plays XML and sync to database.
      *
-     * @param array<SimpleXMLElement> $plays Array of play XML elements
-     * @param User $user The user to sync plays for
+     * @param  array<SimpleXMLElement>  $plays  Array of play XML elements
+     * @param  User  $user  The user to sync plays for
      * @return array<string> Array of BGG play IDs that were processed
      */
     public function processBggPlaysXml(array $plays, User $user): array
@@ -162,12 +162,13 @@ class BoardGameGeekPlaySyncService extends BaseService
 
         foreach ($plays as $playElement) {
             try {
-                if (!$this->validateBggPlay($playElement)) {
+                if (! $this->validateBggPlay($playElement)) {
                     // Update existing play's is_incomplete when BGG marks it incomplete so deduplication excludes it
                     $incomplete = (int) ($playElement['incomplete'] ?? 0);
                     if ($incomplete !== 0) {
                         BoardGamePlay::where('bgg_play_id', (string) $playElement['id'])->update(['is_incomplete' => true]);
                     }
+
                     continue;
                 }
 
@@ -194,8 +195,8 @@ class BoardGameGeekPlaySyncService extends BaseService
      * If the board game is not yet in the database, queues the board game sync and a chained
      * play import job, and returns null. Otherwise creates the play and returns it.
      *
-     * @param SimpleXMLElement $playElement The play XML element
-     * @param User $user The user to sync for
+     * @param  SimpleXMLElement  $playElement  The play XML element
+     * @param  User  $user  The user to sync for
      * @return BoardGamePlay|null The synced play, or null if import was deferred (board game queued for sync first)
      */
     public function syncPlayFromBggXml(SimpleXMLElement $playElement, User $user): ?BoardGamePlay
@@ -247,7 +248,7 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Return BGG game IDs from play payloads that do not yet have a BoardGame record.
      *
-     * @param array<int, array<string, mixed>> $playPayloads Payloads from buildPlayPayloadFromBggXml
+     * @param  array<int, array<string, mixed>>  $playPayloads  Payloads from buildPlayPayloadFromBggXml
      * @return array<string> Unique BGG game IDs that are missing locally
      */
     public function getMissingBggGameIdsFromPayloads(array $playPayloads): array
@@ -265,14 +266,15 @@ class BoardGameGeekPlaySyncService extends BaseService
         }
         $existing = BoardGame::whereIn('bgg_id', $bggGameIds)->pluck('bgg_id')->all();
         $existingSet = array_flip($existing);
+
         return array_values(array_filter($bggGameIds, fn (string $id) => ! isset($existingSet[$id])));
     }
 
     /**
      * Build a serializable play payload from BGG XML for deferred import (e.g. after board game sync).
      *
-     * @param SimpleXMLElement $playElement The play XML element
-     * @param User $user The user to sync for
+     * @param  SimpleXMLElement  $playElement  The play XML element
+     * @param  User  $user  The user to sync for
      * @return array<string, mixed> Play payload (bgg_play_id, bgg_game_id, play fields, players)
      */
     public function buildPlayPayloadFromBggXml(SimpleXMLElement $playElement, User $user): array
@@ -301,7 +303,7 @@ class BoardGameGeekPlaySyncService extends BaseService
             'comment' => $comment !== '' ? $comment : null,
             'game_length_minutes' => $length > 0 ? $length : null,
             'is_incomplete' => $incomplete !== 0,
-            'group_id' => $user->default_group_id,
+            'group_id' => $user->getDefaultGroupIdOrFirst(),
             'created_by_user_id' => $user->id,
             'source' => 'boardgamegeek',
             'players' => $players,
@@ -311,9 +313,9 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Create (or update) a play and its players from a serialized payload. Used by ImportBoardGamePlayFromBoardGameGeekJob.
      *
-     * @param array<string, mixed> $playPayload Payload from buildPlayPayloadFromBggXml
-     * @param User $user The user who owns the play
-     * @param int $boardGameId The local board game ID (board game must already exist)
+     * @param  array<string, mixed>  $playPayload  Payload from buildPlayPayloadFromBggXml
+     * @param  User  $user  The user who owns the play
+     * @param  int  $boardGameId  The local board game ID (board game must already exist)
      * @return BoardGamePlay The created or updated play
      */
     public function createPlayFromPayload(array $playPayload, User $user, int $boardGameId): BoardGamePlay
@@ -321,7 +323,7 @@ class BoardGameGeekPlaySyncService extends BaseService
         $bggPlayId = (string) ($playPayload['bgg_play_id'] ?? '');
         $playData = [
             'board_game_id' => $boardGameId,
-            'group_id' => $playPayload['group_id'] ?? $user->default_group_id,
+            'group_id' => $playPayload['group_id'] ?? $user->getDefaultGroupIdOrFirst(),
             'created_by_user_id' => $user->id,
             'played_at' => $playPayload['played_at'] ?? now()->format('Y-m-d'),
             'location' => $playPayload['location'] ?? 'Unknown',
@@ -354,8 +356,8 @@ class BoardGameGeekPlaySyncService extends BaseService
      * Resolve or validate player user_id at import time so we never insert a non-existent user_id.
      * Payloads are cached between fetch and import; the user may have been deleted in the meantime.
      *
-     * @param array<string, mixed> $playerPayload Single player from play payload
-     * @param int $boardGamePlayId The play id for the created record
+     * @param  array<string, mixed>  $playerPayload  Single player from play payload
+     * @param  int  $boardGamePlayId  The play id for the created record
      * @return array<string, mixed> Player data safe for BoardGamePlayPlayer::create()
      */
     private function resolvePlayerUserForImport(array $playerPayload, int $boardGamePlayId): array
@@ -377,6 +379,7 @@ class BoardGameGeekPlaySyncService extends BaseService
                 $base['board_game_geek_username'] = $bggUsername;
                 $base['guest_name'] = null;
             }
+
             return $base;
         }
 
@@ -394,7 +397,7 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Map BGG player XML to a serializable payload (no board_game_play_id). Used for deferred play import.
      *
-     * @param SimpleXMLElement $playerElement The player XML element
+     * @param  SimpleXMLElement  $playerElement  The player XML element
      * @return array<string, mixed> Player data for payload
      */
     private function mapBggPlayerToPayload(SimpleXMLElement $playerElement): array
@@ -435,9 +438,9 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Map BGG play data to our database format.
      *
-     * @param SimpleXMLElement $playElement The play XML element
-     * @param User $user The user
-     * @param int $boardGameId The board game ID
+     * @param  SimpleXMLElement  $playElement  The play XML element
+     * @param  User  $user  The user
+     * @param  int  $boardGameId  The board game ID
      * @return array<string, mixed> Play data for database
      */
     public function mapBggPlayToDatabase(SimpleXMLElement $playElement, User $user, int $boardGameId): array
@@ -451,7 +454,7 @@ class BoardGameGeekPlaySyncService extends BaseService
 
         return [
             'board_game_id' => $boardGameId,
-            'group_id' => $user->default_group_id,
+            'group_id' => $user->getDefaultGroupIdOrFirst(),
             'created_by_user_id' => $user->id,
             'played_at' => $playedAt,
             'location' => $location !== '' ? $location : 'Unknown',
@@ -466,8 +469,8 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Map BGG player data to our database format.
      *
-     * @param SimpleXMLElement $playerElement The player XML element
-     * @param int $playId The play ID
+     * @param  SimpleXMLElement  $playerElement  The player XML element
+     * @param  int  $playId  The play ID
      * @return array<string, mixed> Player data for database
      */
     public function mapBggPlayerToDatabase(SimpleXMLElement $playerElement, int $playId): array
@@ -496,7 +499,7 @@ class BoardGameGeekPlaySyncService extends BaseService
         // Determine identifier type
         if ($username !== '') {
             // Try to find user by BGG username
-            $user = \App\Models\User::where('board_game_geek_username', $username)->first();
+            $user = User::where('board_game_geek_username', $username)->first();
             if ($user !== null) {
                 $playerData['user_id'] = $user->id;
                 $playerData['board_game_geek_username'] = null;
@@ -518,11 +521,10 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Clean up plays that no longer exist on BGG.
      *
-     * @param User $user The user
-     * @param array<string> $bggPlayIds Array of BGG play IDs that exist on BGG
-     * @param string $minDate Minimum date
-     * @param string $maxDate Maximum date
-     * @return void
+     * @param  User  $user  The user
+     * @param  array<string>  $bggPlayIds  Array of BGG play IDs that exist on BGG
+     * @param  string  $minDate  Minimum date
+     * @param  string  $maxDate  Maximum date
      */
     public function cleanupDeletedBggPlays(User $user, array $bggPlayIds, string $minDate, string $maxDate): void
     {
@@ -546,7 +548,7 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Validate that a BGG play meets our criteria.
      *
-     * @param SimpleXMLElement $playElement The play XML element
+     * @param  SimpleXMLElement  $playElement  The play XML element
      * @return bool True if valid
      */
     public function validateBggPlay(SimpleXMLElement $playElement): bool
@@ -585,7 +587,7 @@ class BoardGameGeekPlaySyncService extends BaseService
         // Check subtype
         $subtype = $this->getBggPlaySubtype($playElement);
         $validSubtypes = ['boardgame', 'boardgameexpansion', 'boardgamecompilation'];
-        if (!in_array($subtype, $validSubtypes, true)) {
+        if (! in_array($subtype, $validSubtypes, true)) {
             return false;
         }
 
@@ -595,12 +597,12 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Get the BGG play subtype.
      *
-     * @param SimpleXMLElement $playElement The play XML element
+     * @param  SimpleXMLElement  $playElement  The play XML element
      * @return string|null The subtype or null
      */
     public function getBggPlaySubtype(SimpleXMLElement $playElement): ?string
     {
-        if (!isset($playElement->item[0]->subtypes[0]->subtype[0])) {
+        if (! isset($playElement->item[0]->subtypes[0]->subtype[0])) {
             return null;
         }
 
@@ -610,17 +612,15 @@ class BoardGameGeekPlaySyncService extends BaseService
     /**
      * Trigger board game sync if game doesn't exist locally.
      *
-     * @param string $bggGameId The BGG game ID
-     * @return void
+     * @param  string  $bggGameId  The BGG game ID
      */
     public function syncBoardGameIfNeeded(string $bggGameId): void
     {
         $boardGame = BoardGame::where('bgg_id', $bggGameId)->first();
         if ($boardGame === null) {
             // Queue board game sync job
-            \App\Jobs\SyncBoardGameFromBoardGameGeekJob::dispatch($bggGameId)
+            SyncBoardGameFromBoardGameGeekJob::dispatch($bggGameId)
                 ->delay(now()->addSeconds(2));
         }
     }
 }
-

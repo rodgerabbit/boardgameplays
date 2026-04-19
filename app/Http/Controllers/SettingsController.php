@@ -9,8 +9,7 @@ use App\Http\Requests\UpdatePreferencesRequest;
 use App\Http\Requests\UpdateProfileRequest;
 use App\Jobs\SyncBoardGamePlaysFromBoardGameGeekJob;
 use App\Jobs\SyncUserCollectionFromBoardGameGeekJob;
-use App\Models\BggCollectionSync;
-use App\Models\BggPlaysSync;
+use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\User;
 use App\Services\UserSettingsService;
@@ -40,9 +39,18 @@ class SettingsController extends Controller
     public function index(Request $request): Response
     {
         $user = Auth::user();
-        $user->loadMissing([]);
+        $user->loadMissing([
+            'groups' => static function ($query): void {
+                $query->orderBy('friendly_name');
+            },
+        ]);
 
         $boardGameGeek = $this->buildBoardGameGeekSyncStatusPayload($user);
+
+        $memberGroups = $user->groups->map(static fn (Group $group): array => [
+            'id' => $group->id,
+            'friendly_name' => $group->friendly_name,
+        ])->values()->all();
 
         return Inertia::render('Settings', [
             'activeTab' => $request->session()->get('activeTab', 'profile'),
@@ -58,10 +66,13 @@ class SettingsController extends Controller
                 'biography' => $user->biography,
                 'theme_preference' => $user->theme_preference ?? User::THEME_SYSTEM,
                 'is_profile_public' => $user->is_profile_public ?? false,
+                'default_group_id' => $user->default_group_id,
+                'effective_default_group_id' => $user->getDefaultGroupIdOrFirst(),
                 'board_game_geek_username' => $user->board_game_geek_username,
                 'sync_plays_to_board_game_geek' => (bool) $user->sync_plays_to_board_game_geek,
                 'use_generic_user_for_bgg_plays' => $user->use_generic_user_for_bgg_plays ?? true,
             ],
+            'memberGroups' => $memberGroups,
             'boardGameGeek' => $boardGameGeek,
         ]);
     }
@@ -124,7 +135,7 @@ class SettingsController extends Controller
 
         if ($request->hasFile('profile_picture')) {
             $file = $request->file('profile_picture');
-            $directory = 'profiles/' . $user->id;
+            $directory = 'profiles/'.$user->id;
 
             // Remove previous profile picture if it exists
             if ($user->profile_picture_path) {
