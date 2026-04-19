@@ -33,6 +33,8 @@ This is a Laravel-based boardgame plays and statistics platform for groups. The 
 ### 2. Testing Requirements (MANDATORY)
 - **EVERY feature, class, and significant method MUST have corresponding tests**
 - **Always run tests with Docker Compose** so the test environment matches the app: `docker-compose exec app php artisan test` (or `docker-compose exec app composer test`). Do not run PHP/artisan tests directly on the host unless you are in a non-Docker setup.
+- **Tests run on SQLite; the app stays on PostgreSQL**: `phpunit.xml` forces `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:` with `force="true"`, so `php artisan test` uses a **fresh in-memory SQLite** database for that run only. It does **not** use the PostgreSQL service, and it does **not** wipe or alter your development PostgreSQL data. **Do not** change `.env` or Docker Compose to SQLite just to run PHPUnit—the test runner already overrides the database for the test process.
+- **Keep `.env` / Docker on PostgreSQL for development**: Leave `DB_CONNECTION=pgsql` (and matching `DB_*` values) for the application and local workflows. If you temporarily change `.env` for debugging, **revert** `DB_CONNECTION` and related variables back to PostgreSQL afterward so the stack matches this project’s documented setup.
 - **Test-Driven Development (TDD) is preferred** - write tests before implementation when possible
 - **Test Coverage**: Aim for minimum 80% coverage, critical paths should be 100%
 - **Test Types**:
