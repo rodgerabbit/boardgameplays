@@ -439,15 +439,37 @@ run_tests() {
     local TEST_OUTPUT
     local TEST_EXIT_CODE=0
     
+    # Laravel loads database settings from bootstrap/cache/config.php when present.
+    # PHPUnit sets SQLite in phpunit.xml, but a cached config still points at PostgreSQL,
+    # so RefreshDatabase would run migrate:fresh against the real database. Clear config
+    # before tests, then restore the same caches as the full update (PostgreSQL runtime).
     if is_docker_setup; then
         local DOCKER_COMPOSE=$(docker_compose_cmd)
+        print_info "Clearing configuration cache so php artisan test uses SQLite from phpunit.xml (not cached PostgreSQL)..."
+        $DOCKER_COMPOSE exec -T app php artisan config:clear
+        
         print_info "Running test suite..."
         # Capture output and exit code separately
         TEST_OUTPUT=$($DOCKER_COMPOSE exec -T app php artisan test 2>&1) || TEST_EXIT_CODE=$?
+        
+        print_info "Restoring cached configuration, routes, and views for normal operation (PostgreSQL)..."
+        $DOCKER_COMPOSE exec -T app php artisan config:cache
+        $DOCKER_COMPOSE exec -T app php artisan route:cache
+        $DOCKER_COMPOSE exec -T app php artisan view:cache
+        print_success "Application caches restored; runtime uses PostgreSQL again"
     else
+        print_info "Clearing configuration cache so php artisan test uses SQLite from phpunit.xml (not cached PostgreSQL)..."
+        php artisan config:clear
+        
         print_info "Running test suite..."
         # Capture output and exit code separately
         TEST_OUTPUT=$(php artisan test 2>&1) || TEST_EXIT_CODE=$?
+        
+        print_info "Restoring cached configuration, routes, and views for normal operation (PostgreSQL)..."
+        php artisan config:cache
+        php artisan route:cache
+        php artisan view:cache
+        print_success "Application caches restored; runtime uses PostgreSQL again"
     fi
     
     # Display the test output
@@ -543,7 +565,7 @@ main() {
         fi
     fi
     
-    # Ask about seeding (after tests, since tests may reset the database)
+    # Ask about seeding (after tests; tests run here clear config first so SQLite is used, then caches are restored)
     echo ""
     read -p "Do you want to seed the database with seeders? (y/N): " -n 1 -r
     echo
